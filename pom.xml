@@ -3,16 +3,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>it.gov.pagopa.project</groupId>
-    <artifactId>example-function</artifactId>
+    <groupId>it.gov.pagopa.gpd</groupId>
+    <artifactId>gpd-ingestion-manager</artifactId>
     <version>0.0.1</version>
     <packaging>jar</packaging>
 
-    <name>Azure Custom Fn</name>
+    <name>pagopa-gpd-ingestion-manager</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>11</java.version>
+        <java.version>17</java.version>
         <azure.functions.maven.plugin.version>1.15.0</azure.functions.maven.plugin.version>
         <azure.functions.java.library.version>1.4.2</azure.functions.java.library.version>
         <functionAppName>com.microsoft.azure-20220215182005862</functionAppName>
@@ -142,6 +142,18 @@
             <artifactId>lombok</artifactId>
             <version>1.18.20</version>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.9</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-retry</artifactId>
+            <version>2.1.0</version>
         </dependency>
 
     </dependencies>
