@@ -30,7 +30,7 @@
     "applicationInsights": {
       "samplingSettings": {
         "isEnabled": false
+      }
     }
-  } 
-}
+  }
 }

@@ -8,11 +8,11 @@ public enum ReasonErrorCode {
 
     private final int code;
 
-    ReasonErrorCode(int code){
+    ReasonErrorCode(int code) {
         this.code = code;
     }
 
-    public int getCode(){
+    public int getCode() {
         return this.code;
     }
 }

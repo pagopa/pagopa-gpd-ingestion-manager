@@ -2,7 +2,8 @@
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=pagopa_pagopa-gpd-ingestion-manager&metric=alert_status)](https://sonarcloud.io/dashboard?id=pagopa_pagopa-gpd-ingestion-manager)
 
-Java Azure Functions that ingest a message from GPD observer event hub, tokenizes sensitive information and sends it again to the event hub
+Java Azure Functions that ingest a message from GPD observer event hub, tokenizes sensitive information and sends it
+again to the event hub
 
 ---
 
@@ -10,22 +11,22 @@ Java Azure Functions that ingest a message from GPD observer event hub, tokenize
 
 - [Api Documentation 📖](#api-documentation-)
 - [Start Project Locally 🚀](#start-project-locally-)
-  * [Run locally with Docker](#run-locally-with-docker)
-    + [Prerequisites](#prerequisites)
-    + [Run docker container](#run-docker-container)
-  * [Run locally with Maven](#run-locally-with-maven)
-    + [Prerequisites](#prerequisites-1)
-    + [Set environment variables](#set-environment-variables)
-    + [Run the project](#run-the-project)
-  * [Test](#test)
+    * [Run locally with Docker](#run-locally-with-docker)
+        + [Prerequisites](#prerequisites)
+        + [Run docker container](#run-docker-container)
+    * [Run locally with Maven](#run-locally-with-maven)
+        + [Prerequisites](#prerequisites-1)
+        + [Set environment variables](#set-environment-variables)
+        + [Run the project](#run-the-project)
+    * [Test](#test)
 - [Develop Locally 💻](#develop-locally-)
-  * [Prerequisites](#prerequisites-2)
-  * [Testing 🧪](#testing-)
-    + [Unit testing](#unit-testing)
-    + [Integration testing](#integration-testing)
-    + [Performance testing](#performance-testing)
+    * [Prerequisites](#prerequisites-2)
+    * [Testing 🧪](#testing-)
+        + [Unit testing](#unit-testing)
+        + [Integration testing](#integration-testing)
+        + [Performance testing](#performance-testing)
 - [Contributors 👥](#contributors-)
-  * [Maintainers](#maintainers)
+    * [Maintainers](#maintainers)
 
 ---
 
@@ -80,8 +81,8 @@ then replace env variables with correct values
 | `TOKENIZER_APIM_HEADER_KEY`                    | Tokenizer APIM header key                                                         |                       x-api-key                        |
 
 > to doc details about AZ fn config
-> see [here](https://stackoverflow.com/questions/62669672/azure-functions-what-is-the-purpose-of-having-host-json-and-local-settings-jso)
-
+>
+see [here](https://stackoverflow.com/questions/62669672/azure-functions-what-is-the-purpose-of-having-host-json-and-local-settings-jso)
 
 #### Run the project
 

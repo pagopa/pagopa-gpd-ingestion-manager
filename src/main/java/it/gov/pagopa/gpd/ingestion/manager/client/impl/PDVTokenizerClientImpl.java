@@ -18,23 +18,13 @@ import java.net.http.HttpResponse;
  */
 public class PDVTokenizerClientImpl implements PDVTokenizerClient {
 
-    private final Logger logger = LoggerFactory.getLogger(PDVTokenizerClientImpl.class);
-
     private static final String BASE_PATH = System.getenv().getOrDefault("PDV_TOKENIZER_BASE_PATH", "https://api.uat.tokenizer.pdv.pagopa.it/tokenizer/v1");
     private static final String SUBSCRIPTION_KEY = System.getenv().getOrDefault("PDV_TOKENIZER_SUBSCRIPTION_KEY", "");
-    private static final String SUBSCRIPTION_KEY_HEADER =  System.getenv().getOrDefault("TOKENIZER_APIM_HEADER_KEY", "x-api-key");
+    private static final String SUBSCRIPTION_KEY_HEADER = System.getenv().getOrDefault("TOKENIZER_APIM_HEADER_KEY", "x-api-key");
     private static final String CREATE_TOKEN_ENDPOINT = System.getenv().getOrDefault("PDV_TOKENIZER_CREATE_TOKEN_ENDPOINT", "/tokens");
-
-    private final HttpClient client;
-
     private static PDVTokenizerClientImpl instance;
-
-    public static PDVTokenizerClientImpl getInstance() {
-        if (instance == null) {
-            instance = new PDVTokenizerClientImpl();
-        }
-        return instance;
-    }
+    private final Logger logger = LoggerFactory.getLogger(PDVTokenizerClientImpl.class);
+    private final HttpClient client;
 
     private PDVTokenizerClientImpl() {
         this.client = HttpClient.newBuilder()
@@ -44,6 +34,13 @@ public class PDVTokenizerClientImpl implements PDVTokenizerClient {
 
     PDVTokenizerClientImpl(HttpClient client) {
         this.client = client;
+    }
+
+    public static PDVTokenizerClientImpl getInstance() {
+        if (instance == null) {
+            instance = new PDVTokenizerClientImpl();
+        }
+        return instance;
     }
 
     /**
