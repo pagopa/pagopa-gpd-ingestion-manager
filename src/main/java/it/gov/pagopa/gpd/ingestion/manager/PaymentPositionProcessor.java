@@ -73,8 +73,6 @@ public class PaymentPositionProcessor {
             }
             paymentPositionProcessed.setValue(paymentPositionsTokenized);
 
-        } catch (NullPointerException e) {
-            logger.error(String.format("NullPointerException exception on paymentPosition msg ingestion at %s : %s", LocalDateTime.now(), e.getMessage()));
         } catch (PDVTokenizerException e) {
             logger.error(String.format("PDVTokenizerException on paymentPosition msg ingestion at %s : %s", LocalDateTime.now(), e.getMessage()));
         } catch (Exception e) {
