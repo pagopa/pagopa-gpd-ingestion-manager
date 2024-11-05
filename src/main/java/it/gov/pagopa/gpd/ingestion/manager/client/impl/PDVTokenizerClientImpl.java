@@ -32,7 +32,7 @@ public class PDVTokenizerClientImpl implements PDVTokenizerClient {
                 .build();
     }
 
-    PDVTokenizerClientImpl(HttpClient client) {
+    public PDVTokenizerClientImpl(HttpClient client) {
         this.client = client;
     }
 
