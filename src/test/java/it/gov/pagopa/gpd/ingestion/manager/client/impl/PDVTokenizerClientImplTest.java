@@ -1,7 +1,6 @@
 package it.gov.pagopa.gpd.ingestion.manager.client.impl;
 
 import it.gov.pagopa.gpd.ingestion.manager.client.PDVTokenizerClient;
-import it.gov.pagopa.gpd.ingestion.manager.client.impl.PDVTokenizerClientImpl;
 import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

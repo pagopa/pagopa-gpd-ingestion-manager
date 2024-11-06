@@ -1,13 +1,9 @@
 package it.gov.pagopa.gpd.ingestion.manager;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.OutputBinding;
 import it.gov.pagopa.gpd.ingestion.manager.entity.PaymentOption;
-import it.gov.pagopa.gpd.ingestion.manager.entity.PaymentOption;
 import it.gov.pagopa.gpd.ingestion.manager.entity.enumeration.PaymentOptionStatus;
-import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerException;
-import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerServiceRetryWrapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -21,11 +17,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith({MockitoExtension.class})
-public class PaymentOptionProcessorTest {
+class PaymentOptionProcessorTest {
 
     private PaymentOptionProcessor function;
 
@@ -54,7 +50,7 @@ public class PaymentOptionProcessorTest {
         assertEquals(paymentOptionItems.get(0), captured);
     }
 
-    private PaymentOption generateValidPaymentOption(){
+    private PaymentOption generateValidPaymentOption() {
 
         return PaymentOption.builder()
                 .id(0)

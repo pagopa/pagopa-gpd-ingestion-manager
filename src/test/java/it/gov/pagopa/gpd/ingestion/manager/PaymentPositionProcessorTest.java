@@ -2,7 +2,6 @@ package it.gov.pagopa.gpd.ingestion.manager;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.microsoft.azure.functions.ExecutionContext;
-import com.microsoft.azure.functions.HttpStatus;
 import com.microsoft.azure.functions.OutputBinding;
 import it.gov.pagopa.gpd.ingestion.manager.entity.PaymentPosition;
 import it.gov.pagopa.gpd.ingestion.manager.entity.enumeration.PaymentPositionStatus;
@@ -14,16 +13,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith({MockitoExtension.class})
@@ -102,7 +99,7 @@ public class PaymentPositionProcessorTest {
         verify(documentdb, never()).setValue(any());
     }
 
-    private PaymentPosition generateValidPaymentPosition(String fiscalCode){
+    private PaymentPosition generateValidPaymentPosition(String fiscalCode) {
 
         return PaymentPosition.builder()
                 .id(0)

@@ -19,7 +19,7 @@ public class Health {
      * @return response with HttpStatus.OK
      */
     @FunctionName("Health")
-    public HttpResponseMessage run (
+    public HttpResponseMessage run(
             @HttpTrigger(name = "HealthTrigger",
                     methods = {HttpMethod.GET},
                     route = "health",

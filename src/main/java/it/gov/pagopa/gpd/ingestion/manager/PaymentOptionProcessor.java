@@ -7,16 +7,11 @@ import com.microsoft.azure.functions.annotation.EventHubOutput;
 import com.microsoft.azure.functions.annotation.EventHubTrigger;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import it.gov.pagopa.gpd.ingestion.manager.entity.PaymentOption;
-import it.gov.pagopa.gpd.ingestion.manager.entity.PaymentPosition;
-import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-
-import static it.gov.pagopa.gpd.ingestion.manager.utils.ValidationUtils.isValidFiscalCode;
 
 public class PaymentOptionProcessor {
 

@@ -26,7 +26,7 @@ public class Info {
      * @return response with HttpStatus.OK
      */
     @FunctionName("Info")
-    public HttpResponseMessage run (
+    public HttpResponseMessage run(
             @HttpTrigger(name = "InfoTrigger",
                     methods = {HttpMethod.GET},
                     route = "info",
@@ -37,6 +37,7 @@ public class Info {
                 .body(getInfo())
                 .build();
     }
+
     public synchronized AppInfo getInfo() {
         String version = null;
         String name = null;

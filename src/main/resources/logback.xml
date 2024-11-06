@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <property resource="application.properties" />
+    <property resource="application.properties"/>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -21,7 +21,8 @@
                 <serviceEnvironment>${ENV}</serviceEnvironment>
             </encoder>
         </appender>
-    </if>>
+    </if>
+    >
 
     <appender name="ASYNC_STDOUT"
               class="ch.qos.logback.classic.AsyncAppender">
@@ -47,7 +48,8 @@
                 </encoder>
                 <file>${LOG_FILE}</file>
                 <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-                    <fileNamePattern>${LOGBACK_ROLLINGPOLICY_FILE_NAME_PATTERN:-${LOG_FILE}.%d{yyyy-MM-dd}.%i.gz}</fileNamePattern>
+                    <fileNamePattern>${LOGBACK_ROLLINGPOLICY_FILE_NAME_PATTERN:-${LOG_FILE}.%d{yyyy-MM-dd}.%i.gz}
+                    </fileNamePattern>
                     <cleanHistoryOnStart>${LOGBACK_ROLLINGPOLICY_CLEAN_HISTORY_ON_START:-false}</cleanHistoryOnStart>
                     <maxFileSize>${LOGBACK_ROLLINGPOLICY_MAX_FILE_SIZE:-10MB}</maxFileSize>
                     <totalSizeCap>${LOGBACK_ROLLINGPOLICY_TOTAL_SIZE_CAP:-0}</totalSizeCap>
@@ -67,8 +69,8 @@
     </if>
 
     <root level="INFO">
-        <appender-ref ref="ASYNC_STDOUT" />
-        <appender-ref ref="ASYNC_FILE" />
+        <appender-ref ref="ASYNC_STDOUT"/>
+        <appender-ref ref="ASYNC_FILE"/>
     </root>
 
 </configuration>
