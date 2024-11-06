@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>it.gov.pagopa.gpd</groupId>
+    <groupId>it.gov.pagopa.gps</groupId>
     <artifactId>gpd-ingestion-manager</artifactId>
     <version>0.0.1</version>
     <packaging>jar</packaging>
@@ -288,5 +288,15 @@
                 <version>2.9.0</version>
             </plugin>
         </plugins>
+
+        <resources>
+            <resource>
+                <directory>src/main/resources-filtered</directory>
+                <filtering>true</filtering>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
     </build>
 </project>
