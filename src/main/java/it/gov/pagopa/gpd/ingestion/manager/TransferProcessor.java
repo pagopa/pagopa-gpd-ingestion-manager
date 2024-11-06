@@ -6,7 +6,7 @@ import com.microsoft.azure.functions.annotation.Cardinality;
 import com.microsoft.azure.functions.annotation.EventHubOutput;
 import com.microsoft.azure.functions.annotation.EventHubTrigger;
 import com.microsoft.azure.functions.annotation.FunctionName;
-import it.gov.pagopa.gpd.ingestion.manager.entity.PaymentOption;
+import it.gov.pagopa.gpd.ingestion.manager.entity.Transfer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,36 +16,35 @@ import java.util.List;
 /**
  * Azure Functions with Azure EventHub trigger.
  */
-public class PaymentOptionProcessor {
-
-    private final Logger logger = LoggerFactory.getLogger(PaymentOptionProcessor.class);
+public class TransferProcessor {
+    private final Logger logger = LoggerFactory.getLogger(TransferProcessor.class);
 
     /**
      * This function will be invoked when an Event Hub trigger occurs
      */
-    @FunctionName("EventHubPaymentOptionProcessor")
-    public void processPaymentOption(
+    @FunctionName("EventHubTransferProcessor")
+    public void processTransfer(
             @EventHubTrigger(
-                    name = "PaymentOptionTrigger",
+                    name = "TransferTrigger",
                     eventHubName = "", // blank because the value is included in the connection string
-                    connection = "PAYMENT_OPTION_INPUT_EVENTHUB_CONN_STRING",
+                    connection = "TRANSFER_INPUT_EVENTHUB_CONN_STRING",
                     cardinality = Cardinality.MANY)
-            List<PaymentOption> paymentOptionMsg,
+            List<Transfer> transferMsg,
             @EventHubOutput(
-                    name = "PaymentOptionOutput",
+                    name = "TransferOutput",
                     eventHubName = "", // blank because the value is included in the connection string
-                    connection = "PAYMENT_OPTION_OUTPUT_EVENTHUB_CONN_STRING")
-            OutputBinding<List<PaymentOption>> paymentPositionProcessed,
+                    connection = "TRANSFER_OUTPUT_EVENTHUB_CONN_STRING")
+            OutputBinding<List<Transfer>> transferProcessed,
             final ExecutionContext context) {
 
-        String message = String.format("PaymentOptionProcessor function called at %s with events list size %s", LocalDateTime.now(), paymentOptionMsg.size());
+        String message = String.format("TransferProcessor function called at %s with events list size %s", LocalDateTime.now(), transferMsg.size());
         logger.info(message);
 
         // persist the item
         try {
-            paymentPositionProcessed.setValue(paymentOptionMsg);
+            transferProcessed.setValue(transferMsg);
         } catch (Exception e) {
-            logger.error(String.format("Generic exception on paymentOption msg ingestion at %s : %s", LocalDateTime.now(), e.getMessage()));
+            logger.error(String.format("Generic exception on transfer msg ingestion at %s : %s", LocalDateTime.now(), e.getMessage()));
         }
 
     }

@@ -81,6 +81,8 @@ microservice-chart:
     PAYMENT_POSITION_OUTPUT_EVENTHUB_CONN_STRING: "payment-position-topic-output-conn-string"
     PAYMENT_OPTION_INPUT_EVENTHUB_CONN_STRING: "payment-option-topic-input-conn-string"
     PAYMENT_OPTION_OUTPUT_EVENTHUB_CONN_STRING: "payment-option-topic-output-conn-string"
+    TRANSFER_INPUT_EVENTHUB_CONN_STRING: "transfer-topic-input-conn-string"
+    TRANSFER_OUTPUT_EVENTHUB_CONN_STRING: "transfer-topic-output-conn-string"
     PDV_TOKENIZER_SUBSCRIPTION_KEY: "tokenizer-api-key"
   keyvault:
     name: "pagopa-u-gps-kv"
