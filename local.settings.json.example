@@ -2,5 +2,13 @@
     "IsEncrypted": false,
     "Values": {
       "FUNCTIONS_WORKER_RUNTIME": "java",
+      "PAYMENT_POSITION_INPUT_EVENTHUB_CONN_STRING": "<<payment-position-topic-input-conn-string>",
+      "PAYMENT_POSITION_OUTPUT_EVENTHUB_CONN_STRING": "<payment-position-topic-output-conn-string>",
+      "PAYMENT_OPTION_INPUT_EVENTHUB_CONN_STRING": "<payment-option-topic-input-conn-string>",
+      "PAYMENT_OPTION_OUTPUT_EVENTHUB_CONN_STRING": "<payment-option-topic-output-conn-string>",
+      "TRANSFER_INPUT_EVENTHUB_CONN_STRING": "<transfer-topic-input-conn-string>",
+      "TRANSFER_OUTPUT_EVENTHUB_CONN_STRING": "<transfer-topic-output-conn-string>",
+      "PDV_TOKENIZER_BASE_PATH": "<tokenizer-api-base-path>",
+      "PDV_TOKENIZER_SUBSCRIPTION_KEY": "<tokenizer-api-key>"
     }
   }
