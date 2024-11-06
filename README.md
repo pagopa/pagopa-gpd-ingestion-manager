@@ -71,6 +71,8 @@ then replace env variables with correct values
 |------------------------------------------------|-----------------------------------------------------------------------------------|:------------------------------------------------------:|
 | `PAYMENT_POSITION_INPUT_EVENTHUB_CONN_STRING`  | Connection string to the PaymentPosition input topic                              |                                                        |
 | `PAYMENT_POSITION_OUTPUT_EVENTHUB_CONN_STRING` | Connection string to the PaymentPosition output topic                             |                                                        |
+| `PAYMENT_OPTION_INPUT_EVENTHUB_CONN_STRING`    | Connection string to the PaymentOption input topic                                |                                                        |
+| `PAYMENT_OPTION_OUTPUT_EVENTHUB_CONN_STRING`   | Connection string to the PaymentOption output topic                               |                                                        |
 | `PDV_TOKENIZER_BASE_PATH`                      | PDV Tokenizer API base path                                                       | "https://api.uat.tokenizer.pdv.pagopa.it/tokenizer/v1" |
 | `PDV_TOKENIZER_CREATE_TOKEN_ENDPOINT`          | PDV Tokenizer API create token endpoint                                           |                       "/tokens"                        |
 | `PDV_TOKENIZER_SUBSCRIPTION_KEY`               | API azure ocp apim subscription key                                               |                                                        |
