@@ -29,7 +29,7 @@ public class PaymentPosition {
     @JsonProperty("min_due_date")
     private Long minDueDate;
     @NonNull
-    @JsonProperty("organizationFiscalCode")
+    @JsonProperty("organization_fiscal_code")
     private String organizationFiscalCode;
     @NonNull
     @JsonProperty("company_name")
@@ -43,13 +43,13 @@ public class PaymentPosition {
     private String type;
     @JsonProperty("validity_date")
     private Long validityDate;
-    @JsonProperty("switchToExpired")
+    @JsonProperty("switch_to_expired")
     private boolean switchToExpired;
     @JsonProperty("payment_date")
     private Long paymentDate;
     @NonNull
-    @JsonProperty("last_update_date")
-    private Long lastUpdateDate;
+    @JsonProperty("last_updated_date")
+    private Long lastUpdatedDate;
     @NonNull
     @JsonProperty("inserted_date")
     private Long insertedDate;
