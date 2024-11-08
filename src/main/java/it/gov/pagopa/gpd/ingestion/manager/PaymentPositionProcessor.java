@@ -8,6 +8,7 @@ import com.microsoft.azure.functions.annotation.EventHubTrigger;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import it.gov.pagopa.gpd.ingestion.manager.entity.PaymentPosition;
 import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerException;
+import it.gov.pagopa.gpd.ingestion.manager.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerServiceRetryWrapper;
 import it.gov.pagopa.gpd.ingestion.manager.service.impl.PDVTokenizerServiceRetryWrapperImpl;
 import org.slf4j.Logger;
@@ -45,12 +46,12 @@ public class PaymentPositionProcessor {
                     eventHubName = "", // blank because the value is included in the connection string
                     connection = "PAYMENT_POSITION_INPUT_EVENTHUB_CONN_STRING",
                     cardinality = Cardinality.MANY)
-            List<PaymentPosition> paymentPositionMsg,
+            List<DataCaptureMessage<PaymentPosition>> paymentPositionMsg,
             @EventHubOutput(
                     name = "PaymentPositionOutput",
                     eventHubName = "", // blank because the value is included in the connection string
                     connection = "PAYMENT_POSITION_OUTPUT_EVENTHUB_CONN_STRING")
-            OutputBinding<List<PaymentPosition>> paymentPositionProcessed,
+            OutputBinding<List<DataCaptureMessage<PaymentPosition>>> paymentPositionProcessed,
             final ExecutionContext context) {
 
         String message = String.format("PaymentPositionProcessor function called at %s with events list size %s", LocalDateTime.now(), paymentPositionMsg.size());
@@ -58,15 +59,23 @@ public class PaymentPositionProcessor {
 
         // persist the item
         try {
-            List<PaymentPosition> paymentPositionsTokenized = new ArrayList<>();
-            for (PaymentPosition pp : paymentPositionMsg) {
+            List<DataCaptureMessage<PaymentPosition>> paymentPositionsTokenized = new ArrayList<>();
+            for (DataCaptureMessage<PaymentPosition> pp : paymentPositionMsg) {
+                PaymentPosition valuesBefore = pp.getBefore();
+                PaymentPosition valuesAfter = pp.getAfter();
+
                 String msg = String.format("PaymentPositionProcessor function called at %s with object id %s",
-                        LocalDateTime.now(), pp.getId());
+                        LocalDateTime.now(), (valuesAfter != null ? valuesAfter : valuesBefore).getId());
                 logger.info(msg);
 
-                // tokenize fiscal code
-                if (isValidFiscalCode(pp.getFiscalCode())) {
-                    pp.setFiscalCode(pdvTokenizerService.generateTokenForFiscalCodeWithRetry(pp.getFiscalCode()));
+                // tokenize fiscal codes
+                if (valuesAfter != null && isValidFiscalCode(valuesAfter.getFiscalCode())) {
+                    valuesAfter.setFiscalCode(pdvTokenizerService.generateTokenForFiscalCodeWithRetry(valuesAfter.getFiscalCode()));
+                    pp.setAfter(valuesAfter);
+                }
+                if (valuesBefore != null && isValidFiscalCode(valuesBefore.getFiscalCode())) {
+                    valuesBefore.setFiscalCode(pdvTokenizerService.generateTokenForFiscalCodeWithRetry(valuesBefore.getFiscalCode()));
+                    pp.setAfter(valuesBefore);
                 }
 
                 paymentPositionsTokenized.add(pp);

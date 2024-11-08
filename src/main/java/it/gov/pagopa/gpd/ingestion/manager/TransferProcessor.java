@@ -7,6 +7,7 @@ import com.microsoft.azure.functions.annotation.EventHubOutput;
 import com.microsoft.azure.functions.annotation.EventHubTrigger;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import it.gov.pagopa.gpd.ingestion.manager.entity.Transfer;
+import it.gov.pagopa.gpd.ingestion.manager.model.DataCaptureMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,12 +30,12 @@ public class TransferProcessor {
                     eventHubName = "", // blank because the value is included in the connection string
                     connection = "TRANSFER_INPUT_EVENTHUB_CONN_STRING",
                     cardinality = Cardinality.MANY)
-            List<Transfer> transferMsg,
+            List<DataCaptureMessage<Transfer>> transferMsg,
             @EventHubOutput(
                     name = "TransferOutput",
                     eventHubName = "", // blank because the value is included in the connection string
                     connection = "TRANSFER_OUTPUT_EVENTHUB_CONN_STRING")
-            OutputBinding<List<Transfer>> transferProcessed,
+            OutputBinding<List<DataCaptureMessage<Transfer>>> transferProcessed,
             final ExecutionContext context) {
 
         String message = String.format("TransferProcessor function called at %s with events list size %s", LocalDateTime.now(), transferMsg.size());

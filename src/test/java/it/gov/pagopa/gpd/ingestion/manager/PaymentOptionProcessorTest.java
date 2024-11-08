@@ -4,6 +4,7 @@ import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.OutputBinding;
 import it.gov.pagopa.gpd.ingestion.manager.entity.PaymentOption;
 import it.gov.pagopa.gpd.ingestion.manager.entity.enumeration.PaymentOptionStatus;
+import it.gov.pagopa.gpd.ingestion.manager.model.DataCaptureMessage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -29,16 +30,16 @@ class PaymentOptionProcessorTest {
     private ExecutionContext context;
 
     @Captor
-    private ArgumentCaptor<List<PaymentOption>> paymentOptionCaptor;
+    private ArgumentCaptor<List<DataCaptureMessage<PaymentOption>>> paymentOptionCaptor;
 
     @Test
     void runOk() {
 
-        List<PaymentOption> paymentOptionItems = new ArrayList<>();
+        List<DataCaptureMessage<PaymentOption>> paymentOptionItems = new ArrayList<>();
         paymentOptionItems.add(generateValidPaymentOption());
 
         @SuppressWarnings("unchecked")
-        OutputBinding<List<PaymentOption>> documentdb = (OutputBinding<List<PaymentOption>>) spy(OutputBinding.class);
+        OutputBinding<List<DataCaptureMessage<PaymentOption>>> documentdb = (OutputBinding<List<DataCaptureMessage<PaymentOption>>>) spy(OutputBinding.class);
 
         function = new PaymentOptionProcessor();
 
@@ -46,13 +47,12 @@ class PaymentOptionProcessorTest {
         assertDoesNotThrow(() -> function.processPaymentOption(paymentOptionItems, documentdb, context));
 
         verify(documentdb).setValue(paymentOptionCaptor.capture());
-        PaymentOption captured = paymentOptionCaptor.getValue().get(0);
+        DataCaptureMessage<PaymentOption> captured = paymentOptionCaptor.getValue().get(0);
         assertEquals(paymentOptionItems.get(0), captured);
     }
 
-    private PaymentOption generateValidPaymentOption() {
-
-        return PaymentOption.builder()
+    private DataCaptureMessage<PaymentOption> generateValidPaymentOption() {
+        PaymentOption po = PaymentOption.builder()
                 .id(0)
                 .paymentPositionId(0)
                 .amount(0)
@@ -74,6 +74,15 @@ class PaymentOptionProcessorTest {
                 .retentionDate(new Date().getTime())
                 .notificationFee(0)
                 .lastUpdatedDateNotificationFee(new Date().getTime())
+                .build();
+
+        return DataCaptureMessage.<PaymentOption>builder()
+                .before(po)
+                .after(po)
+                .op("c")
+                .tsMs(0L)
+                .tsNs(0L)
+                .tsUs(0L)
                 .build();
     }
 }
