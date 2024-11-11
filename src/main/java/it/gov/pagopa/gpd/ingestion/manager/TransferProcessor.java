@@ -20,7 +20,13 @@ public class TransferProcessor {
     private final Logger logger = LoggerFactory.getLogger(TransferProcessor.class);
 
     /**
-     * This function will be invoked when an Event Hub trigger occurs
+     * This function will be invoked when a EventHub trigger occurs
+     * <p>
+     * Map Transfer fields to ignore unused ones
+     *
+     * @param transferMsg       List of messages coming from eventhub with transfers' values
+     * @param transferProcessed Output binding that will save the ingested transfers
+     * @param context           Function context
      */
     @FunctionName("EventHubTransferProcessor")
     public void processTransfer(
@@ -37,14 +43,15 @@ public class TransferProcessor {
             OutputBinding<List<DataCaptureTransfer>> transferProcessed,
             final ExecutionContext context) {
 
-        String message = String.format("TransferProcessor function called at %s with events list size %s", LocalDateTime.now(), transferMsg.size());
-        logger.info(message);
+        logger.info("[{}] function called at {} for transfers with events list size {}",
+                context.getFunctionName(), LocalDateTime.now(), transferMsg.size());
 
         // persist the item
         try {
             transferProcessed.setValue(transferMsg);
         } catch (Exception e) {
-            logger.error(String.format("Generic exception on transfer msg ingestion at %s : %s", LocalDateTime.now(), e.getMessage()));
+            logger.error("[{}] function error Generic exception at {} : {}",
+                    context.getFunctionName(), LocalDateTime.now(), e.getMessage());
         }
 
     }

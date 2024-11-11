@@ -20,8 +20,15 @@ public class PaymentOptionProcessor {
 
     private final Logger logger = LoggerFactory.getLogger(PaymentOptionProcessor.class);
 
+
     /**
-     * This function will be invoked when an Event Hub trigger occurs
+     * This function will be invoked when a EventHub trigger occurs
+     * <p>
+     * Map PaymentOption fields to ignore unused ones
+     *
+     * @param paymentOptionMsg       List of messages coming from eventhub with payment options' values
+     * @param paymentOptionProcessed Output binding that will save the ingested payment options
+     * @param context                Function context
      */
     @FunctionName("EventHubPaymentOptionProcessor")
     public void processPaymentOption(
@@ -35,17 +42,18 @@ public class PaymentOptionProcessor {
                     name = "PaymentOptionOutput",
                     eventHubName = "", // blank because the value is included in the connection string
                     connection = "PAYMENT_OPTION_OUTPUT_EVENTHUB_CONN_STRING")
-            OutputBinding<List<DataCapturePaymentOption>> paymentPositionProcessed,
+            OutputBinding<List<DataCapturePaymentOption>> paymentOptionProcessed,
             final ExecutionContext context) {
 
-        String message = String.format("PaymentOptionProcessor function called at %s with events list size %s", LocalDateTime.now(), paymentOptionMsg.size());
-        logger.info(message);
+        logger.info("[{}] function called at {} for payment options with events list size {}",
+                context.getFunctionName(), LocalDateTime.now(), paymentOptionMsg.size());
 
         // persist the item
         try {
-            paymentPositionProcessed.setValue(paymentOptionMsg);
+            paymentOptionProcessed.setValue(paymentOptionMsg);
         } catch (Exception e) {
-            logger.error(String.format("Generic exception on paymentOption msg ingestion at %s : %s", LocalDateTime.now(), e.getMessage()));
+            logger.error("[{}] function error Generic exception at {} : {}",
+                    context.getFunctionName(), LocalDateTime.now(), e.getMessage());
         }
 
     }

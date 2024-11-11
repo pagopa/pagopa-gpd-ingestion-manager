@@ -37,7 +37,13 @@ public class PaymentPositionProcessor {
     }
 
     /**
-     * This function will be invoked when an Event Hub trigger occurs
+     * This function will be invoked when a EventHub trigger occurs
+     * <p>
+     * If valid tax codes, tokenizes the fiscal code value from both the before and after entity values
+     *
+     * @param paymentPositionMsg       List of messages coming from eventhub with payment positions' values
+     * @param paymentPositionProcessed Output binding that will save the tokenized payment position
+     * @param context                  Function context
      */
     @FunctionName("EventHubPaymentPositionProcessor")
     public void processPaymentPosition(
@@ -54,8 +60,8 @@ public class PaymentPositionProcessor {
             OutputBinding<List<DataCapturePaymentPosition>> paymentPositionProcessed,
             final ExecutionContext context) {
 
-        String message = String.format("PaymentPositionProcessor function called at %s with events list size %s", LocalDateTime.now(), paymentPositionMsg.size());
-        logger.info(message);
+        logger.info("[{}] function called at {} for payment positions with events list size {}",
+                context.getFunctionName(), LocalDateTime.now(), paymentPositionMsg.size());
 
         // persist the item
         try {
@@ -64,9 +70,8 @@ public class PaymentPositionProcessor {
                 PaymentPosition valuesBefore = pp.getBefore();
                 PaymentPosition valuesAfter = pp.getAfter();
 
-                String msg = String.format("PaymentPositionProcessor function called at %s with object id %s",
-                        LocalDateTime.now(), (valuesAfter != null ? valuesAfter : valuesBefore).getId());
-                logger.info(msg);
+                logger.info("[{}] function called at {} with payment position id {}",
+                        context.getFunctionName(), LocalDateTime.now(), (valuesAfter != null ? valuesAfter : valuesBefore).getId());
 
                 // tokenize fiscal codes
                 if (valuesAfter != null && isValidFiscalCode(valuesAfter.getFiscalCode())) {
@@ -83,9 +88,11 @@ public class PaymentPositionProcessor {
             paymentPositionProcessed.setValue(paymentPositionsTokenized);
 
         } catch (PDVTokenizerException e) {
-            logger.error(String.format("PDVTokenizerException on paymentPosition msg ingestion at %s : %s", LocalDateTime.now(), e.getMessage()));
+            logger.error("[{}] function error PDVTokenizerException at {} : {}",
+                    context.getFunctionName(), LocalDateTime.now(), e.getMessage());
         } catch (Exception e) {
-            logger.error(String.format("Generic exception on paymentPosition msg ingestion at %s : %s", LocalDateTime.now(), e.getMessage()));
+            logger.error("[{}] function error Generic exception at {} : {}",
+                    context.getFunctionName(), LocalDateTime.now(), e.getMessage());
         }
 
     }
