@@ -2,7 +2,6 @@ package it.gov.pagopa.gpd.ingestion.manager.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.gov.pagopa.gpd.ingestion.manager.entity.Transfer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,10 +12,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DataCaptureTransfer {
+public class DataCaptureMessage<T> {
 
-    private Transfer before;
-    private Transfer after;
+    private T before;
+    private T after;
     private String op;
     @JsonProperty("ts_ms")
     private Long tsMs;
