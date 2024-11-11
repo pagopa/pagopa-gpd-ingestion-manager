@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static it.gov.pagopa.gpd.ingestion.manager.utils.ValidationUtils.isValidFiscalCode;
 
@@ -67,49 +68,56 @@ public class PaymentPositionProcessor {
         logger.info("[{}] function called at {} for payment positions",
                 context.getFunctionName(), LocalDateTime.now());
 
-        // persist the item
+        List<DataCaptureMessage<PaymentPosition>> paymentPositionList = new ArrayList<>();
         try {
-            List<DataCaptureMessage<PaymentPosition>> paymentPositionList = ObjectMapperUtils.mapDataCapturePaymentPositionListString(paymentPositionMsg, new TypeReference<>() {
-            });
-
-            logger.info("[{}] function called at {} for payment positions with events list size {}",
-                    context.getFunctionName(), LocalDateTime.now(), paymentPositionList.size());
-
-            List<DataCaptureMessage<PaymentPosition>> paymentPositionsTokenized = new ArrayList<>();
-            for (DataCaptureMessage<PaymentPosition> pp : paymentPositionList) {
-                PaymentPosition valuesBefore = pp.getBefore();
-                PaymentPosition valuesAfter = pp.getAfter();
-
-                logger.info("[{}] function called at {} with payment position id {}",
-                        context.getFunctionName(), LocalDateTime.now(), (valuesAfter != null ? valuesAfter : valuesBefore).getId());
-
-                // tokenize fiscal codes
-                if (valuesBefore != null && isValidFiscalCode(valuesBefore.getFiscalCode())) {
-                    valuesBefore.setFiscalCode(pdvTokenizerService.generateTokenForFiscalCode(valuesBefore.getFiscalCode()));
-                    pp.setBefore(valuesBefore);
-                }
-                if (valuesAfter != null && isValidFiscalCode(valuesAfter.getFiscalCode())) {
-                    valuesAfter.setFiscalCode(pdvTokenizerService.generateTokenForFiscalCode(valuesAfter.getFiscalCode()));
-                    pp.setAfter(valuesAfter);
-                }
-
-                paymentPositionsTokenized.add(pp);
-            }
-            paymentPositionProcessed.setValue(paymentPositionsTokenized);
-
-        } catch (PDVTokenizerException e) {
-            logger.error("[{}] function error PDVTokenizerException at {} : {}",
-                    context.getFunctionName(), LocalDateTime.now(), e.getMessage());
-        } catch (PDVTokenizerUnexpectedException e) {
-            logger.error("[{}] function error PDVTokenizerUnexpectedException at {} : {}",
-                    context.getFunctionName(), LocalDateTime.now(), e.getMessage());
+            paymentPositionList = ObjectMapperUtils.mapDataCapturePaymentPositionListString(paymentPositionMsg, new TypeReference<>() {
+            }).stream().filter(Objects::nonNull).toList();
         } catch (JsonProcessingException e) {
             logger.error("[{}] function error JsonProcessingException at {} : {}",
                     context.getFunctionName(), LocalDateTime.now(), e.getMessage());
-        } catch (Exception e) {
-            logger.error("[{}] function error Generic exception at {} : {}",
-                    context.getFunctionName(), LocalDateTime.now(), e.getMessage());
         }
 
+        logger.info("[{}] function called at {} for payment positions with events list size {}",
+                context.getFunctionName(), LocalDateTime.now(), paymentPositionList.size());
+
+        if (!paymentPositionList.isEmpty()) {
+            // persist the item
+            try {
+                List<DataCaptureMessage<PaymentPosition>> paymentPositionsTokenized = new ArrayList<>();
+                for (DataCaptureMessage<PaymentPosition> pp : paymentPositionList) {
+                    if (pp == null) {
+                        continue;
+                    }
+                    PaymentPosition valuesBefore = pp.getBefore();
+                    PaymentPosition valuesAfter = pp.getAfter();
+
+                    logger.info("[{}] function called at {} with payment position id {}",
+                            context.getFunctionName(), LocalDateTime.now(), (valuesAfter != null ? valuesAfter : valuesBefore).getId());
+
+                    // tokenize fiscal codes
+                    if (valuesBefore != null && isValidFiscalCode(valuesBefore.getFiscalCode())) {
+                        valuesBefore.setFiscalCode(pdvTokenizerService.generateTokenForFiscalCode(valuesBefore.getFiscalCode()));
+                        pp.setBefore(valuesBefore);
+                    }
+                    if (valuesAfter != null && isValidFiscalCode(valuesAfter.getFiscalCode())) {
+                        valuesAfter.setFiscalCode(pdvTokenizerService.generateTokenForFiscalCode(valuesAfter.getFiscalCode()));
+                        pp.setAfter(valuesAfter);
+                    }
+
+                    paymentPositionsTokenized.add(pp);
+                }
+                paymentPositionProcessed.setValue(paymentPositionsTokenized);
+
+            } catch (PDVTokenizerException e) {
+                logger.error("[{}] function error PDVTokenizerException at {} : {}",
+                        context.getFunctionName(), LocalDateTime.now(), e.getMessage());
+            } catch (PDVTokenizerUnexpectedException e) {
+                logger.error("[{}] function error PDVTokenizerUnexpectedException at {} : {}",
+                        context.getFunctionName(), LocalDateTime.now(), e.getMessage());
+            } catch (Exception e) {
+                logger.error("[{}] function error Generic exception at {} : {}",
+                        context.getFunctionName(), LocalDateTime.now(), e.getMessage());
+            }
+        }
     }
 }

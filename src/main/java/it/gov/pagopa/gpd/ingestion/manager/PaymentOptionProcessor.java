@@ -1,5 +1,6 @@
 package it.gov.pagopa.gpd.ingestion.manager;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.OutputBinding;
@@ -14,7 +15,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Azure Functions with Azure EventHub trigger.
@@ -51,17 +54,20 @@ public class PaymentOptionProcessor {
         logger.info("[{}] function called at {} for payment options",
                 context.getFunctionName(), LocalDateTime.now());
 
-        // persist the item
+        List<DataCaptureMessage<PaymentOption>> paymentOptionList = new ArrayList<>();
         try {
-            List<DataCaptureMessage<PaymentOption>> paymentOptionList = ObjectMapperUtils.mapDataCapturePaymentOptionListString(paymentOptionMsg, new TypeReference<>() {});
-
-            logger.info("[{}] function called at {} for payment options with events list size {}",
-                    context.getFunctionName(), LocalDateTime.now(), paymentOptionList.size());
-
-            paymentOptionProcessed.setValue(paymentOptionList);
-        } catch (Exception e) {
-            logger.error("[{}] function error Generic exception at {} : {}",
+            paymentOptionList = ObjectMapperUtils.mapDataCapturePaymentOptionListString(paymentOptionMsg, new TypeReference<>() {
+            }).stream().filter(Objects::nonNull).toList();
+        } catch (JsonProcessingException e) {
+            logger.error("[{}] function error JsonProcessingException at {} : {}",
                     context.getFunctionName(), LocalDateTime.now(), e.getMessage());
+        }
+
+        logger.info("[{}] function called at {} for payment options with events list size {}",
+                context.getFunctionName(), LocalDateTime.now(), paymentOptionList.size());
+
+        if (!paymentOptionList.isEmpty()) {
+            paymentOptionProcessed.setValue(paymentOptionList);
         }
 
     }

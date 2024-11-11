@@ -1,6 +1,5 @@
 package it.gov.pagopa.gpd.ingestion.manager.utils;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -72,7 +71,6 @@ public class ObjectMapperUtils {
     public static List<DataCaptureMessage<PaymentPosition>> mapDataCapturePaymentPositionListString(final String string, TypeReference<List<DataCaptureMessage<PaymentPosition>>> outClass) throws JsonProcessingException {
         return objectMapper
                 .configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true)
-                .setSerializationInclusion(JsonInclude.Include.NON_NULL)
                 .readValue(string, outClass);
     }
 
@@ -86,7 +84,6 @@ public class ObjectMapperUtils {
     public static List<DataCaptureMessage<PaymentOption>> mapDataCapturePaymentOptionListString(final String string, TypeReference<List<DataCaptureMessage<PaymentOption>>> outClass) throws JsonProcessingException {
         return objectMapper
                 .configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true)
-                .setSerializationInclusion(JsonInclude.Include.NON_NULL)
                 .readValue(string, outClass);
     }
 
@@ -100,7 +97,6 @@ public class ObjectMapperUtils {
     public static List<DataCaptureMessage<Transfer>> mapDataCaptureTransferListString(final String string, TypeReference<List<DataCaptureMessage<Transfer>>> outClass) throws JsonProcessingException {
         return objectMapper
                 .configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true)
-                .setSerializationInclusion(JsonInclude.Include.NON_NULL)
                 .readValue(string, outClass);
     }
 
