@@ -4,7 +4,7 @@ import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.OutputBinding;
 import it.gov.pagopa.gpd.ingestion.manager.entity.PaymentOption;
 import it.gov.pagopa.gpd.ingestion.manager.entity.enumeration.PaymentOptionStatus;
-import it.gov.pagopa.gpd.ingestion.manager.model.DataCaptureMessage;
+import it.gov.pagopa.gpd.ingestion.manager.model.DataCapturePaymentOption;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -30,16 +30,16 @@ class PaymentOptionProcessorTest {
     private ExecutionContext context;
 
     @Captor
-    private ArgumentCaptor<List<DataCaptureMessage<PaymentOption>>> paymentOptionCaptor;
+    private ArgumentCaptor<List<DataCapturePaymentOption>> paymentOptionCaptor;
 
     @Test
     void runOk() {
 
-        List<DataCaptureMessage<PaymentOption>> paymentOptionItems = new ArrayList<>();
+        List<DataCapturePaymentOption> paymentOptionItems = new ArrayList<>();
         paymentOptionItems.add(generateValidPaymentOption());
 
         @SuppressWarnings("unchecked")
-        OutputBinding<List<DataCaptureMessage<PaymentOption>>> documentdb = (OutputBinding<List<DataCaptureMessage<PaymentOption>>>) spy(OutputBinding.class);
+        OutputBinding<List<DataCapturePaymentOption>> documentdb = (OutputBinding<List<DataCapturePaymentOption>>) spy(OutputBinding.class);
 
         function = new PaymentOptionProcessor();
 
@@ -47,11 +47,11 @@ class PaymentOptionProcessorTest {
         assertDoesNotThrow(() -> function.processPaymentOption(paymentOptionItems, documentdb, context));
 
         verify(documentdb).setValue(paymentOptionCaptor.capture());
-        DataCaptureMessage<PaymentOption> captured = paymentOptionCaptor.getValue().get(0);
+        DataCapturePaymentOption captured = paymentOptionCaptor.getValue().get(0);
         assertEquals(paymentOptionItems.get(0), captured);
     }
 
-    private DataCaptureMessage<PaymentOption> generateValidPaymentOption() {
+    private DataCapturePaymentOption generateValidPaymentOption() {
         PaymentOption po = PaymentOption.builder()
                 .id(0)
                 .paymentPositionId(0)
@@ -76,7 +76,7 @@ class PaymentOptionProcessorTest {
                 .lastUpdatedDateNotificationFee(new Date().getTime())
                 .build();
 
-        return DataCaptureMessage.<PaymentOption>builder()
+        return DataCapturePaymentOption.<PaymentOption>builder()
                 .before(po)
                 .after(po)
                 .op("c")

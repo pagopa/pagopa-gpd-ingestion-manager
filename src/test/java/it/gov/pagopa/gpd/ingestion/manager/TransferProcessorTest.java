@@ -4,7 +4,7 @@ import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.OutputBinding;
 import it.gov.pagopa.gpd.ingestion.manager.entity.Transfer;
 import it.gov.pagopa.gpd.ingestion.manager.entity.enumeration.TransferStatus;
-import it.gov.pagopa.gpd.ingestion.manager.model.DataCaptureMessage;
+import it.gov.pagopa.gpd.ingestion.manager.model.DataCaptureTransfer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -29,16 +29,16 @@ class TransferProcessorTest {
     private ExecutionContext context;
 
     @Captor
-    private ArgumentCaptor<List<DataCaptureMessage<Transfer>>> transferCaptor;
+    private ArgumentCaptor<List<DataCaptureTransfer>> transferCaptor;
 
     @Test
     void runOk() {
 
-        List<DataCaptureMessage<Transfer>> transferItems = new ArrayList<>();
+        List<DataCaptureTransfer> transferItems = new ArrayList<>();
         transferItems.add(generateValidTransfer());
 
         @SuppressWarnings("unchecked")
-        OutputBinding<List<DataCaptureMessage<Transfer>>> documentdb = (OutputBinding<List<DataCaptureMessage<Transfer>>>) spy(OutputBinding.class);
+        OutputBinding<List<DataCaptureTransfer>> documentdb = (OutputBinding<List<DataCaptureTransfer>>) spy(OutputBinding.class);
 
         function = new TransferProcessor();
 
@@ -46,11 +46,11 @@ class TransferProcessorTest {
         assertDoesNotThrow(() -> function.processTransfer(transferItems, documentdb, context));
 
         verify(documentdb).setValue(transferCaptor.capture());
-        DataCaptureMessage<Transfer> captured = transferCaptor.getValue().get(0);
+        DataCaptureTransfer captured = transferCaptor.getValue().get(0);
         assertEquals(transferItems.get(0), captured);
     }
 
-    private DataCaptureMessage<Transfer> generateValidTransfer() {
+    private DataCaptureTransfer generateValidTransfer() {
         Transfer tr = Transfer.builder()
                 .amount(0)
                 .category("category")
@@ -62,7 +62,7 @@ class TransferProcessorTest {
                 .status(TransferStatus.T_REPORTED)
                 .build();
 
-        return DataCaptureMessage.<Transfer>builder()
+        return DataCaptureTransfer.builder()
                 .before(tr)
                 .after(tr)
                 .op("c")

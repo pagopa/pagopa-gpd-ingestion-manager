@@ -6,8 +6,7 @@ import com.microsoft.azure.functions.annotation.Cardinality;
 import com.microsoft.azure.functions.annotation.EventHubOutput;
 import com.microsoft.azure.functions.annotation.EventHubTrigger;
 import com.microsoft.azure.functions.annotation.FunctionName;
-import it.gov.pagopa.gpd.ingestion.manager.entity.PaymentOption;
-import it.gov.pagopa.gpd.ingestion.manager.model.DataCaptureMessage;
+import it.gov.pagopa.gpd.ingestion.manager.model.DataCapturePaymentOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,12 +30,12 @@ public class PaymentOptionProcessor {
                     eventHubName = "", // blank because the value is included in the connection string
                     connection = "PAYMENT_OPTION_INPUT_EVENTHUB_CONN_STRING",
                     cardinality = Cardinality.MANY)
-            List<DataCaptureMessage<PaymentOption>> paymentOptionMsg,
+            List<DataCapturePaymentOption> paymentOptionMsg,
             @EventHubOutput(
                     name = "PaymentOptionOutput",
                     eventHubName = "", // blank because the value is included in the connection string
                     connection = "PAYMENT_OPTION_OUTPUT_EVENTHUB_CONN_STRING")
-            OutputBinding<List<DataCaptureMessage<PaymentOption>>> paymentPositionProcessed,
+            OutputBinding<List<DataCapturePaymentOption>> paymentPositionProcessed,
             final ExecutionContext context) {
 
         String message = String.format("PaymentOptionProcessor function called at %s with events list size %s", LocalDateTime.now(), paymentOptionMsg.size());

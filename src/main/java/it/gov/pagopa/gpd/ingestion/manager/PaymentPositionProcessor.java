@@ -8,7 +8,7 @@ import com.microsoft.azure.functions.annotation.EventHubTrigger;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import it.gov.pagopa.gpd.ingestion.manager.entity.PaymentPosition;
 import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerException;
-import it.gov.pagopa.gpd.ingestion.manager.model.DataCaptureMessage;
+import it.gov.pagopa.gpd.ingestion.manager.model.DataCapturePaymentPosition;
 import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerServiceRetryWrapper;
 import it.gov.pagopa.gpd.ingestion.manager.service.impl.PDVTokenizerServiceRetryWrapperImpl;
 import org.slf4j.Logger;
@@ -46,12 +46,12 @@ public class PaymentPositionProcessor {
                     eventHubName = "", // blank because the value is included in the connection string
                     connection = "PAYMENT_POSITION_INPUT_EVENTHUB_CONN_STRING",
                     cardinality = Cardinality.MANY)
-            List<DataCaptureMessage<PaymentPosition>> paymentPositionMsg,
+            List<DataCapturePaymentPosition> paymentPositionMsg,
             @EventHubOutput(
                     name = "PaymentPositionOutput",
                     eventHubName = "", // blank because the value is included in the connection string
                     connection = "PAYMENT_POSITION_OUTPUT_EVENTHUB_CONN_STRING")
-            OutputBinding<List<DataCaptureMessage<PaymentPosition>>> paymentPositionProcessed,
+            OutputBinding<List<DataCapturePaymentPosition>> paymentPositionProcessed,
             final ExecutionContext context) {
 
         String message = String.format("PaymentPositionProcessor function called at %s with events list size %s", LocalDateTime.now(), paymentPositionMsg.size());
@@ -59,8 +59,8 @@ public class PaymentPositionProcessor {
 
         // persist the item
         try {
-            List<DataCaptureMessage<PaymentPosition>> paymentPositionsTokenized = new ArrayList<>();
-            for (DataCaptureMessage<PaymentPosition> pp : paymentPositionMsg) {
+            List<DataCapturePaymentPosition> paymentPositionsTokenized = new ArrayList<>();
+            for (DataCapturePaymentPosition pp : paymentPositionMsg) {
                 PaymentPosition valuesBefore = pp.getBefore();
                 PaymentPosition valuesAfter = pp.getAfter();
 

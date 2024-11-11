@@ -6,7 +6,7 @@ import com.microsoft.azure.functions.OutputBinding;
 import it.gov.pagopa.gpd.ingestion.manager.entity.PaymentPosition;
 import it.gov.pagopa.gpd.ingestion.manager.entity.enumeration.PaymentPositionStatus;
 import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerException;
-import it.gov.pagopa.gpd.ingestion.manager.model.DataCaptureMessage;
+import it.gov.pagopa.gpd.ingestion.manager.model.DataCapturePaymentPosition;
 import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerServiceRetryWrapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,17 +39,17 @@ public class PaymentPositionProcessorTest {
     private PDVTokenizerServiceRetryWrapper pdvTokenizerServiceMock;
 
     @Captor
-    private ArgumentCaptor<List<DataCaptureMessage<PaymentPosition>>> paymentPositionCaptor;
+    private ArgumentCaptor<List<DataCapturePaymentPosition>> paymentPositionCaptor;
 
     @Test
     void runOk() throws PDVTokenizerException, JsonProcessingException {
         when(pdvTokenizerServiceMock.generateTokenForFiscalCodeWithRetry(FISCAL_CODE)).thenReturn(TOKENIZED_FISCAL_CODE);
 
-        List<DataCaptureMessage<PaymentPosition>> paymentPositionsItems = new ArrayList<>();
+        List<DataCapturePaymentPosition> paymentPositionsItems = new ArrayList<>();
         paymentPositionsItems.add(generateValidPaymentPosition(FISCAL_CODE, false));
 
         @SuppressWarnings("unchecked")
-        OutputBinding<List<DataCaptureMessage<PaymentPosition>>> documentdb = (OutputBinding<List<DataCaptureMessage<PaymentPosition>>>) spy(OutputBinding.class);
+        OutputBinding<List<DataCapturePaymentPosition>> documentdb = (OutputBinding<List<DataCapturePaymentPosition>>) spy(OutputBinding.class);
 
         function = new PaymentPositionProcessor(pdvTokenizerServiceMock);
 
@@ -57,7 +57,7 @@ public class PaymentPositionProcessorTest {
         assertDoesNotThrow(() -> function.processPaymentPosition(paymentPositionsItems, documentdb, context));
 
         verify(documentdb).setValue(paymentPositionCaptor.capture());
-        DataCaptureMessage<PaymentPosition> captured = paymentPositionCaptor.getValue().get(0);
+        DataCapturePaymentPosition captured = paymentPositionCaptor.getValue().get(0);
         assertNull(captured.getBefore());
         assertEquals(TOKENIZED_FISCAL_CODE, captured.getAfter().getFiscalCode());
     }
@@ -66,11 +66,11 @@ public class PaymentPositionProcessorTest {
     void runOkBothAfterAndBefore() throws PDVTokenizerException, JsonProcessingException {
         when(pdvTokenizerServiceMock.generateTokenForFiscalCodeWithRetry(FISCAL_CODE)).thenReturn(TOKENIZED_FISCAL_CODE);
 
-        List<DataCaptureMessage<PaymentPosition>> paymentPositionsItems = new ArrayList<>();
+        List<DataCapturePaymentPosition> paymentPositionsItems = new ArrayList<>();
         paymentPositionsItems.add(generateValidPaymentPosition(FISCAL_CODE, true));
 
         @SuppressWarnings("unchecked")
-        OutputBinding<List<DataCaptureMessage<PaymentPosition>>> documentdb = (OutputBinding<List<DataCaptureMessage<PaymentPosition>>>) spy(OutputBinding.class);
+        OutputBinding<List<DataCapturePaymentPosition>> documentdb = (OutputBinding<List<DataCapturePaymentPosition>>) spy(OutputBinding.class);
 
         function = new PaymentPositionProcessor(pdvTokenizerServiceMock);
 
@@ -78,18 +78,18 @@ public class PaymentPositionProcessorTest {
         assertDoesNotThrow(() -> function.processPaymentPosition(paymentPositionsItems, documentdb, context));
 
         verify(documentdb).setValue(paymentPositionCaptor.capture());
-        DataCaptureMessage<PaymentPosition> captured = paymentPositionCaptor.getValue().get(0);
+        DataCapturePaymentPosition captured = paymentPositionCaptor.getValue().get(0);
         assertEquals(TOKENIZED_FISCAL_CODE, captured.getBefore().getFiscalCode());
         assertEquals(TOKENIZED_FISCAL_CODE, captured.getAfter().getFiscalCode());
     }
 
     @Test
     void runInvalidFiscalCode() throws PDVTokenizerException, JsonProcessingException {
-        List<DataCaptureMessage<PaymentPosition>> paymentPositionsItems = new ArrayList<>();
+        List<DataCapturePaymentPosition> paymentPositionsItems = new ArrayList<>();
         paymentPositionsItems.add(generateValidPaymentPosition(INVALID_FISCAL_CODE, false));
 
         @SuppressWarnings("unchecked")
-        OutputBinding<List<DataCaptureMessage<PaymentPosition>>> documentdb = (OutputBinding<List<DataCaptureMessage<PaymentPosition>>>) spy(OutputBinding.class);
+        OutputBinding<List<DataCapturePaymentPosition>> documentdb = (OutputBinding<List<DataCapturePaymentPosition>>) spy(OutputBinding.class);
 
         function = new PaymentPositionProcessor(pdvTokenizerServiceMock);
 
@@ -98,18 +98,18 @@ public class PaymentPositionProcessorTest {
 
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
         verify(documentdb).setValue(paymentPositionCaptor.capture());
-        DataCaptureMessage<PaymentPosition> captured = paymentPositionCaptor.getValue().get(0);
+        DataCapturePaymentPosition captured = paymentPositionCaptor.getValue().get(0);
         assertNull(captured.getBefore());
         assertEquals(INVALID_FISCAL_CODE, captured.getAfter().getFiscalCode());
     }
 
     @Test
     void runInvalidFiscalCodeBothAfterAndBefore() throws PDVTokenizerException, JsonProcessingException {
-        List<DataCaptureMessage<PaymentPosition>> paymentPositionsItems = new ArrayList<>();
+        List<DataCapturePaymentPosition> paymentPositionsItems = new ArrayList<>();
         paymentPositionsItems.add(generateValidPaymentPosition(INVALID_FISCAL_CODE, true));
 
         @SuppressWarnings("unchecked")
-        OutputBinding<List<DataCaptureMessage<PaymentPosition>>> documentdb = (OutputBinding<List<DataCaptureMessage<PaymentPosition>>>) spy(OutputBinding.class);
+        OutputBinding<List<DataCapturePaymentPosition>> documentdb = (OutputBinding<List<DataCapturePaymentPosition>>) spy(OutputBinding.class);
 
         function = new PaymentPositionProcessor(pdvTokenizerServiceMock);
 
@@ -118,7 +118,7 @@ public class PaymentPositionProcessorTest {
 
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
         verify(documentdb).setValue(paymentPositionCaptor.capture());
-        DataCaptureMessage<PaymentPosition> captured = paymentPositionCaptor.getValue().get(0);
+        DataCapturePaymentPosition captured = paymentPositionCaptor.getValue().get(0);
         assertEquals(INVALID_FISCAL_CODE, captured.getBefore().getFiscalCode());
         assertEquals(INVALID_FISCAL_CODE, captured.getAfter().getFiscalCode());
     }
@@ -130,11 +130,11 @@ public class PaymentPositionProcessorTest {
 
         function = new PaymentPositionProcessor(pdvTokenizerServiceMock);
 
-        List<DataCaptureMessage<PaymentPosition>> paymentPositionsItems = new ArrayList<>();
+        List<DataCapturePaymentPosition> paymentPositionsItems = new ArrayList<>();
         paymentPositionsItems.add(generateValidPaymentPosition(FISCAL_CODE, false));
 
         @SuppressWarnings("unchecked")
-        OutputBinding<List<DataCaptureMessage<PaymentPosition>>> documentdb = (OutputBinding<List<DataCaptureMessage<PaymentPosition>>>) spy(OutputBinding.class);
+        OutputBinding<List<DataCapturePaymentPosition>> documentdb = (OutputBinding<List<DataCapturePaymentPosition>>) spy(OutputBinding.class);
 
         // test execution
         assertDoesNotThrow(() -> function.processPaymentPosition(paymentPositionsItems, documentdb, context));
@@ -142,7 +142,7 @@ public class PaymentPositionProcessorTest {
         verify(documentdb, never()).setValue(any());
     }
 
-    private DataCaptureMessage<PaymentPosition> generateValidPaymentPosition(String fiscalCode, boolean withBefore) {
+    private DataCapturePaymentPosition generateValidPaymentPosition(String fiscalCode, boolean withBefore) {
         PaymentPosition pp = PaymentPosition.builder()
                 .id(0)
                 .iupd("iupd")
@@ -160,11 +160,11 @@ public class PaymentPositionProcessorTest {
                 .validityDate(new Date().getTime())
                 .switchToExpired(false)
                 .paymentDate(new Date().getTime())
-                .lastUpdateDate(new Date().getTime())
+                .lastUpdatedDate(new Date().getTime())
                 .insertedDate(new Date().getTime())
                 .build();
 
-        return DataCaptureMessage.<PaymentPosition>builder()
+        return DataCapturePaymentPosition.builder()
                 .before(withBefore ? pp : null)
                 .after(pp)
                 .op("c")
