@@ -74,13 +74,13 @@ public class PaymentPositionProcessor {
                         context.getFunctionName(), LocalDateTime.now(), (valuesAfter != null ? valuesAfter : valuesBefore).getId());
 
                 // tokenize fiscal codes
+                if (valuesBefore != null && isValidFiscalCode(valuesBefore.getFiscalCode())) {
+                    valuesBefore.setFiscalCode(pdvTokenizerService.generateTokenForFiscalCodeWithRetry(valuesBefore.getFiscalCode()));
+                    pp.setBefore(valuesBefore);
+                }
                 if (valuesAfter != null && isValidFiscalCode(valuesAfter.getFiscalCode())) {
                     valuesAfter.setFiscalCode(pdvTokenizerService.generateTokenForFiscalCodeWithRetry(valuesAfter.getFiscalCode()));
                     pp.setAfter(valuesAfter);
-                }
-                if (valuesBefore != null && isValidFiscalCode(valuesBefore.getFiscalCode())) {
-                    valuesBefore.setFiscalCode(pdvTokenizerService.generateTokenForFiscalCodeWithRetry(valuesBefore.getFiscalCode()));
-                    pp.setAfter(valuesBefore);
                 }
 
                 paymentPositionsTokenized.add(pp);
