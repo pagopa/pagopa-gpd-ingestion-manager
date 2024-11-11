@@ -4,7 +4,8 @@ import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.OutputBinding;
 import it.gov.pagopa.gpd.ingestion.manager.entity.Transfer;
 import it.gov.pagopa.gpd.ingestion.manager.entity.enumeration.TransferStatus;
-import it.gov.pagopa.gpd.ingestion.manager.model.DataCaptureTransfer;
+import it.gov.pagopa.gpd.ingestion.manager.model.DataCaptureMessage;
+import it.gov.pagopa.gpd.ingestion.manager.utils.ObjectMapperUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -12,7 +13,7 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -29,16 +30,15 @@ class TransferProcessorTest {
     private ExecutionContext context;
 
     @Captor
-    private ArgumentCaptor<List<DataCaptureTransfer>> transferCaptor;
+    private ArgumentCaptor<List<DataCaptureMessage<Transfer>>> transferCaptor;
 
     @Test
     void runOk() {
-
-        List<DataCaptureTransfer> transferItems = new ArrayList<>();
-        transferItems.add(generateValidTransfer());
+        List<DataCaptureMessage<Transfer>> tList = Collections.singletonList(generateValidTransfer());
+        String transferItems = ObjectMapperUtils.writeValueAsString(tList);
 
         @SuppressWarnings("unchecked")
-        OutputBinding<List<DataCaptureTransfer>> documentdb = (OutputBinding<List<DataCaptureTransfer>>) spy(OutputBinding.class);
+        OutputBinding<List<DataCaptureMessage<Transfer>>> documentdb = (OutputBinding<List<DataCaptureMessage<Transfer>>>) spy(OutputBinding.class);
 
         function = new TransferProcessor();
 
@@ -46,11 +46,11 @@ class TransferProcessorTest {
         assertDoesNotThrow(() -> function.processTransfer(transferItems, documentdb, context));
 
         verify(documentdb).setValue(transferCaptor.capture());
-        DataCaptureTransfer captured = transferCaptor.getValue().get(0);
-        assertEquals(transferItems.get(0), captured);
+        DataCaptureMessage<Transfer> captured = transferCaptor.getValue().get(0);
+        assertEquals(tList.get(0).getBefore().getTransferId(), captured.getBefore().getTransferId());
     }
 
-    private DataCaptureTransfer generateValidTransfer() {
+    private DataCaptureMessage<Transfer> generateValidTransfer() {
         Transfer tr = Transfer.builder()
                 .amount(0)
                 .category("category")
@@ -62,7 +62,7 @@ class TransferProcessorTest {
                 .status(TransferStatus.T_REPORTED)
                 .build();
 
-        return DataCaptureTransfer.builder()
+        return DataCaptureMessage.<Transfer>builder()
                 .before(tr)
                 .after(tr)
                 .op("c")

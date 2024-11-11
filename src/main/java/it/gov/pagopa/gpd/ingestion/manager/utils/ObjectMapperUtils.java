@@ -1,9 +1,18 @@
 package it.gov.pagopa.gpd.ingestion.manager.utils;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.gov.pagopa.gpd.ingestion.manager.entity.PaymentOption;
+import it.gov.pagopa.gpd.ingestion.manager.entity.PaymentPosition;
+import it.gov.pagopa.gpd.ingestion.manager.entity.Transfer;
+import it.gov.pagopa.gpd.ingestion.manager.model.DataCaptureMessage;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
+
+import java.util.List;
 
 public class ObjectMapperUtils {
 
@@ -51,6 +60,48 @@ public class ObjectMapperUtils {
      */
     public static <T> T mapString(final String string, Class<T> outClass) throws JsonProcessingException {
         return objectMapper.readValue(string, outClass);
+    }
+
+    /**
+     * Maps string to object of DataCaptureMessage paymentPosition list
+     *
+     * @param string   String to map
+     * @param outClass Class to be mapped to
+     * @return object of the defined Class
+     */
+    public static List<DataCaptureMessage<PaymentPosition>> mapDataCapturePaymentPositionListString(final String string, TypeReference<List<DataCaptureMessage<PaymentPosition>>> outClass) throws JsonProcessingException {
+        return objectMapper
+                .configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true)
+                .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+                .readValue(string, outClass);
+    }
+
+    /**
+     * Maps string to object of DataCaptureMessage paymentOption list
+     *
+     * @param string   String to map
+     * @param outClass Class to be mapped to
+     * @return object of the defined Class
+     */
+    public static List<DataCaptureMessage<PaymentOption>> mapDataCapturePaymentOptionListString(final String string, TypeReference<List<DataCaptureMessage<PaymentOption>>> outClass) throws JsonProcessingException {
+        return objectMapper
+                .configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true)
+                .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+                .readValue(string, outClass);
+    }
+
+    /**
+     * Maps string to object of DataCaptureMessage transfer list
+     *
+     * @param string   String to map
+     * @param outClass Class to be mapped to
+     * @return object of the defined Class
+     */
+    public static List<DataCaptureMessage<Transfer>> mapDataCaptureTransferListString(final String string, TypeReference<List<DataCaptureMessage<Transfer>>> outClass) throws JsonProcessingException {
+        return objectMapper
+                .configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true)
+                .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+                .readValue(string, outClass);
     }
 
 

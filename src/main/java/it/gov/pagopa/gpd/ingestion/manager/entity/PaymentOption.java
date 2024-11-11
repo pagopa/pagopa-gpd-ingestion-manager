@@ -3,14 +3,13 @@ package it.gov.pagopa.gpd.ingestion.manager.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.gov.pagopa.gpd.ingestion.manager.entity.enumeration.PaymentOptionStatus;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PaymentOption {
     private int id;
@@ -18,7 +17,7 @@ public class PaymentOption {
     private int paymentPositionId;
     private int amount;
     private String description;
-    @NonNull
+
     @JsonProperty("due_date")
     private Long dueDate;
     private int fee;
@@ -26,20 +25,20 @@ public class PaymentOption {
     private String flowReportingId;
     @JsonProperty("receipt_id")
     private String receiptId;
-    @NonNull
+
     @JsonProperty("inserted_date")
     private Long insertedDate;
     @JsonProperty("is_partial_payment")
     private boolean isPartialPayment;
-    @NonNull
+
     private String iuv;
-    @NonNull
+
     @JsonProperty("last_update_date")
     private Long lastUpdateDate;
-    @NonNull
+
     @JsonProperty("organization_fiscal_code")
     private String organizationFiscalCode;
-    @NonNull
+
     private PaymentOptionStatus status;
     @JsonProperty("payment_date")
     private Long paymentDate;
