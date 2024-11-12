@@ -1,9 +1,9 @@
 microservice-chart:
-  namespace: "<namespace>" # TODO
+  namespace: "gps"
   nameOverride: ""
   fullnameOverride: ""
   image:
-    repository: pagopapcommonacr.azurecr.io/pagopa<project-name>  # TODO
+    repository: ghcr.io/pagopa/pagopa-gpd-ingestion-manager
     tag: "0.0.1"
     pullPolicy: Always
   # https://github.com/Azure/azure-functions-host/blob/dev/src/WebJobs.Script.WebHost/Controllers/HostController.cs
@@ -29,13 +29,13 @@ microservice-chart:
     port: 80
   ingress:
     create: true
-    host: "weuprod.<namespace>.internal.platform.pagopa.it"  # TODO
-    path: /pagopa-<project-name>-service/(.*) # TODO
+    host: "weuprod.gps.internal.platform.pagopa.it"
+    path: /pagopa-gpd-ingestion-manager/(.*)
   serviceAccount:
     create: false
-    annotations: {}
+    annotations: { }
     name: ""
-  podAnnotations: {}
+  podAnnotations: { }
   podSecurityContext:
     seccompProfile:
       type: RuntimeDefault
@@ -61,13 +61,32 @@ microservice-chart:
           type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
           value: "75"
   envConfig:
-    WEBSITE_SITE_NAME: "pagopa<project-name>" # required to show cloud role name in application insights # TODO
+    WEBSITE_SITE_NAME: "pagopagpdingestionmanager" # required to show cloud role name in application insights
     FUNCTIONS_WORKER_RUNTIME: "java"
+    PDV_TOKENIZER_BASE_PATH: "https://api.tokenizer.pdv.pagopa.it/tokenizer/v1"
+    PDV_TOKENIZER_INITIAL_INTERVAL: "200"
+    PDV_TOKENIZER_MULTIPLIER: "2.0"
+    PDV_TOKENIZER_RANDOMIZATION_FACTOR: "0.6"
+    PDV_TOKENIZER_MAX_RETRIES: "3"
+    ENABLE_ECS_CONSOLE: "true"
+    CONSOLE_LOG_THRESHOLD: "DEBUG"
+    CONSOLE_LOG_PATTERN: "%d{HH:mm:ss.SSS}[%thread]%-5level%logger{36}-%msg%n"
+    CONSOLE_LOG_CHARSET: "UTF-8"
+  envFieldRef:
+    APP_NAME: "metadata.labels['app.kubernetes.io/instance']"
+    APP_VERSION: "metadata.labels['app.kubernetes.io/version']"
   envSecret:
-    APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-d-connection-string' # TODO set in kv
+    APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-p-connection-string' # TODO set in kv
+    PAYMENT_POSITION_INPUT_EVENTHUB_CONN_STRING: "payment-position-topic-input-conn-string"
+    PAYMENT_POSITION_OUTPUT_EVENTHUB_CONN_STRING: "payment-position-topic-output-conn-string"
+    PAYMENT_OPTION_INPUT_EVENTHUB_CONN_STRING: "payment-option-topic-input-conn-string"
+    PAYMENT_OPTION_OUTPUT_EVENTHUB_CONN_STRING: "payment-option-topic-output-conn-string"
+    TRANSFER_INPUT_EVENTHUB_CONN_STRING: "transfer-topic-input-conn-string"
+    TRANSFER_OUTPUT_EVENTHUB_CONN_STRING: "transfer-topic-output-conn-string"
+    PDV_TOKENIZER_SUBSCRIPTION_KEY: "tokenizer-api-key"
   keyvault:
-    name: "pagopa-p-<namespace>-kv" # TODO
+    name: "pagopa-p-gps-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
-  nodeSelector: {}
-  tolerations: []
-  affinity: {}
+  nodeSelector: { }
+  tolerations: [ ]
+  affinity: { }
