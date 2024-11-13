@@ -28,6 +28,7 @@ microservice-chart:
     type: ClusterIP
     ports:
       - 8080
+      - 80
   ingress:
     create: true
     host: "weudev.gps.internal.dev.platform.pagopa.it"
