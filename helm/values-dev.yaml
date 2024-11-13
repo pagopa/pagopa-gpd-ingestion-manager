@@ -42,8 +42,8 @@ microservice-chart:
     seccompProfile:
       type: RuntimeDefault
   securityContext:
-    readOnlyRootFilesystem: true
-    allowPrivilegeEscalation: true
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
     capabilities:
       drop:
         - all
@@ -57,7 +57,7 @@ microservice-chart:
   autoscaling:
     enable: true
     minReplica: 1
-    maxReplica: 11
+    maxReplica: 1
     pollingInterval: 10 # seconds
     cooldownPeriod: 50 # seconds
     triggers:
@@ -116,7 +116,7 @@ microservice-chart:
     deployment:
       create: true
       image:
-        repository: ghcr.io/pagopa/pagopa-print-payment-notice-service
+        repository: ghcr.io/pagopa/pagopa-gpd-ingestion-manager
         tag: "0.0.0"
         pullPolicy: Always
       envConfig: {}
