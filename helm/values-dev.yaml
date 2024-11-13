@@ -1,7 +1,7 @@
 microservice-chart:
   namespace: "gps"
   nameOverride: ""
-  fullnameOverride: ""
+  fullnameOverride: "pagopa-gpd-ingestion-manager"
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-ingestion-manager
     tag: "0.0.5"
@@ -26,11 +26,13 @@ microservice-chart:
   service:
     create: true
     type: ClusterIP
-    port: 80
+    ports:
+      - 8080
   ingress:
     create: true
     host: "weudev.gps.internal.dev.platform.pagopa.it"
-    path: /pagopa-gpd-ingestion-manager/(.*) #
+    path: /pagopa-gpd-ingestion-manager/(.*)
+    servicePort: 8080
   serviceAccount:
     create: false
     annotations: {}
