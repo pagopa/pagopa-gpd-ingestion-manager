@@ -23,14 +23,27 @@ microservice-chart:
     periodSeconds: 10
   deployment:
     create: true
-  service:
+  serviceMonitor:
     create: true
+    endpoints:
+      - interval: 10s #jmx-exporter
+        targetPort: 12345
+        path: /metrics
+  ports:
+    - 80 #http
+    - 8080
+    - 12345 #jmx-exporter
+  service:
     type: ClusterIP
-    port: 80
+    ports:
+      - 80 #http
+      - 12345 #jmx-exporter
+      - 8080
   ingress:
     create: true
     host: "weuuat.gps.internal.uat.platform.pagopa.it"
     path: /pagopa-gpd-ingestion-manager/(.*)
+    servicePort: 8080
   serviceAccount:
     create: false
     annotations: {}
@@ -46,12 +59,12 @@ microservice-chart:
       memory: "512Mi"
       cpu: "0.25"
     limits:
-      memory: "512Mi"
-      cpu: "0.25"
+      memory: "768Mi"
+      cpu: "0.50"
   autoscaling:
     enable: true
-    minReplica: 3
-    maxReplica: 10
+    minReplica: 1
+    maxReplica: 1
     pollingInterval: 10 # seconds
     cooldownPeriod: 50 # seconds
     triggers:
@@ -59,7 +72,13 @@ microservice-chart:
         metadata:
           # Required
           type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
-          value: "75"
+          value: "80"
+      - type: memory
+        metadata:
+          # Required
+          type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+          value: "80"
+  fileConfig: {}
   envConfig:
     WEBSITE_SITE_NAME: "pagopagpdingestionmanager" # required to show cloud role name in application insights
     FUNCTIONS_WORKER_RUNTIME: "java"
@@ -76,7 +95,8 @@ microservice-chart:
     APP_NAME: "metadata.labels['app.kubernetes.io/instance']"
     APP_VERSION: "metadata.labels['app.kubernetes.io/version']"
   envSecret:
-    APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-u-connection-string' # TODO set in kv
+    AzureWebJobsStorage: 'AzureWebJobsStorage-gdp-ingestion'
+    APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-u-connection-string'
     PAYMENT_POSITION_INPUT_EVENTHUB_CONN_STRING: "payment-position-topic-input-conn-string"
     PAYMENT_POSITION_OUTPUT_EVENTHUB_CONN_STRING: "payment-position-topic-output-conn-string"
     PAYMENT_OPTION_INPUT_EVENTHUB_CONN_STRING: "payment-option-topic-input-conn-string"
@@ -89,6 +109,31 @@ microservice-chart:
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
   nodeSelector: {}
   tolerations: []
-  affinity: {}
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node_type
+                operator: In
+                values:
+                  - 'user'
   canaryDelivery:
     create: false
+    ingress:
+      create: true
+      canary:
+        type: header
+        headerName: X-Canary
+        headerValue: canary
+        weightPercent: 0
+    service:
+      create: true
+    deployment:
+      create: false
+      image:
+        repository: ghcr.io/pagopa/pagopa-gpd-ingestion-manager
+        tag: "0.0.0"
+        pullPolicy: Always
+      envConfig: {}
+      envSecret: {}
