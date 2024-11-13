@@ -51,7 +51,7 @@ data "azurerm_key_vault_secret" "key_vault_cucumber_token" {
   key_vault_id = data.azurerm_key_vault.key_vault.id
 }
 
-data "azurerm_key_vault_secret" "key_vault_integration_test_webhook_slack" {
-  name         = "webhook-slack"
-  key_vault_id = data.azurerm_key_vault.domain_key_vault.id
-}
+# data "azurerm_key_vault_secret" "key_vault_integration_test_webhook_slack" {
+#   name         = "webhook-slack"
+#   key_vault_id = data.azurerm_key_vault.domain_key_vault.id
+# }
