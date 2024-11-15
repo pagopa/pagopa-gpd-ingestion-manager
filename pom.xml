@@ -5,7 +5,7 @@
 
     <groupId>it.gov.pagopa.gps</groupId>
     <artifactId>gpd-ingestion-manager</artifactId>
-    <version>0.0.9</version>
+    <version>0.0.10</version>
     <packaging>jar</packaging>
 
     <name>pagopa-gpd-ingestion-manager</name>
