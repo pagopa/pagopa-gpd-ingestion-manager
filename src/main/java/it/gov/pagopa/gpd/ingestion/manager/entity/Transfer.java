@@ -31,4 +31,7 @@ public class Transfer {
     private String organizationFiscalCode;
 
     private TransferStatus status;
+
+    @JsonProperty("payment_option_id")
+    private int paymentOptionId;
 }
