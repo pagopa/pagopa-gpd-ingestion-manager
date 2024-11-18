@@ -1,0 +1,13 @@
+{
+  "name": "kafka-to-redis",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "test": "node kafka_event_hub_client.js"
+  },
+  "devDependencies": {
+    "kafkajs": "^2.2.4",
+    "redis": "^4.7.0"
+  }
+}
