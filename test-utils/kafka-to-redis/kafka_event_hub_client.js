@@ -1,31 +1,34 @@
 const { Kafka } = require('kafkajs')
 const { createClient } = require('redis');
 
-const connectionString = process.env.INGESTION_EVENTHUB_CONN_STRING;
+const evhHost = process.env.INGESTION_EVENTHUB_HOST;
+const evhConnectionString = process.env.INGESTION_EVENTHUB_CONN_STRING;
+const redisHost = process.env.REDIS_HOST;
+const redisPort = process.env.REDIS_PORT;
 
 async function eventHubToRedisHandler() {
     try {
         const kafka = new Kafka({
-            clientId: 'my-app', brokers: ['pagopa-d-itn-observ-gpd-evh.servicebus.windows.net:9093'],   // 
+            clientId: 'my-app', brokers: [evhHost],   // 
             authenticationTimeout: 10000, // 
             reauthenticationThreshold: 10000,
             ssl: true,
             sasl: {
                 mechanism: 'plain', // scram-sha-256 or scram-sha-512
                 username: '$ConnectionString',
-                password: ""
+                password: evhConnectionString
             },
         })
         // Connect to Kafka broker
         const consumer = kafka.consumer({ groupId: 'gpd-ingestion-integration-test-consumer-group' });
         await consumer.connect();
-        await consumer.subscribe({ topics: ['gpd-ingestion.apd.payment_position'] })
+        await consumer.subscribe({ topics: ['gpd-ingestion.apd.payment_position', 'gpd-ingestion.apd.payment_option', 'gpd-ingestion.apd.transfer'] })
 
         // Create Redis client
         const client = createClient({
             socket: {
-                port: "6379",
-                host: "127.0.0.1"
+                port: redisPort,
+                host: redisHost
             }
         });
         client.on('error', err => console.log('Redis Client Error', err))

@@ -4,9 +4,11 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "test": "node kafka_event_hub_client.js"
+    "start": "dotenv -e ./config/.env.local node kafka_event_hub_client.js"
   },
   "devDependencies": {
+    "dotenv": "^16.1.4",
+    "dotenv-cli": "^7.2.1",
     "kafkajs": "^2.2.4",
     "redis": "^4.7.0"
   }
