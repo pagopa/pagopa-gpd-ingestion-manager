@@ -65,6 +65,7 @@ jobs:
           export SUBKEY=${{ secrets.SUBKEY }}
           export CANARY=${{ inputs.canary }}
           export CUCUMBER_PUBLISH_TOKEN=${{ secrets.CUCUMBER_PUBLISH_TOKEN }}
+          export PG_GPD_PASSWORD=${{ secrets.PG_GPD_PASSWORD }}
 
           cd ./integration-test
           chmod +x ./run_integration_test.sh
