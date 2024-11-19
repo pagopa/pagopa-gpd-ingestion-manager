@@ -9,7 +9,7 @@ const redisPort = process.env.REDIS_PORT;
 async function eventHubToRedisHandler() {
     try {
         const kafka = new Kafka({
-            clientId: 'my-app', brokers: [evhHost],   // 
+            clientId: 'kafka-to-redis-app', brokers: [evhHost],   // 
             authenticationTimeout: 10000, // 
             reauthenticationThreshold: 10000,
             ssl: true,
@@ -46,7 +46,6 @@ async function eventHubToRedisHandler() {
                 writeOnRedis(client, decoder, message);
             },
         })
-
         
         // when call client close?
         // await client.quit();
@@ -56,11 +55,10 @@ async function eventHubToRedisHandler() {
 }
 
 async function writeOnRedis(client, decoder, message) {
-    let decodedMessage = JSON.parse(decoder.decode(message.value));
-    console.log(decodedMessage)
+    let messageBody = decoder.decode(message.value);
+    let decodedMessage = JSON.parse(messageBody);
     let id = getEventId(decodedMessage);
-    console.log("ID ", id);
-    await client.set(id, message);
+    await client.set(id, messageBody);
 }
 
 function getEventId(event) {

@@ -51,11 +51,13 @@ jobs:
           tenant-id: ${{ secrets.TENANT_ID }}
           subscription-id: ${{ secrets.SUBSCRIPTION_ID }}
 
-      - name: Run Redis container on Docker
+      - name: Run Kafka to Redis utils on Docker
         shell: bash
-        id: run_redis_docker
+        id: run_kafka_to_redis_docker
         run: |
-          docker run -p 10001:6379 -p 13333:8001 --network=host redis/redis-stack:latest
+          cd ./test-utils
+          chmod +x ./run_compose.sh
+          ./run_compose.sh ${{ secrets.INGESTION_EVENTHUB_CONN_STRING }}
 
       - name: Run Integration Tests
         shell: bash

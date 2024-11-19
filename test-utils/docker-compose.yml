@@ -7,3 +7,8 @@ services:
   kafka-to-redis:
     restart: on-failure
     build: ./kafka-to-redis
+    environment:
+      - INGESTION_EVENTHUB_HOST=pagopa-d-itn-observ-gpd-evh.servicebus.windows.net:9093
+      - INGESTION_EVENTHUB_CONN_STRING=${INGESTION_EVENTHUB_CONN_STRING}
+      - REDIS_PORT=6379
+      - REDIS_HOST=redis
