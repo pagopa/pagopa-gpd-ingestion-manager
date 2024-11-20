@@ -25,7 +25,8 @@ locals {
     "TENANT_ID" : data.azurerm_client_config.current.tenant_id,
     "SUBSCRIPTION_ID" : data.azurerm_subscription.current.subscription_id,
     "INGESTION_EVENTHUB_CONN_STRING" : data.azurerm_key_vault_secret.key_vault_integration_test_evh_conn_string.value,
-    "PG_GPD_PASSWORD" : data.azurerm_key_vault_secret.key_vault_integration_test_gpd_db_apd_user_psw.value
+    "PG_GPD_PASSWORD" : data.azurerm_key_vault_secret.key_vault_integration_test_gpd_db_apd_user_psw.value,
+    "PG_GPD_USERNAME" : data.azurerm_key_vault_secret.key_vault_integration_test_gpd_db_apd_user_name.value
   }
   env_variables = {
     "CONTAINER_APP_ENVIRONMENT_NAME" : local.container_app_environment.name,
