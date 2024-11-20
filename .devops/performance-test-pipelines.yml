@@ -1,0 +1,39 @@
+# azure-pipelines.yml
+trigger: none
+
+parameters:
+  - name: "ENVIRONMENT"
+    displayName: "Environment"
+    type: string
+    values:
+      - "dev"
+      - "uat"
+    default: "uat"
+  - name: "NUMBER_OF_EVENTS"
+    displayName: "Number of events"
+    type: number
+    default: 50
+variables:
+  ${{ if eq(parameters['ENVIRONMENT'], 'dev') }}:
+    poolImage: "pagopa-dev-loadtest-linux"
+    PG_GPD_PASSWORD: "$(DEV_PG_GPD_PASSWORD)"
+  ${{ if eq(parameters['ENVIRONMENT'], 'uat') }}:
+    poolImage: "pagopa-uat-loadtest-linux"
+    PG_GPD_PASSWORD: "$(UAT_PG_GPD_PASSWORD)"
+
+pool:
+  name: $(poolImage)
+
+steps:
+  - script: |
+      cd ./performance-test/src
+      npm install
+      docker build -f ./Dockerfile -t exec-node .
+      docker run --rm --name initToRunk6 \
+      -e PG_GPD_PASSWORD=${PG_GPD_PASSWORD} \
+      -e NUMBER_OF_EVENTS=${NUMBER_OF_EVENTS} \
+      exec-node
+    displayName: Run GPD Ingestion Timestamp Review
+    env:
+      PG_GPD_PASSWORD: ${{ variables.PG_GPD_PASSWORD }}
+      NUMBER_OF_EVENTS: ${{ variables.NUMBER_OF_EVENTS }}

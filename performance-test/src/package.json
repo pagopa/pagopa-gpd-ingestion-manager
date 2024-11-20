@@ -1,0 +1,11 @@
+{
+  "type": "module",
+  "dependencies": {},
+  "scripts": {
+    "start-performance-review": "export $(cat .env | xargs) && node ./gpd_ingestion_test.js"
+  },
+  "devDependencies": {
+    "pg": "^8.13.1",
+    "redis": "^4.7.0"
+  }
+}

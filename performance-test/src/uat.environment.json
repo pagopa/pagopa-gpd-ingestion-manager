@@ -1,0 +1,10 @@
+{
+  "environment": [
+    {
+      "env": "uat",
+      "PG_GPD_USERNAME": "apduser",
+      "PG_GPD_SERVER_NAME": "pagopa-u-weu-gpd-pgflex.postgres.database.azure.com",
+      "PG_GPD_DATABASE_NAME": "apd"
+    }
+  ]
+}
