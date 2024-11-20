@@ -3,11 +3,13 @@ const { createClient } = require('redis');
 
 const evhHost = process.env.INGESTION_EVENTHUB_HOST;
 const evhConnectionString = process.env.INGESTION_EVENTHUB_CONN_STRING;
+const evhTopics = process.env.INGESTION_EVENTHUB_TOPICS.split(',');
 const redisHost = process.env.REDIS_HOST;
 const redisPort = process.env.REDIS_PORT;
 
 async function eventHubToRedisHandler() {
     try {
+        console.log("TOPICS ", evhTopics);
         const kafka = new Kafka({
             clientId: 'kafka-to-redis-app', brokers: [evhHost],   // 
             authenticationTimeout: 10000, // 
@@ -22,8 +24,7 @@ async function eventHubToRedisHandler() {
         // Connect to Kafka broker
         const consumer = kafka.consumer({ groupId: 'gpd-ingestion-integration-test-consumer-group' });
         await consumer.connect();
-        await consumer.subscribe({ topics: ['gpd-ingestion.apd.payment_position', 'gpd-ingestion.apd.payment_option', 'gpd-ingestion.apd.transfer'] })
-
+        await consumer.subscribe({ topics: evhTopics })
         // Create Redis client
         const client = createClient({
             socket: {
@@ -43,7 +44,7 @@ async function eventHubToRedisHandler() {
         let decoder = new TextDecoder("utf-8");
         await consumer.run({
             eachMessage: async ({ topic, partition, message, heartbeat, pause }) => {
-                writeOnRedis(client, decoder, message);
+                writeOnRedis(client, decoder, message, topic);
             },
         })
         
@@ -54,20 +55,21 @@ async function eventHubToRedisHandler() {
     }
 }
 
-async function writeOnRedis(client, decoder, message) {
+async function writeOnRedis(client, decoder, message, topic) {
     let messageBody = decoder.decode(message.value);
     let decodedMessage = JSON.parse(messageBody);
-    let id = getEventId(decodedMessage);
+    let id = getEventId(decodedMessage, topic);
     await client.set(id, messageBody);
 }
 
-function getEventId(event) {
+function getEventId(event, topic) {
+    let topicSuffix = topic.contain("raw") ? "-raw" : "-ing";
     if (event.op === "c") {
-        return event.after.id + "-c";
+        return event.after.id + `${topicSuffix}-c`;
     } else if (event.op === "d") {
-        return event.before.id + "-d";
+        return event.before.id + `${topicSuffix}-d`;
     } else {
-        return event.after.id + "-u";
+        return event.after.id + `${topicSuffix}-u`;
     }
 }
 
