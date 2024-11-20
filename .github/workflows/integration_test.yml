@@ -57,7 +57,7 @@ jobs:
         run: |
           cd ./test-utils
           chmod +x ./run_compose.sh
-          ./run_compose.sh ${{ secrets.INGESTION_EVENTHUB_CONN_STRING }}
+          ./run_compose.sh "${{ secrets.INGESTION_EVENTHUB_CONN_STRING }}" "gpd-ingestion.apd.payment_position,gpd-ingestion.apd.payment_option,gpd-ingestion.apd.transfer"
 
       - name: Run Integration Tests
         shell: bash

@@ -12,6 +12,9 @@ import lombok.*;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Transfer {
+
+    private int id;
+    
     private int amount;
 
     private String category;
