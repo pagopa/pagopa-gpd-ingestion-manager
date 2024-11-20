@@ -1,5 +1,5 @@
-import { REDIS_ARRAY_IDS_NOT_TOKENIZED, REDIS_ARRAY_IDS_TOKENIZED } from "../modules/common.js";
-import { readFromRedisWithKey, shutDownClient } from "../modules/redis_client.js";
+const { REDIS_ARRAY_IDS_NOT_TOKENIZED, REDIS_ARRAY_IDS_TOKENIZED } = require("../modules/common.js");
+const { readFromRedisWithKey, shutDownClient } = require("../modules/redis_client.js");
 
 const REDIS_RAW_SUFFIX = "-raw-c";
 const REDIS_ING_SUFFIX = "-ing-c";

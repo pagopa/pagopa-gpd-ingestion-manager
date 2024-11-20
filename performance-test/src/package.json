@@ -1,5 +1,6 @@
 {
-  "type": "module",
+  "name": "pagopa-gpd-ingestion-manager",
+  "version": "0.0.1",
   "dependencies": {},
   "scripts": {
     "start-load-events": "export $(cat .env | xargs) && node ./gpd_ingestion_test.js",
@@ -7,6 +8,7 @@
   },
   "devDependencies": {
     "pg": "^8.13.1",
-    "redis": "^4.7.0"
+    "redis": "^4.7.0",
+    "dotenv": "^16.1.4"
   }
 }

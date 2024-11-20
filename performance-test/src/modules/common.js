@@ -1,11 +1,13 @@
-export const VALID_CF = "PRFGPD24S20B157N";
-export const INVALID_CF = "invalidCF";
-export const entityIdentifier = "PERFORMANCE_TEST_GPD_INGESTION";
-export const REDIS_ARRAY_IDS_TOKENIZED = "redisTokenized";
-export const REDIS_ARRAY_IDS_NOT_TOKENIZED = "redisNotTokenized";
+const VALID_CF = "PRFGPD24S20B157N";
+const INVALID_CF = "invalidCF";
+const ENTITY_IDENTIFIER = "PERFORMANCE_TEST_GPD_INGESTION";
+const REDIS_ARRAY_IDS_TOKENIZED = "redisTokenized";
+const REDIS_ARRAY_IDS_NOT_TOKENIZED = "redisNotTokenized";
 
-export function randomString(length, charset) {
-    let res = '';
-    while (length--) res += charset[(Math.random() * charset.length) | 0];
-    return res;
+module.exports = {
+    VALID_CF,
+    INVALID_CF,
+    ENTITY_IDENTIFIER,
+    REDIS_ARRAY_IDS_TOKENIZED,
+    REDIS_ARRAY_IDS_NOT_TOKENIZED
 }
