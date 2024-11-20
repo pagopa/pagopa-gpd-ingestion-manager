@@ -63,7 +63,7 @@ async function writeOnRedis(client, decoder, message, topic) {
 }
 
 function getEventId(event, topic) {
-    let topicSuffix = topic.contain("raw") ? "-raw" : "-ing";
+    let topicSuffix = topic.includes("raw") ? "-raw" : "-ing";
     if (event.op === "c") {
         return event.after.id + `${topicSuffix}-c`;
     } else if (event.op === "d") {

@@ -10,6 +10,6 @@ services:
     environment:
       - INGESTION_EVENTHUB_HOST=pagopa-d-itn-observ-gpd-evh.servicebus.windows.net:9093
       - INGESTION_EVENTHUB_CONN_STRING=${INGESTION_EVENTHUB_CONN_STRING}
-      - INGESTION_EVENTHUB_TOPICS=gpd-ingestion.apd.payment_position,gpd-ingestion.apd.payment_option,gpd-ingestion.apd.transfer
+      - INGESTION_EVENTHUB_TOPICS=${INGESTION_EVENTHUB_TOPICS}
       - REDIS_PORT=6379
       - REDIS_HOST=redis
