@@ -1,0 +1,20 @@
+{
+  "name": "pagopa-gpd-ingestion-manager",
+  "license": "MIT",
+  "version": "0.0.1",
+  "scripts": {
+    "test": "dotenv -e ./config/.env.local yarn cucumber",
+    "test:local": "dotenv -e ./config/.env.local yarn cucumber",
+    "test:dev": "dotenv -e ./config/.env.dev yarn cucumber",
+    "test:uat": "dotenv -e ./config/.env.uat yarn cucumber",
+    "cucumber": "npx cucumber-js --publish -r step_definitions"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^9.1.2",
+    "dotenv": "^16.1.4",
+    "dotenv-cli": "^7.2.1",
+    "npx": "^10.2.2",
+    "pg": "^8.13.1",
+    "redis": "^4.7.0"
+  }
+}
