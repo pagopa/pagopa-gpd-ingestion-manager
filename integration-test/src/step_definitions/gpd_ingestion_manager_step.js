@@ -82,15 +82,16 @@ When('the payment position operations have been properly published on data lake 
 });
 
 Then('the data lake topic returns the payment position {string} operation with id {string}', async function (operation, id) {
-  let pp = await readFromRedisWithKey(id);
+  let operationMessage = await readFromRedisWithKey(id);
+  let pp = JSON.parse(operationMessage).value;
   if (operation === "create") {
-    this.paymentPositionCreateOp = JSON.parse(pp);
+    this.paymentPositionCreateOp = pp;
     assert.strictEqual(this.paymentPositionCreateOp.op, "c");
   } else if (operation === "update") {
-    this.paymentPositionUpdateOp = JSON.parse(pp);
+    this.paymentPositionUpdateOp = pp;
     assert.strictEqual(this.paymentPositionUpdateOp.op, "u");
   } else if (operation === "delete") {
-    this.paymentPositionDeleteOp = JSON.parse(pp);
+    this.paymentPositionDeleteOp = pp;
     assert.strictEqual(this.paymentPositionDeleteOp.op, "d");
   }
 });
@@ -142,15 +143,16 @@ When('the payment option operations have been properly published on data lake ev
 });
 
 Then('the data lake topic returns the payment option {string} operation with id {string}', async function (operation, id) {
-  let po = await readFromRedisWithKey(id);
+  let operationMessage = await readFromRedisWithKey(id);
+  let po = JSON.parse(operationMessage).value;
   if (operation === "create") {
-    this.paymentOptionCreateOp = JSON.parse(po);
+    this.paymentOptionCreateOp = po;
     assert.strictEqual(this.paymentOptionCreateOp.op, "c");
   } else if (operation === "update") {
-    this.paymentOptionUpdateOp = JSON.parse(po);
+    this.paymentOptionUpdateOp = po;
     assert.strictEqual(this.paymentOptionUpdateOp.op, "u");
   } else if (operation === "delete") {
-    this.paymentOptionDeleteOp = JSON.parse(po);
+    this.paymentOptionDeleteOp = po;
     assert.strictEqual(this.paymentOptionDeleteOp.op, "d");
   }
 });

@@ -57,9 +57,10 @@ async function eventHubToRedisHandler() {
 
 async function writeOnRedis(client, decoder, message, topic) {
     let messageBody = decoder.decode(message.value);
-    let decodedMessage = JSON.parse(messageBody);
-    let id = getEventId(decodedMessage, topic);
-    await client.set(id, messageBody);
+    let decodedMessageBody = JSON.parse(messageBody);
+    let id = getEventId(decodedMessageBody, topic);
+    message.value = decodedMessageBody;
+    await client.set(id, JSON.stringify(message));
 }
 
 function getEventId(event, topic) {
