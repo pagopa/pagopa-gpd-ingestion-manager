@@ -1,5 +1,5 @@
 import { REDIS_ARRAY_IDS_NOT_TOKENIZED, REDIS_ARRAY_IDS_TOKENIZED } from "../modules/common.js";
-import { readFromRedisWithKey } from "../modules/redis_client.js";
+import { readFromRedisWithKey, shutDownClient } from "../modules/redis_client.js";
 
 const REDIS_RAW_SUFFIX = "-raw-c";
 const REDIS_ING_SUFFIX = "-ing-c";
@@ -38,7 +38,7 @@ const reviewIngestionTimeToProcess = async () => {
         const rawMsg = readFromRedisWithKey(id + REDIS_RAW_SUFFIX);
 
         if (rawMsg) {
-            const rawMsgValue = JSON.parse(rawMsg.value.toString());
+            const rawMsgValue = JSON.parse(rawMsg).value;
             console.log("Processing raw message with id: " + rawMsgValue.after.id);
 
             // CALCULATE TIME TO CAPTURE
@@ -52,7 +52,7 @@ const reviewIngestionTimeToProcess = async () => {
             const tokenizedMsg = readFromRedisWithKey(id + REDIS_ING_SUFFIX);
 
             if (tokenizedMsg) {
-                const tokenizedMsgValue = JSON.parse(tokenizedMsg.value.toString());
+                const tokenizedMsgValue = JSON.parse(tokenizedMsg).value;
                 console.log("Processing tokenized message with id: " + tokenizedMsgValue.after.id);
 
                 // CALCULATE TIME TO TOKENIZE
@@ -62,9 +62,11 @@ const reviewIngestionTimeToProcess = async () => {
                 minTimeRawToTokenize = minTimeRawToTokenize === null || timeRawToTokenize < minTimeRawToTokenize ? timeRawToTokenize : minTimeRawToTokenize;
                 maxTimeRawToTokenize = maxTimeRawToTokenize === null || timeRawToTokenize > maxTimeRawToTokenize ? timeRawToTokenize : maxTimeRawToTokenize;
             } else {
+                console.log("Fail to tokenize message with id: " + id);
                 failedTokenized += 1;
             }
         } else {
+            console.log("Fail to capture message with id: " + id);
             failedRaw += 1;
         }
 
@@ -76,7 +78,7 @@ const reviewIngestionTimeToProcess = async () => {
 
         if (rawMsg) {
             const rawMsgValue = JSON.parse(rawMsg.value.toString());
-            console.log("Processing raw message with id: " + rawMsgValue.after.id);
+            console.log("Processing raw message with id: " + id);
 
             // CALCULATE TIME TO CAPTURE
             let timePsgToRaw = rawMsgValue.source.tsMs - rawMsgValue.tsMs;
@@ -90,7 +92,7 @@ const reviewIngestionTimeToProcess = async () => {
 
             if (ingestedMsg) {
                 const ingestedMsgValue = JSON.parse(ingestedMsg.value.toString());
-                console.log("Processing ingested message with id: " + ingestedMsgValue.after.id);
+                console.log("Processing ingested message with id: " + id);
 
                 // CALCULATE TIME TO INGEST WITHOUT TOKENIZER
                 let timeRawToIngest = rawMsg.timestamp - ingestedMsgValue.timestamp;
@@ -99,9 +101,11 @@ const reviewIngestionTimeToProcess = async () => {
                 minTimeRawToIngest = minTimeRawToIngest === null || timeRawToIngest < minTimeRawToIngest ? timeRawToIngest : minTimeRawToIngest;
                 maxTimeRawToIngest = maxTimeRawToIngest === null || timeRawToIngest > maxTimeRawToIngest ? timeRawToIngest : maxTimeRawToIngest;
             } else {
+                console.log("Fail to ingest message with id: " + id);
                 failedIngested += 1;
             }
         } else {
+            console.log("Fail to capture message with id: " + id);
             failedRaw += 1;
         }
     }
@@ -110,15 +114,15 @@ const reviewIngestionTimeToProcess = async () => {
     console.log("/----------- METRICS -----------/");
     console.log("/////////////////////////////////");
     console.log("--------------------------------");
-    console.log(`mean time psg to evh..............: ${totalTimePsgToRaw ? getTimeString(Math.round(totalTimePsgToRaw / arrayTimePsgToRaw.length)) : "-"}`);
+    console.log(`mean time to capture..............: ${totalTimePsgToRaw ? getTimeString(Math.round(totalTimePsgToRaw / arrayTimePsgToRaw.length)) : "-"}`);
     console.log(`mean time to tokenize.............: ${totalTimeRawToTokenize ? getTimeString(Math.round(totalTimeRawToTokenize / arrayTimeRawToTokenize.length)) : "-"}`);
     console.log(`mean time to ingest...............: ${totalTimeRawToIngest ? getTimeString(Math.round(totalTimeRawToIngest / arrayTimeRawToIngest.length)) : "-"}`);
     console.log("--------------------------------");
-    console.log(`min time psg to evh...............: ${minTimePsgToRaw ? getTimeString(minTimePsgToRaw) : "-"}`);
+    console.log(`min time to capture...............: ${minTimePsgToRaw ? getTimeString(minTimePsgToRaw) : "-"}`);
     console.log(`min time to tokenize..............: ${minTimeRawToTokenize ? getTimeString(minTimeRawToTokenize) : "-"}`);
     console.log(`min time to ingest................: ${minTimeRawToIngest ? getTimeString(minTimeRawToIngest) : "-"}`);
     console.log("--------------------------------");
-    console.log(`max time psg to evh...............: ${maxTimePsgToRaw ? getTimeString(maxTimePsgToRaw) : "-"}`);
+    console.log(`max time to capture...............: ${maxTimePsgToRaw ? getTimeString(maxTimePsgToRaw) : "-"}`);
     console.log(`max time to tokenize..............: ${maxTimeRawToTokenize ? getTimeString(maxTimeRawToTokenize) : "-"}`);
     console.log(`max time to ingest................: ${maxTimeRawToIngest ? getTimeString(maxTimeRawToIngest) : "-"}`);
     console.log("--------------------------------");
@@ -128,6 +132,8 @@ const reviewIngestionTimeToProcess = async () => {
     console.log("/////////////////////////////////");
     console.log("/------------- END -------------/");
     console.log("/////////////////////////////////");
+
+    shutDownClient();
 }
 
 function getTimeString(time) {

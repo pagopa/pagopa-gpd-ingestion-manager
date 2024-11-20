@@ -2,7 +2,8 @@
   "type": "module",
   "dependencies": {},
   "scripts": {
-    "start-performance-review": "export $(cat .env | xargs) && node ./gpd_ingestion_test.js"
+    "start-load-events": "export $(cat .env | xargs) && node ./gpd_ingestion_test.js",
+    "start-performance-review": "export $(cat .env | xargs) && node ./scripts/review_script.js"
   },
   "devDependencies": {
     "pg": "^8.13.1",

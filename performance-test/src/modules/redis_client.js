@@ -1,4 +1,4 @@
-import {createClient} from "redis";
+import { createClient } from "redis";
 
 const redisHost = "127.0.0.1";
 const redisPort = "6379";
@@ -21,14 +21,14 @@ async function readFromRedisWithKey(key) {
     return await client.get(key);
 }
 
-async function setValueRedis({key, value}){
+async function setValueRedis({ key, value }) {
     return await client.set(key, value);
 }
 
 async function shutDownClient() {
     await client.quit();
-  }
+}
 
 module.exports = {
     readFromRedisWithKey, shutDownClient, setValueRedis
-  }
+}
