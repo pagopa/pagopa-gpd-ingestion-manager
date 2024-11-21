@@ -11,8 +11,8 @@ async function eventHubToRedisHandler() {
     try {
         console.log("TOPICS ", evhTopics);
         const kafka = new Kafka({
-            clientId: 'kafka-to-redis-app', brokers: [evhHost],   // 
-            authenticationTimeout: 10000, // 
+            clientId: 'kafka-to-redis-app', brokers: [evhHost],   //
+            authenticationTimeout: 10000, //
             reauthenticationThreshold: 10000,
             ssl: true,
             sasl: {
@@ -44,10 +44,12 @@ async function eventHubToRedisHandler() {
         let decoder = new TextDecoder("utf-8");
         await consumer.run({
             eachMessage: async ({ topic, partition, message, heartbeat, pause }) => {
-                writeOnRedis(client, decoder, message, topic);
+                if(message && message.value){
+                    writeOnRedis(client, decoder, message, topic)
+                }
             },
         })
-        
+
         // when call client close?
         // await client.quit();
     } catch (e) {
