@@ -13,17 +13,17 @@ async function insertEvents() {
     console.log("Selected number of events: ", NUMBER_OF_EVENTS);
     // SAVE ON DB paymentPositions
     for (let i = 0; i < NUMBER_OF_EVENTS; i++) {
-        const timestamp = Number(new Date().getTime());
-        const idValidFiscalCode = timestamp + i;
+        const uniqueId = 120798 + i;
+        const idValidFiscalCode = uniqueId;
         await insertPaymentPositionWithValidFiscalCode(idValidFiscalCode);
         arrayIdTokenized.push(idValidFiscalCode);
 
-        const idInvalidFiscalCode = timestamp + i + (NUMBER_OF_EVENTS * 2);
+        const idInvalidFiscalCode = uniqueId + (NUMBER_OF_EVENTS * 2);
         await insertPaymentPositionWithInvalidFiscalCode(idInvalidFiscalCode);
         arrayIdNotTokenized.push(idInvalidFiscalCode);
     }
-    console.log("Inserted in database paymentOptions with valid fiscal code with ids: ", JSON.stringify(arrayIdTokenized));
-    console.log("Inserted in database paymentOptions with invalid fiscal code with ids: ", JSON.stringify(arrayIdNotTokenized));
+    console.log("Inserted in database paymentPositions with valid fiscal code with ids: ", JSON.stringify(arrayIdTokenized));
+    console.log("Inserted in database paymentPositions with invalid fiscal code with ids: ", JSON.stringify(arrayIdNotTokenized));
 
 
     // SAVE ID ARRAYS ON REDIS
