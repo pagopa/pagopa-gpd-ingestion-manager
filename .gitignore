@@ -42,3 +42,6 @@ obj/
 **/node_modules
 yarn.lock
 **/*.copy
+
+# Misc
+.azure/
