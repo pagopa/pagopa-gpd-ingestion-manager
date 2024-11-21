@@ -21,12 +21,13 @@ variables:
   ${{ if eq(parameters['ENVIRONMENT'], 'dev') }}:
     poolImage: "pagopa-dev-loadtest-linux"
     PG_GPD_PASSWORD: "$(DEV_PG_GPD_PASSWORD)"
+    PG_GPD_USER: "$(DEV_PG_GPD_USER)"
     INGESTION_EVENTHUB_CONN_STRING: "${DEV_INGESTION_EVENTHUB_CONN_STRING}"
   ${{ if eq(parameters['ENVIRONMENT'], 'uat') }}:
     poolImage: "pagopa-uat-loadtest-linux"
     PG_GPD_PASSWORD: "$(UAT_PG_GPD_PASSWORD)"
+    PG_GPD_USER: "$(UAT_PG_GPD_USER)"
     INGESTION_EVENTHUB_CONN_STRING: "${UAT_INGESTION_EVENTHUB_CONN_STRING}"
-
 
 pool:
   name: $(poolImage)
@@ -43,11 +44,12 @@ steps:
   - script: |
       cd ./performance-test/src
       npm install
-      export PG_GPD_PASSWORD=${PG_GPD_PASSWORD} NUMBER_OF_EVENTS=${NUMBER_OF_EVENTS} && \
+      export PG_GPD_USER=${PG_GPD_USER} PG_GPD_PASSWORD=${PG_GPD_PASSWORD} NUMBER_OF_EVENTS=${NUMBER_OF_EVENTS} && \
       npm run start-load-events-${ENV}
     displayName: Run insert events on postgres
     env:
       ENV: ${{ parameters.ENV }}
+      PG_GPD_USER: ${{ variables.PG_GPD_USER }}
       PG_GPD_PASSWORD: ${{ variables.PG_GPD_PASSWORD }}
       NUMBER_OF_EVENTS: ${{ parameters.NUMBER_OF_EVENTS }}
 
