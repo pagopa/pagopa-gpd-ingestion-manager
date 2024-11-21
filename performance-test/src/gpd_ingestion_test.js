@@ -7,12 +7,15 @@ const { setValueRedis, shutDownClient } = require("./modules/redis_client.js");
 const NUMBER_OF_EVENTS = JSON.parse(process.env.NUMBER_OF_EVENTS);
 
 async function insertEvents() {
+    // Clean up paymentPositions
+    await deletePaymentPositions();
+
     const arrayIdTokenized = [];
     const arrayIdNotTokenized = [];
 
     console.log("Selected number of events: ", NUMBER_OF_EVENTS);
     // SAVE ON DB paymentPositions
-    for (let i = 0; i < NUMBER_OF_EVENTS; i++) {
+    for (let i = 0; i < (Math.floor(NUMBER_OF_EVENTS / 2)); i++) {
         const uniqueId = 120798 + i;
         const idValidFiscalCode = uniqueId;
         await insertPaymentPositionWithValidFiscalCode(idValidFiscalCode);
@@ -22,8 +25,8 @@ async function insertEvents() {
         await insertPaymentPositionWithInvalidFiscalCode(idInvalidFiscalCode);
         arrayIdNotTokenized.push(idInvalidFiscalCode);
     }
-    console.log("Inserted in database paymentPositions with valid fiscal code with ids: ", JSON.stringify(arrayIdTokenized));
-    console.log("Inserted in database paymentPositions with invalid fiscal code with ids: ", JSON.stringify(arrayIdNotTokenized));
+    console.log(`Inserted ${arrayIdTokenized.length} elements in database paymentPositions with valid fiscal code with ids: `, JSON.stringify(arrayIdTokenized));
+    console.log(`Inserted ${arrayIdNotTokenized.length} elements in database paymentPositions with invalid fiscal code with ids: `, JSON.stringify(arrayIdNotTokenized));
 
 
     // SAVE ID ARRAYS ON REDIS
