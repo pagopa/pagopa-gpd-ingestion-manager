@@ -31,6 +31,7 @@ function insertEvents() {
 
     // DELETE paymentPositions
     deletePaymentPositions();
+    console.log("Deleted payment positions");
 }
 
 insertEvents();

@@ -7,5 +7,5 @@ COPY ./ ./
 
 RUN yarn install
 
-ENTRYPOINT ["yarn", "start-load-events"]
+ENTRYPOINT yarn start-load-events-${ENV:-dev}
 

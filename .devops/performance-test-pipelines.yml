@@ -45,19 +45,21 @@ steps:
       npm install
       docker build -f ./DockerfileLoad -t exec-node .
       docker run --rm --name loadPostgres \
+      -e ENV=${ENV}
       -e PG_GPD_PASSWORD=${PG_GPD_PASSWORD} \
       -e NUMBER_OF_EVENTS=${NUMBER_OF_EVENTS} \
       exec-node
     displayName: Run insert events on postgres
     env:
+      ENV: ${{ parameters.ENV }}
       PG_GPD_PASSWORD: ${{ variables.PG_GPD_PASSWORD }}
-      NUMBER_OF_EVENTS: ${{ variables.NUMBER_OF_EVENTS }}
+      NUMBER_OF_EVENTS: ${{ parameters.NUMBER_OF_EVENTS }}
 
   - script: |
       timeout ${TIMEOUT}s
     displayName: Wait for timeout
     env:
-      TIMEOUT: ${{ variables.TIMEOUT }}
+      TIMEOUT: ${{ parameters.TIMEOUT }}
 
   - script: |
       cd ./performance-test/src
