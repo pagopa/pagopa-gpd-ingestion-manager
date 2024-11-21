@@ -43,12 +43,8 @@ steps:
   - script: |
       cd ./performance-test/src
       npm install
-      docker build -f ./DockerfileLoad -t exec-node .
-      docker run --rm --name loadPostgres \
-      -e ENV=${ENV}
-      -e PG_GPD_PASSWORD=${PG_GPD_PASSWORD} \
-      -e NUMBER_OF_EVENTS=${NUMBER_OF_EVENTS} \
-      exec-node
+      export PG_GPD_PASSWORD=${PG_GPD_PASSWORD} NUMBER_OF_EVENTS=${NUMBER_OF_EVENTS} && \
+      npm run start-load-events-${ENV}
     displayName: Run insert events on postgres
     env:
       ENV: ${{ parameters.ENV }}
@@ -64,7 +60,5 @@ steps:
   - script: |
       cd ./performance-test/src
       npm install
-      docker build -f ./DockerfileReview -t exec-node .
-      docker run --rm --name ingestionReview \
-      exec-node
+      npm run start-performance-review
     displayName: Run timestamp review
