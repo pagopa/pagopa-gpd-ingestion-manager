@@ -34,8 +34,8 @@ this.paymentOptionDeleteOp = null;
 // Transfer vasrs //
 ////////////////////
 this.transferId = null;
-this.transferCompanyName = null;
-this.transferUpdatedCompanyName = null;
+this.transferCategory = null;
+this.transferUpdatedCategory = null;
 this.transferCreateOp = null;
 this.transferUpdateOp = null;
 this.transferDeleteOp = null;
@@ -83,8 +83,8 @@ After(async function () {
   // Transfer vasrs //
   ////////////////////
   this.transferId = null;
-  this.transferCompanyName = null;
-  this.transferUpdatedCompanyName = null;
+  this.transferCategory = null;
+  this.transferUpdatedCategory = null;
   this.transferCreateOp = null;
   this.transferUpdateOp = null;
   this.transferDeleteOp = null;
@@ -208,15 +208,15 @@ Given('a payment option with id {string} and description {string} and associated
   this.paymentOptionId = id;
 });
 
-Given('a create operation on transfer table with id {string} and company name {string} and associated to payment option with id {int} in GPD database', async function (id, companyName, paymentOptionId) {
-  await insertTransfer(id, companyName, paymentOptionId);
+Given('a create operation on transfer table with id {string} and category {string} and associated to payment option with id {int} in GPD database', async function (id, category, paymentOptionId) {
+  await insertTransfer(id, category, paymentOptionId);
   this.transferId = id;
-  this.transferCompanyName = companyName;
+  this.transferCategory = category;
 });
 
-Given('an update operation on field company name with new value {string} on the same transfer in GPD database', async function (companyName) {
-  await updateTransfer(this.transferId, companyName);
-  this.transferUpdatedCompanyName = companyName;
+Given('an update operation on field category with new value {string} on the same transfer in GPD database', async function (category) {
+  await updateTransfer(this.transferId, category);
+  this.transferUpdatedCategory = category;
 });
 
 Given('a delete operation on the same transfer in GPD database', async function () {
@@ -249,7 +249,7 @@ Then('the transfer operations have id {int}', function (id) {
   assert.strictEqual(this.transferDeleteOp.before.id, id);
 });
 
-Then('the transfer update operation has the company name updated', function () {
-  assert.notStrictEqual(this.transferUpdateOp.after.companyName, this.transferCompanyName);
-  assert.strictEqual(this.transferUpdateOp.after.companyName, this.transferUpdatedCompanyName);
+Then('the transfer update operation has the category updated', function () {
+  assert.notStrictEqual(this.transferUpdateOp.after.category, this.transferCategory);
+  assert.strictEqual(this.transferUpdateOp.after.category, this.transferUpdatedCategory);
 });
