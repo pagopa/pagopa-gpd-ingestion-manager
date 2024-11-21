@@ -66,3 +66,8 @@ data "azurerm_key_vault_secret" "key_vault_integration_test_gpd_db_apd_user_psw"
   key_vault_id = data.azurerm_key_vault.domain_key_vault.id
 }
 
+data "azurerm_key_vault_secret" "key_vault_integration_test_gpd_db_apd_user_name" {
+  name         = "db-apd-user-name"
+  key_vault_id = data.azurerm_key_vault.domain_key_vault.id
+}
+
