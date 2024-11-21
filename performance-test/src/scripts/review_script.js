@@ -6,7 +6,7 @@ const REDIS_ING_SUFFIX = "-ing-c";
 
 // Performance Debezium connector
 // 1. Retrieve messages from topic "raw"
-// 2. Calculate difference between timestamps -> obj.source.tsMs (time of insert on db) : obj.tsMs (time of insert on eventhub)
+// 2. Calculate difference between timestamps -> obj.ts_ms (time of insert on eventhub) : obj.source.ts_ms (time of insert on db)
 // Performance gpd-ingestion-manager
 // 1. Retrieve messages from topic "ingested"
 // 2. Calculate difference between raw and ingested timestamps -> rawMsg.timestamp (timestamp of the message from topic raw) : ingestedMsg.timestamp (timestamp of the message from topic raw)
@@ -30,30 +30,33 @@ const reviewIngestionTimeToProcess = async () => {
     let failedIngested = 0;
 
     // RETRIEVE ARRAYS OF IDS
-    const tokenizedIds = readFromRedisWithKey(REDIS_ARRAY_IDS_TOKENIZED);
-    const notTokenizedIds = readFromRedisWithKey(REDIS_ARRAY_IDS_NOT_TOKENIZED);
+    const tokenizedIds = await readFromRedisWithKey(REDIS_ARRAY_IDS_TOKENIZED);
+    const arrTokenizedParsed = JSON.parse(tokenizedIds);
+    const notTokenizedIds = await readFromRedisWithKey(REDIS_ARRAY_IDS_NOT_TOKENIZED);
+    const arrNotTokenizedParsed = JSON.parse(notTokenizedIds);
 
-    for (const id of tokenizedIds) {
+    for (const id of arrTokenizedParsed) {
         // RETRIEVE RAW MESSAGE FROM REDIS
-        const rawMsg = readFromRedisWithKey(id + REDIS_RAW_SUFFIX);
+        console.log("Retrieving from Redis message with id: " + id);
+        const rawMsg = await readFromRedisWithKey(id + REDIS_RAW_SUFFIX);
 
         if (rawMsg) {
             const rawMsgValue = JSON.parse(rawMsg).value;
-            console.log("Processing raw message with id: " + rawMsgValue.after.id);
+            console.log("Processing raw message with id: " + id);
 
             // CALCULATE TIME TO CAPTURE
-            let timePsgToRaw = rawMsgValue.source.tsMs - rawMsgValue.tsMs;
+            let timePsgToRaw = rawMsgValue.ts_ms - rawMsgValue.source.ts_ms;
             arrayTimePsgToRaw.push(timePsgToRaw);
             totalTimePsgToRaw += timePsgToRaw;
             minTimePsgToRaw = minTimePsgToRaw === null || timePsgToRaw < minTimePsgToRaw ? timePsgToRaw : minTimePsgToRaw;
             maxTimePsgToRaw = maxTimePsgToRaw === null || timePsgToRaw > maxTimePsgToRaw ? timePsgToRaw : maxTimePsgToRaw;
 
             // RETRIEVE TOKENIZED MESSAGE FROM REDIS WITH RAW OBJ ID
-            const tokenizedMsg = readFromRedisWithKey(id + REDIS_ING_SUFFIX);
+            const tokenizedMsg = await readFromRedisWithKey(id + REDIS_ING_SUFFIX);
 
             if (tokenizedMsg) {
                 const tokenizedMsgValue = JSON.parse(tokenizedMsg).value;
-                console.log("Processing tokenized message with id: " + tokenizedMsgValue.after.id);
+                console.log("Processing tokenized message with id: " + id);
 
                 // CALCULATE TIME TO TOKENIZE
                 let timeRawToTokenize = rawMsg.timestamp - tokenizedMsgValue.timestamp;
@@ -72,26 +75,27 @@ const reviewIngestionTimeToProcess = async () => {
 
     }
 
-    for (const id of notTokenizedIds) {
+    for (const id of arrNotTokenizedParsed) {
         // RETRIEVE RAW MESSAGE FROM REDIS
-        const rawMsg = readFromRedisWithKey(id + REDIS_RAW_SUFFIX);
+        console.log("Retrieving from Redis message with id: " + id);
+        const rawMsg = await readFromRedisWithKey(id + REDIS_RAW_SUFFIX);
 
         if (rawMsg) {
-            const rawMsgValue = JSON.parse(rawMsg.value.toString());
+            const rawMsgValue = JSON.parse(rawMsg).value;
             console.log("Processing raw message with id: " + id);
 
             // CALCULATE TIME TO CAPTURE
-            let timePsgToRaw = rawMsgValue.source.tsMs - rawMsgValue.tsMs;
+            let timePsgToRaw = rawMsgValue.ts_ms - rawMsgValue.source.ts_ms;
             arrayTimePsgToRaw.push(timePsgToRaw);
             totalTimePsgToRaw += timePsgToRaw;
             minTimePsgToRaw = minTimePsgToRaw === null || timePsgToRaw < minTimePsgToRaw ? timePsgToRaw : minTimePsgToRaw;
             maxTimePsgToRaw = maxTimePsgToRaw === null || timePsgToRaw > maxTimePsgToRaw ? timePsgToRaw : maxTimePsgToRaw;
 
             // RETRIEVE INGESTED MESSAGE FROM REDIS WITH RAW OBJ ID
-            const ingestedMsg = readFromRedisWithKey(id + REDIS_ING_SUFFIX);
+            const ingestedMsg = await readFromRedisWithKey(id + REDIS_ING_SUFFIX);
 
             if (ingestedMsg) {
-                const ingestedMsgValue = JSON.parse(ingestedMsg.value.toString());
+                const ingestedMsgValue = JSON.parse(ingestedMsg).value;
                 console.log("Processing ingested message with id: " + id);
 
                 // CALCULATE TIME TO INGEST WITHOUT TOKENIZER
@@ -114,6 +118,8 @@ const reviewIngestionTimeToProcess = async () => {
     console.log("/----------- METRICS -----------/");
     console.log("/////////////////////////////////");
     console.log("--------------------------------");
+    console.log(`total messages....................: ${arrTokenizedParsed.length + arrNotTokenizedParsed.length}`);
+    console.log("--------------------------------");
     console.log(`mean time to capture..............: ${totalTimePsgToRaw ? getTimeString(Math.round(totalTimePsgToRaw / arrayTimePsgToRaw.length)) : "-"}`);
     console.log(`mean time to tokenize.............: ${totalTimeRawToTokenize ? getTimeString(Math.round(totalTimeRawToTokenize / arrayTimeRawToTokenize.length)) : "-"}`);
     console.log(`mean time to ingest...............: ${totalTimeRawToIngest ? getTimeString(Math.round(totalTimeRawToIngest / arrayTimeRawToIngest.length)) : "-"}`);
@@ -133,11 +139,16 @@ const reviewIngestionTimeToProcess = async () => {
     console.log("/------------- END -------------/");
     console.log("/////////////////////////////////");
 
-    shutDownClient();
+    await shutDownClient();
+
+    return null;
 }
 
 function getTimeString(time) {
     return `${time}ms | ${time / 1000}s`;
 }
 
-reviewIngestionTimeToProcess();
+reviewIngestionTimeToProcess().then(() => {
+    console.log("Review script ended");
+    process.exit();
+});;

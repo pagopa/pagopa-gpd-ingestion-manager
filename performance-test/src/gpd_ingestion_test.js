@@ -2,23 +2,24 @@
 
 const { insertPaymentPositionWithValidFiscalCode, insertPaymentPositionWithInvalidFiscalCode, deletePaymentPositions } = require("./modules/pg_gpd_client.js");
 const { REDIS_ARRAY_IDS_TOKENIZED, REDIS_ARRAY_IDS_NOT_TOKENIZED } = require("./modules/common.js");
-const { setValueRedis } = require("./modules/redis_client.js");
+const { setValueRedis, shutDownClient } = require("./modules/redis_client.js");
 
 const NUMBER_OF_EVENTS = JSON.parse(process.env.NUMBER_OF_EVENTS);
 
-function insertEvents() {
+async function insertEvents() {
     const arrayIdTokenized = [];
     const arrayIdNotTokenized = [];
 
     console.log("Selected number of events: ", NUMBER_OF_EVENTS);
     // SAVE ON DB paymentPositions
     for (let i = 0; i < NUMBER_OF_EVENTS; i++) {
-        const idValidFiscalCode = "PERFORMANCE_GPD_INGESTION_VALID_FISCAL_CODE_" + new Date().getTime();
-        insertPaymentPositionWithValidFiscalCode(idValidFiscalCode);
+        const timestamp = Number(new Date().getTime());
+        const idValidFiscalCode = timestamp + i;
+        await insertPaymentPositionWithValidFiscalCode(idValidFiscalCode);
         arrayIdTokenized.push(idValidFiscalCode);
 
-        const idInvalidFiscalCode = "PERFORMANCE_GPD_INGESTION_INVALID_FISCAL_CODE_" + new Date().getTime();
-        insertPaymentPositionWithInvalidFiscalCode(idInvalidFiscalCode);
+        const idInvalidFiscalCode = timestamp + i + (NUMBER_OF_EVENTS * 2);
+        await insertPaymentPositionWithInvalidFiscalCode(idInvalidFiscalCode);
         arrayIdNotTokenized.push(idInvalidFiscalCode);
     }
     console.log("Inserted in database paymentOptions with valid fiscal code with ids: ", JSON.stringify(arrayIdTokenized));
@@ -26,12 +27,19 @@ function insertEvents() {
 
 
     // SAVE ID ARRAYS ON REDIS
-    setValueRedis(REDIS_ARRAY_IDS_TOKENIZED, arrayIdTokenized);
-    setValueRedis(REDIS_ARRAY_IDS_NOT_TOKENIZED, arrayIdNotTokenized);
+    await setValueRedis({ key: REDIS_ARRAY_IDS_TOKENIZED, value: JSON.stringify(arrayIdTokenized) });
+    await setValueRedis({ key: REDIS_ARRAY_IDS_NOT_TOKENIZED, value: JSON.stringify(arrayIdNotTokenized) });
 
     // DELETE paymentPositions
-    deletePaymentPositions();
+    await deletePaymentPositions();
     console.log("Deleted payment positions");
+
+    await shutDownClient();
+
+    return null;
 }
 
-insertEvents();
+insertEvents().then(() => {
+    console.log("Insert script ended");
+    process.exit();
+});
