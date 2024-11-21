@@ -38,10 +38,10 @@ const reviewIngestionTimeToProcess = async () => {
     for (const id of arrTokenizedParsed) {
         // RETRIEVE RAW MESSAGE FROM REDIS
         console.log("Retrieving from Redis message with id: " + id);
-        const rawMsg = await readFromRedisWithKey(id + REDIS_RAW_SUFFIX);
-
+        const retrievedMsg = await readFromRedisWithKey(id + REDIS_RAW_SUFFIX);
+        const rawMsg = JSON.parse(retrievedMsg);
         if (rawMsg) {
-            const rawMsgValue = JSON.parse(rawMsg).value;
+            const rawMsgValue = rawMsg.value;
             console.log("Processing raw message with id: " + id);
 
             // CALCULATE TIME TO CAPTURE
@@ -55,11 +55,11 @@ const reviewIngestionTimeToProcess = async () => {
             const tokenizedMsg = await readFromRedisWithKey(id + REDIS_ING_SUFFIX);
 
             if (tokenizedMsg) {
-                const tokenizedMsgValue = JSON.parse(tokenizedMsg).value;
+                const tokenizedMsgValue = JSON.parse(tokenizedMsg);
                 console.log("Processing tokenized message with id: " + id);
 
                 // CALCULATE TIME TO TOKENIZE
-                let timeRawToTokenize = rawMsg.timestamp - tokenizedMsgValue.timestamp;
+                let timeRawToTokenize = Number(tokenizedMsgValue.timestamp) - Number(rawMsg.timestamp);
                 arrayTimeRawToTokenize.push(timeRawToTokenize);
                 totalTimeRawToTokenize += timeRawToTokenize;
                 minTimeRawToTokenize = minTimeRawToTokenize === null || timeRawToTokenize < minTimeRawToTokenize ? timeRawToTokenize : minTimeRawToTokenize;
@@ -78,10 +78,10 @@ const reviewIngestionTimeToProcess = async () => {
     for (const id of arrNotTokenizedParsed) {
         // RETRIEVE RAW MESSAGE FROM REDIS
         console.log("Retrieving from Redis message with id: " + id);
-        const rawMsg = await readFromRedisWithKey(id + REDIS_RAW_SUFFIX);
-
+        const retrievedMsg = await readFromRedisWithKey(id + REDIS_RAW_SUFFIX);
+        const rawMsg = JSON.parse(retrievedMsg);
         if (rawMsg) {
-            const rawMsgValue = JSON.parse(rawMsg).value;
+            const rawMsgValue = rawMsg.value;
             console.log("Processing raw message with id: " + id);
 
             // CALCULATE TIME TO CAPTURE
@@ -95,11 +95,11 @@ const reviewIngestionTimeToProcess = async () => {
             const ingestedMsg = await readFromRedisWithKey(id + REDIS_ING_SUFFIX);
 
             if (ingestedMsg) {
-                const ingestedMsgValue = JSON.parse(ingestedMsg).value;
+                const ingestedMsgValue = JSON.parse(ingestedMsg);
                 console.log("Processing ingested message with id: " + id);
 
                 // CALCULATE TIME TO INGEST WITHOUT TOKENIZER
-                let timeRawToIngest = rawMsg.timestamp - ingestedMsgValue.timestamp;
+                let timeRawToIngest = Number(ingestedMsgValue.timestamp) - Number(rawMsg.timestamp);
                 arrayTimeRawToIngest.push(timeRawToIngest);
                 totalTimeRawToIngest += timeRawToIngest;
                 minTimeRawToIngest = minTimeRawToIngest === null || timeRawToIngest < minTimeRawToIngest ? timeRawToIngest : minTimeRawToIngest;
