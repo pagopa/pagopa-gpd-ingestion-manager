@@ -149,6 +149,5 @@ function getTimeString(time) {
 }
 
 reviewIngestionTimeToProcess().then(() => {
-    console.log("Review script ended");
     process.exit();
 });;
