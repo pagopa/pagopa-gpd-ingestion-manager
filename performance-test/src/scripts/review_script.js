@@ -35,90 +35,96 @@ const reviewIngestionTimeToProcess = async () => {
     const notTokenizedIds = await readFromRedisWithKey(REDIS_ARRAY_IDS_NOT_TOKENIZED);
     const arrNotTokenizedParsed = JSON.parse(notTokenizedIds);
 
-    for (const id of arrTokenizedParsed) {
-        // RETRIEVE RAW MESSAGE FROM REDIS
-        console.log("Retrieving from Redis message with id: " + id);
-        const retrievedMsg = await readFromRedisWithKey(id + REDIS_RAW_SUFFIX);
-        const rawMsg = JSON.parse(retrievedMsg);
-        if (rawMsg) {
-            const rawMsgValue = rawMsg.value;
-            console.log("Processing raw message with id: " + id);
+    if(arrTokenizedParsed){
+        for (const id of arrTokenizedParsed) {
+            // RETRIEVE RAW MESSAGE FROM REDIS
+            console.log("Retrieving from Redis message with id: " + id);
+            const retrievedMsg = await readFromRedisWithKey(id + REDIS_RAW_SUFFIX);
+            const rawMsg = JSON.parse(retrievedMsg);
+            if (rawMsg) {
+                const rawMsgValue = rawMsg.value;
+                console.log("Processing raw message with id: " + id);
 
-            // CALCULATE TIME TO CAPTURE
-            let timePsgToRaw = rawMsgValue.ts_ms - rawMsgValue.source.ts_ms;
-            arrayTimePsgToRaw.push(timePsgToRaw);
-            totalTimePsgToRaw += timePsgToRaw;
-            minTimePsgToRaw = minTimePsgToRaw === null || timePsgToRaw < minTimePsgToRaw ? timePsgToRaw : minTimePsgToRaw;
-            maxTimePsgToRaw = maxTimePsgToRaw === null || timePsgToRaw > maxTimePsgToRaw ? timePsgToRaw : maxTimePsgToRaw;
+                // CALCULATE TIME TO CAPTURE
+                let timePsgToRaw = rawMsgValue.ts_ms - rawMsgValue.source.ts_ms;
+                arrayTimePsgToRaw.push(timePsgToRaw);
+                totalTimePsgToRaw += timePsgToRaw;
+                minTimePsgToRaw = minTimePsgToRaw === null || timePsgToRaw < minTimePsgToRaw ? timePsgToRaw : minTimePsgToRaw;
+                maxTimePsgToRaw = maxTimePsgToRaw === null || timePsgToRaw > maxTimePsgToRaw ? timePsgToRaw : maxTimePsgToRaw;
 
-            // RETRIEVE TOKENIZED MESSAGE FROM REDIS WITH RAW OBJ ID
-            const tokenizedMsg = await readFromRedisWithKey(id + REDIS_ING_SUFFIX);
+                // RETRIEVE TOKENIZED MESSAGE FROM REDIS WITH RAW OBJ ID
+                const tokenizedMsg = await readFromRedisWithKey(id + REDIS_ING_SUFFIX);
 
-            if (tokenizedMsg) {
-                const tokenizedMsgValue = JSON.parse(tokenizedMsg);
-                console.log("Processing tokenized message with id: " + id);
+                if (tokenizedMsg) {
+                    const tokenizedMsgValue = JSON.parse(tokenizedMsg);
+                    console.log("Processing tokenized message with id: " + id);
 
-                // CALCULATE TIME TO TOKENIZE
-                let timeRawToTokenize = Number(tokenizedMsgValue.timestamp) - Number(rawMsg.timestamp);
-                arrayTimeRawToTokenize.push(timeRawToTokenize);
-                totalTimeRawToTokenize += timeRawToTokenize;
-                minTimeRawToTokenize = minTimeRawToTokenize === null || timeRawToTokenize < minTimeRawToTokenize ? timeRawToTokenize : minTimeRawToTokenize;
-                maxTimeRawToTokenize = maxTimeRawToTokenize === null || timeRawToTokenize > maxTimeRawToTokenize ? timeRawToTokenize : maxTimeRawToTokenize;
+                    // CALCULATE TIME TO TOKENIZE
+                    let timeRawToTokenize = Number(tokenizedMsgValue.timestamp) - Number(rawMsg.timestamp);
+                    arrayTimeRawToTokenize.push(timeRawToTokenize);
+                    totalTimeRawToTokenize += timeRawToTokenize;
+                    minTimeRawToTokenize = minTimeRawToTokenize === null || timeRawToTokenize < minTimeRawToTokenize ? timeRawToTokenize : minTimeRawToTokenize;
+                    maxTimeRawToTokenize = maxTimeRawToTokenize === null || timeRawToTokenize > maxTimeRawToTokenize ? timeRawToTokenize : maxTimeRawToTokenize;
+                } else {
+                    console.log("Fail to tokenize message with id: " + id);
+                    failedTokenized += 1;
+                }
             } else {
-                console.log("Fail to tokenize message with id: " + id);
-                failedTokenized += 1;
+                console.log("Fail to capture message with id: " + id);
+                failedRaw += 1;
             }
-        } else {
-            console.log("Fail to capture message with id: " + id);
-            failedRaw += 1;
-        }
 
+        }
     }
 
-    for (const id of arrNotTokenizedParsed) {
-        // RETRIEVE RAW MESSAGE FROM REDIS
-        console.log("Retrieving from Redis message with id: " + id);
-        const retrievedMsg = await readFromRedisWithKey(id + REDIS_RAW_SUFFIX);
-        const rawMsg = JSON.parse(retrievedMsg);
-        if (rawMsg) {
-            const rawMsgValue = rawMsg.value;
-            console.log("Processing raw message with id: " + id);
+    if(arrNotTokenizedParsed){
+        for (const id of arrNotTokenizedParsed) {
+            // RETRIEVE RAW MESSAGE FROM REDIS
+            console.log("Retrieving from Redis message with id: " + id);
+            const retrievedMsg = await readFromRedisWithKey(id + REDIS_RAW_SUFFIX);
+            const rawMsg = JSON.parse(retrievedMsg);
+            if (rawMsg) {
+                const rawMsgValue = rawMsg.value;
+                console.log("Processing raw message with id: " + id);
 
-            // CALCULATE TIME TO CAPTURE
-            let timePsgToRaw = rawMsgValue.ts_ms - rawMsgValue.source.ts_ms;
-            arrayTimePsgToRaw.push(timePsgToRaw);
-            totalTimePsgToRaw += timePsgToRaw;
-            minTimePsgToRaw = minTimePsgToRaw === null || timePsgToRaw < minTimePsgToRaw ? timePsgToRaw : minTimePsgToRaw;
-            maxTimePsgToRaw = maxTimePsgToRaw === null || timePsgToRaw > maxTimePsgToRaw ? timePsgToRaw : maxTimePsgToRaw;
+                // CALCULATE TIME TO CAPTURE
+                let timePsgToRaw = rawMsgValue.ts_ms - rawMsgValue.source.ts_ms;
+                arrayTimePsgToRaw.push(timePsgToRaw);
+                totalTimePsgToRaw += timePsgToRaw;
+                minTimePsgToRaw = minTimePsgToRaw === null || timePsgToRaw < minTimePsgToRaw ? timePsgToRaw : minTimePsgToRaw;
+                maxTimePsgToRaw = maxTimePsgToRaw === null || timePsgToRaw > maxTimePsgToRaw ? timePsgToRaw : maxTimePsgToRaw;
 
-            // RETRIEVE INGESTED MESSAGE FROM REDIS WITH RAW OBJ ID
-            const ingestedMsg = await readFromRedisWithKey(id + REDIS_ING_SUFFIX);
+                // RETRIEVE INGESTED MESSAGE FROM REDIS WITH RAW OBJ ID
+                const ingestedMsg = await readFromRedisWithKey(id + REDIS_ING_SUFFIX);
 
-            if (ingestedMsg) {
-                const ingestedMsgValue = JSON.parse(ingestedMsg);
-                console.log("Processing ingested message with id: " + id);
+                if (ingestedMsg) {
+                    const ingestedMsgValue = JSON.parse(ingestedMsg);
+                    console.log("Processing ingested message with id: " + id);
 
-                // CALCULATE TIME TO INGEST WITHOUT TOKENIZER
-                let timeRawToIngest = Number(ingestedMsgValue.timestamp) - Number(rawMsg.timestamp);
-                arrayTimeRawToIngest.push(timeRawToIngest);
-                totalTimeRawToIngest += timeRawToIngest;
-                minTimeRawToIngest = minTimeRawToIngest === null || timeRawToIngest < minTimeRawToIngest ? timeRawToIngest : minTimeRawToIngest;
-                maxTimeRawToIngest = maxTimeRawToIngest === null || timeRawToIngest > maxTimeRawToIngest ? timeRawToIngest : maxTimeRawToIngest;
+                    // CALCULATE TIME TO INGEST WITHOUT TOKENIZER
+                    let timeRawToIngest = Number(ingestedMsgValue.timestamp) - Number(rawMsg.timestamp);
+                    arrayTimeRawToIngest.push(timeRawToIngest);
+                    totalTimeRawToIngest += timeRawToIngest;
+                    minTimeRawToIngest = minTimeRawToIngest === null || timeRawToIngest < minTimeRawToIngest ? timeRawToIngest : minTimeRawToIngest;
+                    maxTimeRawToIngest = maxTimeRawToIngest === null || timeRawToIngest > maxTimeRawToIngest ? timeRawToIngest : maxTimeRawToIngest;
+                } else {
+                    console.log("Fail to ingest message with id: " + id);
+                    failedIngested += 1;
+                }
             } else {
-                console.log("Fail to ingest message with id: " + id);
-                failedIngested += 1;
+                console.log("Fail to capture message with id: " + id);
+                failedRaw += 1;
             }
-        } else {
-            console.log("Fail to capture message with id: " + id);
-            failedRaw += 1;
         }
     }
 
     console.log("/////////////////////////////////");
     console.log("/----------- METRICS -----------/");
     console.log("/////////////////////////////////");
-    console.log("--------------------------------");
-    console.log(`total messages....................: ${arrTokenizedParsed.length + arrNotTokenizedParsed.length}`);
+    if(arrNotTokenizedParsed && arrNotTokenizedParsed){
+        console.log("--------------------------------");
+        console.log(`total messages....................: ${arrTokenizedParsed.length + arrNotTokenizedParsed.length}`);
+    }
     console.log("--------------------------------");
     console.log(`mean time to capture..............: ${totalTimePsgToRaw ? getTimeString(Math.round(totalTimePsgToRaw / arrayTimePsgToRaw.length)) : "-"}`);
     console.log(`mean time to tokenize.............: ${totalTimeRawToTokenize ? getTimeString(Math.round(totalTimeRawToTokenize / arrayTimeRawToTokenize.length)) : "-"}`);
