@@ -2,15 +2,11 @@ const { ENTITY_IDENTIFIER, INVALID_CF, VALID_CF } = require('./common.js');
 const { Pool } = require('pg');
 
 //COMMON
-const username = process.env.PG_GPD_USERNAME;
 const serverName = process.env.PG_GPD_SERVER_NAME;
 const databaseName = process.env.PG_GPD_DATABASE_NAME;
 //SECRETS
 const password = process.env.PG_GPD_PASSWORD;
-
-// TODO PG USER AS A SECRET
-
-// TODO DEVOPS
+const username = process.env.PG_GPD_USERNAME;
 
 const pool = new Pool({
   user: username,
