@@ -36,7 +36,7 @@ public class IngestedPaymentOptionProducerImpl implements IngestedPaymentOptionP
 
     @Override
     public boolean sendIngestedPaymentOption(DataCaptureMessage<PaymentOption> ingestedPaymentOption) {
-        var res = streamBridge.send("paymentOption-out-0",
+        var res = streamBridge.send("ingestPaymentOption-out-0",
                 buildMessage(ingestedPaymentOption));
 
 

@@ -36,7 +36,7 @@ public class IngestedPaymentPositionProducerImpl implements IngestedPaymentPosit
 
     @Override
     public boolean sendIngestedPaymentPosition(DataCaptureMessage<PaymentPosition> ingestedPaymentPosition) {
-        var res = streamBridge.send("paymentPosition-out-0",
+        var res = streamBridge.send("ingestPaymentPosition-out-0",
                 buildMessage(ingestedPaymentPosition));
 
 

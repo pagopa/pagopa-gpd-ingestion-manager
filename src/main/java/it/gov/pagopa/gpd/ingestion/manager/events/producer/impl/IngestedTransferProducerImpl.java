@@ -36,7 +36,7 @@ public class IngestedTransferProducerImpl implements IngestedTransferProducer {
 
     @Override
     public boolean sendIngestedTransfer(DataCaptureMessage<Transfer> ingestedTransfer) {
-        var res = streamBridge.send("transfer-out-0",
+        var res = streamBridge.send("ingestTransfer-out-0",
                 buildMessage(ingestedTransfer));
 
 

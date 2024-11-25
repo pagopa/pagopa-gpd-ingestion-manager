@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 public class PaymentOptionConsumerConfig {
 
     @Bean
-    public Consumer<List<String>> paymentOptionComplete(IngestionService ingestionService) {
+    public Consumer<List<String>> ingestPaymentOption(IngestionService ingestionService) {
         return ingestionService::ingestPaymentOptions;
     }
 
