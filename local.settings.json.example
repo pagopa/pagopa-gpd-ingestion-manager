@@ -9,6 +9,7 @@
       "TRANSFER_INPUT_EVENTHUB_CONN_STRING": "<transfer-topic-input-conn-string>",
       "TRANSFER_OUTPUT_EVENTHUB_CONN_STRING": "<transfer-topic-output-conn-string>",
       "PDV_TOKENIZER_BASE_PATH": "<tokenizer-api-base-path>",
-      "PDV_TOKENIZER_SUBSCRIPTION_KEY": "<tokenizer-api-key>"
+      "PDV_TOKENIZER_SUBSCRIPTION_KEY": "<tokenizer-api-key>",
+      "KAFKA_BROKER": "<evh-endpoint>"
     }
   }
