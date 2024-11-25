@@ -25,26 +25,14 @@ public class PDVTokenizerClientImpl implements PDVTokenizerClient {
     private static final String SUBSCRIPTION_KEY = System.getenv().getOrDefault("PDV_TOKENIZER_SUBSCRIPTION_KEY", "");
     private static final String SUBSCRIPTION_KEY_HEADER = System.getenv().getOrDefault("TOKENIZER_APIM_HEADER_KEY", "x-api-key");
     private static final String CREATE_TOKEN_ENDPOINT = System.getenv().getOrDefault("PDV_TOKENIZER_CREATE_TOKEN_ENDPOINT", "/tokens");
-    private static PDVTokenizerClientImpl instance;
     private final Logger logger = LoggerFactory.getLogger(PDVTokenizerClientImpl.class);
     private final HttpClient client;
 
+    @Autowired
     private PDVTokenizerClientImpl() {
         this.client = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_2)
                 .build();
-    }
-
-    @Autowired
-    public PDVTokenizerClientImpl(HttpClient client) {
-        this.client = client;
-    }
-
-    public static PDVTokenizerClientImpl getInstance() {
-        if (instance == null) {
-            instance = new PDVTokenizerClientImpl();
-        }
-        return instance;
     }
 
     /**

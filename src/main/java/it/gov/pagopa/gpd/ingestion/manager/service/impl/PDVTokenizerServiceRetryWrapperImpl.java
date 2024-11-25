@@ -21,10 +21,6 @@ public class PDVTokenizerServiceRetryWrapperImpl implements PDVTokenizerServiceR
         this.pdvTokenizerService = pdvTokenizerService;
     }
 
-    public PDVTokenizerServiceRetryWrapperImpl() {
-        this.pdvTokenizerService = new PDVTokenizerServiceImpl();
-    }
-
     /**
      * {@inheritDoc}
      */

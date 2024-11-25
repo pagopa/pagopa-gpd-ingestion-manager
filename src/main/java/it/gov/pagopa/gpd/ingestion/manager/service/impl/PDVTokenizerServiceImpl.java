@@ -2,7 +2,6 @@ package it.gov.pagopa.gpd.ingestion.manager.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.gpd.ingestion.manager.client.PDVTokenizerClient;
-import it.gov.pagopa.gpd.ingestion.manager.client.impl.PDVTokenizerClientImpl;
 import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerException;
 import it.gov.pagopa.gpd.ingestion.manager.model.tokenizer.ErrorMessage;
 import it.gov.pagopa.gpd.ingestion.manager.model.tokenizer.ErrorResponse;
@@ -27,10 +26,6 @@ public class PDVTokenizerServiceImpl implements PDVTokenizerService {
     private final Logger logger = LoggerFactory.getLogger(PDVTokenizerServiceImpl.class);
 
     private final PDVTokenizerClient pdvTokenizerClient;
-
-    public PDVTokenizerServiceImpl() {
-        this.pdvTokenizerClient = PDVTokenizerClientImpl.getInstance();
-    }
 
     @Autowired
     PDVTokenizerServiceImpl(PDVTokenizerClient pdvTokenizerClient) {
