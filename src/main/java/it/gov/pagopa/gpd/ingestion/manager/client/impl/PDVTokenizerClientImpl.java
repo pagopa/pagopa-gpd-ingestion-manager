@@ -2,10 +2,12 @@ package it.gov.pagopa.gpd.ingestion.manager.client.impl;
 
 
 import it.gov.pagopa.gpd.ingestion.manager.client.PDVTokenizerClient;
-import it.gov.pagopa.gpd.ingestion.manager.entity.enumeration.ReasonErrorCode;
+import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.enumeration.ReasonErrorCode;
 import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.URI;
@@ -16,6 +18,7 @@ import java.net.http.HttpResponse;
 /**
  * {@inheritDoc}
  */
+@Component
 public class PDVTokenizerClientImpl implements PDVTokenizerClient {
 
     private static final String BASE_PATH = System.getenv().getOrDefault("PDV_TOKENIZER_BASE_PATH", "https://api.uat.tokenizer.pdv.pagopa.it/tokenizer/v1");
@@ -32,6 +35,7 @@ public class PDVTokenizerClientImpl implements PDVTokenizerClient {
                 .build();
     }
 
+    @Autowired
     public PDVTokenizerClientImpl(HttpClient client) {
         this.client = client;
     }

@@ -10,20 +10,28 @@ import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerServiceRetryWrapp
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+@SpringBootTest
 class PDVTokenizerServiceRetryWrapperImplTest {
 
     private static final String FISCAL_CODE = "fiscalCode";
     private static final String TOKEN = "token";
     private static final int MAX_ATTEMPTS = 3;
 
+    @MockBean
     private PDVTokenizerService pdvTokenizerServiceMock;
 
+    @Autowired
+    @InjectMocks
     private PDVTokenizerServiceRetryWrapper sut;
 
     @BeforeEach
@@ -36,7 +44,7 @@ class PDVTokenizerServiceRetryWrapperImplTest {
                 .build();
         Retry retry = Retry.of("id", config);
 
-        sut = Mockito.spy(new PDVTokenizerServiceRetryWrapperImpl(pdvTokenizerServiceMock, retry));
+        sut = Mockito.spy(new PDVTokenizerServiceRetryWrapperImpl(pdvTokenizerServiceMock));
     }
 
     @Test

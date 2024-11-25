@@ -13,12 +13,15 @@ import it.gov.pagopa.gpd.ingestion.manager.utils.ObjectMapperUtils;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.net.http.HttpResponse;
 
 /**
  * {@inheritDoc}
  */
+@Service
 public class PDVTokenizerServiceImpl implements PDVTokenizerService {
 
     private final Logger logger = LoggerFactory.getLogger(PDVTokenizerServiceImpl.class);
@@ -29,6 +32,7 @@ public class PDVTokenizerServiceImpl implements PDVTokenizerService {
         this.pdvTokenizerClient = PDVTokenizerClientImpl.getInstance();
     }
 
+    @Autowired
     PDVTokenizerServiceImpl(PDVTokenizerClient pdvTokenizerClient) {
         this.pdvTokenizerClient = pdvTokenizerClient;
     }
