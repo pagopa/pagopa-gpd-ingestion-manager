@@ -12,8 +12,11 @@ import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerService;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.net.http.HttpResponse;
 import java.util.Collections;
@@ -22,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
+@SpringBootTest(classes = {PDVTokenizerServiceImpl.class})
 class PDVTokenizerServiceImplTest {
 
     private static final String TOKEN = "token";
@@ -30,9 +33,12 @@ class PDVTokenizerServiceImplTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    @MockBean
     private HttpResponse<String> httpResponseMock;
+    @MockBean
     private PDVTokenizerClient pdvTokenizerClientMock;
-
+    @Autowired
+    @InjectMocks
     private PDVTokenizerService sut;
 
     @BeforeEach

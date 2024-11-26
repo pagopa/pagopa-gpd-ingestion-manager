@@ -29,7 +29,7 @@ public class PDVTokenizerClientImpl implements PDVTokenizerClient {
     private final HttpClient client;
 
     @Autowired
-    private PDVTokenizerClientImpl(HttpClient httpClient) {
+    public PDVTokenizerClientImpl(HttpClient httpClient) {
         this.client = httpClient;
     }
 

@@ -11,7 +11,7 @@ import it.gov.pagopa.gpd.ingestion.manager.events.producer.IngestedTransferProdu
 import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerException;
 import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerUnexpectedException;
 import it.gov.pagopa.gpd.ingestion.manager.service.IngestionService;
-import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerService;
+import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerServiceRetryWrapper;
 import it.gov.pagopa.gpd.ingestion.manager.utils.ObjectMapperUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,14 +26,14 @@ import static it.gov.pagopa.gpd.ingestion.manager.utils.ValidationUtils.isValidF
 @Slf4j
 public class IngestionServiceImpl implements IngestionService {
 
-    private final PDVTokenizerService pdvTokenizerService;
+    private final PDVTokenizerServiceRetryWrapper pdvTokenizerService;
     private final IngestedPaymentPositionProducer paymentPositionProducer;
     private final IngestedPaymentOptionProducer paymentOptionProducer;
 
     private final IngestedTransferProducer transferProducer;
 
     @Autowired
-    public IngestionServiceImpl(PDVTokenizerService pdvTokenizerService, IngestedPaymentPositionProducer paymentPositionProducer, IngestedPaymentOptionProducer paymentOptionProducer, IngestedTransferProducer transferProducer) {
+    public IngestionServiceImpl(PDVTokenizerServiceRetryWrapper pdvTokenizerService, IngestedPaymentPositionProducer paymentPositionProducer, IngestedPaymentOptionProducer paymentOptionProducer, IngestedTransferProducer transferProducer) {
         this.pdvTokenizerService = pdvTokenizerService;
         this.paymentPositionProducer = paymentPositionProducer;
         this.paymentOptionProducer = paymentOptionProducer;
@@ -47,28 +47,28 @@ public class IngestionServiceImpl implements IngestionService {
         // persist the item
         try {
             for (String msg : messages) {
-                DataCaptureMessage<PaymentPosition> pp = ObjectMapperUtils.mapDataCapturePaymentPositionString(msg);
+                DataCaptureMessage<PaymentPosition> paymentPosition = ObjectMapperUtils.mapDataCapturePaymentPositionString(msg);
 
-                if (pp == null) {
+                if (paymentPosition == null) {
                     continue;
                 }
-                PaymentPosition valuesBefore = pp.getBefore();
-                PaymentPosition valuesAfter = pp.getAfter();
+                PaymentPosition valuesBefore = paymentPosition.getBefore();
+                PaymentPosition valuesAfter = paymentPosition.getAfter();
 
                 log.info("PaymentPosition ingestion called at {} with payment position id {}",
                         LocalDateTime.now(), (valuesAfter != null ? valuesAfter : valuesBefore).getId());
 
                 // tokenize fiscal codes
                 if (valuesBefore != null && isValidFiscalCode(valuesBefore.getFiscalCode())) {
-                    valuesBefore.setFiscalCode(pdvTokenizerService.generateTokenForFiscalCode(valuesBefore.getFiscalCode()));
-                    pp.setBefore(valuesBefore);
+                    valuesBefore.setFiscalCode(pdvTokenizerService.generateTokenForFiscalCodeWithRetry(valuesBefore.getFiscalCode()));
+                    paymentPosition.setBefore(valuesBefore);
                 }
                 if (valuesAfter != null && isValidFiscalCode(valuesAfter.getFiscalCode())) {
-                    valuesAfter.setFiscalCode(pdvTokenizerService.generateTokenForFiscalCode(valuesAfter.getFiscalCode()));
-                    pp.setAfter(valuesAfter);
+                    valuesAfter.setFiscalCode(pdvTokenizerService.generateTokenForFiscalCodeWithRetry(valuesAfter.getFiscalCode()));
+                    paymentPosition.setAfter(valuesAfter);
                 }
 
-                boolean response = paymentPositionProducer.sendIngestedPaymentPosition(pp);
+                boolean response = paymentPositionProducer.sendIngestedPaymentPosition(paymentPosition);
 
                 if (response) {
                     log.info("PaymentPosition ingestion sent to eventhub at {}",
@@ -101,18 +101,18 @@ public class IngestionServiceImpl implements IngestionService {
         // persist the item
         try {
             for (String msg : messages) {
-                DataCaptureMessage<PaymentOption> pp = ObjectMapperUtils.mapDataCapturePaymentOptionString(msg);
+                DataCaptureMessage<PaymentOption> paymentOption = ObjectMapperUtils.mapDataCapturePaymentOptionString(msg);
 
-                if (pp == null) {
+                if (paymentOption == null) {
                     continue;
                 }
-                PaymentOption valuesBefore = pp.getBefore();
-                PaymentOption valuesAfter = pp.getAfter();
+                PaymentOption valuesBefore = paymentOption.getBefore();
+                PaymentOption valuesAfter = paymentOption.getAfter();
 
                 log.info("PaymentOption ingestion called at {} with payment position id {}",
                         LocalDateTime.now(), (valuesAfter != null ? valuesAfter : valuesBefore).getId());
 
-                boolean response = paymentOptionProducer.sendIngestedPaymentOption(pp);
+                boolean response = paymentOptionProducer.sendIngestedPaymentOption(paymentOption);
 
                 if (response) {
                     log.info("PaymentOption ingestion sent to eventhub at {}",
@@ -139,20 +139,18 @@ public class IngestionServiceImpl implements IngestionService {
         // persist the item
         try {
             for (String msg : messages) {
-                DataCaptureMessage<Transfer> pp = ObjectMapperUtils.mapDataCaptureTransferString(msg);
+                DataCaptureMessage<Transfer> transfer = ObjectMapperUtils.mapDataCaptureTransferString(msg);
 
-                if (pp == null) {
+                if (transfer == null) {
                     continue;
                 }
-                Transfer valuesBefore = pp.getBefore();
-                Transfer valuesAfter = pp.getAfter();
+                Transfer valuesBefore = transfer.getBefore();
+                Transfer valuesAfter = transfer.getAfter();
 
                 log.info("Transfer ingestion called at {} with payment position id {}",
                         LocalDateTime.now(), (valuesAfter != null ? valuesAfter : valuesBefore).getId());
 
-
-                transferProducer.sendIngestedTransfer(pp);
-                boolean response = transferProducer.sendIngestedTransfer(pp);
+                boolean response = transferProducer.sendIngestedTransfer(transfer);
 
                 if (response) {
                     log.info("Transfer ingestion sent to eventhub at {}",

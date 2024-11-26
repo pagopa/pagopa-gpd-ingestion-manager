@@ -4,6 +4,9 @@ import it.gov.pagopa.gpd.ingestion.manager.client.PDVTokenizerClient;
 import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
@@ -13,7 +16,10 @@ import static org.mockito.Mockito.*;
 
 class PDVTokenizerClientImplTest {
 
+    @MockBean
     private HttpClient clientMock;
+    @Autowired
+    @InjectMocks
     private PDVTokenizerClient sut;
 
     @BeforeEach
