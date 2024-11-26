@@ -39,6 +39,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           sonar_token: ${{ secrets.SONAR_TOKEN }}
           project_key: ${{env.PROJECT_KEY}}
-          coverage_exclusions: "**/config/*,**/*Mock*,**/model/**,**/entity/**,**/producer/**,**/consumer/**,**/enumeration/**,**/exception/**,**/controller/**"
+          coverage_exclusions: "**/config/*,**/*Mock*,**/model/**,**/entity/**,**/producer/**,**/consumer/**,**/enumeration/**,**/exception/**,**/controller/**,src/Application.java"
           cpd_exclusions: "**/models/**,**/entity/*"
           java_version: 17
