@@ -7,6 +7,7 @@ import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -21,12 +22,16 @@ import java.net.http.HttpResponse;
 @Component
 public class PDVTokenizerClientImpl implements PDVTokenizerClient {
 
-    private static final String BASE_PATH = System.getenv().getOrDefault("PDV_TOKENIZER_BASE_PATH", "https://api.uat.tokenizer.pdv.pagopa.it/tokenizer/v1");
-    private static final String SUBSCRIPTION_KEY = System.getenv().getOrDefault("PDV_TOKENIZER_SUBSCRIPTION_KEY", "");
-    private static final String SUBSCRIPTION_KEY_HEADER = System.getenv().getOrDefault("TOKENIZER_APIM_HEADER_KEY", "x-api-key");
-    private static final String CREATE_TOKEN_ENDPOINT = System.getenv().getOrDefault("PDV_TOKENIZER_CREATE_TOKEN_ENDPOINT", "/tokens");
     private final Logger logger = LoggerFactory.getLogger(PDVTokenizerClientImpl.class);
     private final HttpClient client;
+    @Value("${pdv.tokenizer.base-path}")
+    private String basePath;
+    @Value("${pdv.tokenizer.sub-key}")
+    private String subscriptionKey;
+    @Value("${pdv.tokenizer.sub-key-header}")
+    private String subscriptionKeyHeader;
+    @Value("${pdv.tokenizer.create-token.endpoint}")
+    private String createTokenEndpoint;
 
     @Autowired
     public PDVTokenizerClientImpl(HttpClient httpClient) {
@@ -38,12 +43,12 @@ public class PDVTokenizerClientImpl implements PDVTokenizerClient {
      */
     @Override
     public HttpResponse<String> createToken(String piiBody) throws PDVTokenizerException {
-        String uri = String.format("%s%s", BASE_PATH, CREATE_TOKEN_ENDPOINT);
+        String uri = String.format("%s%s", basePath, createTokenEndpoint);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(uri))
                 .version(HttpClient.Version.HTTP_2)
-                .header(SUBSCRIPTION_KEY_HEADER, SUBSCRIPTION_KEY)
+                .header(subscriptionKeyHeader, subscriptionKey)
                 .PUT(HttpRequest.BodyPublishers.ofString(piiBody))
                 .build();
 

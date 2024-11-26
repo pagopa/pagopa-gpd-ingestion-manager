@@ -2,7 +2,6 @@ package it.gov.pagopa.gpd.ingestion.manager.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.gpd.ingestion.manager.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.PaymentOption;
@@ -61,7 +60,8 @@ public class IngestionServiceImpl implements IngestionService {
         // persist the item
         try {
             for (String msg : messages) {
-                DataCaptureMessage<PaymentPosition> paymentPosition = objectMapper.configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true).readValue(msg, new TypeReference<DataCaptureMessage<PaymentPosition>>() {});
+                DataCaptureMessage<PaymentPosition> paymentPosition = objectMapper.readValue(msg, new TypeReference<DataCaptureMessage<PaymentPosition>>() {
+                });
 
                 if (paymentPosition == null) {
                     continue;
@@ -115,7 +115,8 @@ public class IngestionServiceImpl implements IngestionService {
         // persist the item
         try {
             for (String msg : messages) {
-                DataCaptureMessage<PaymentOption> paymentOption = objectMapper.configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true).readValue(msg, new TypeReference<DataCaptureMessage<PaymentOption>>() {});
+                DataCaptureMessage<PaymentOption> paymentOption = objectMapper.readValue(msg, new TypeReference<DataCaptureMessage<PaymentOption>>() {
+                });
 
                 if (paymentOption == null) {
                     continue;
@@ -153,7 +154,8 @@ public class IngestionServiceImpl implements IngestionService {
         // persist the item
         try {
             for (String msg : messages) {
-                DataCaptureMessage<Transfer> transfer = objectMapper.configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true).readValue(msg, new TypeReference<DataCaptureMessage<Transfer>>() {});
+                DataCaptureMessage<Transfer> transfer = objectMapper.readValue(msg, new TypeReference<DataCaptureMessage<Transfer>>() {
+                });
 
                 if (transfer == null) {
                     continue;
