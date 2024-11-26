@@ -11,6 +11,7 @@ import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerUnexpectedExcep
 import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerService;
 import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerServiceRetryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
@@ -19,21 +20,22 @@ import org.springframework.stereotype.Service;
 @Service
 public class PDVTokenizerServiceRetryWrapperImpl implements PDVTokenizerServiceRetryWrapper {
 
-    private static final Long INITIAL_INTERVAL = Long.parseLong(System.getenv().getOrDefault("PDV_TOKENIZER_INITIAL_INTERVAL", "200"));
-    private static final Double MULTIPLIER = Double.parseDouble(System.getenv().getOrDefault("PDV_TOKENIZER_MULTIPLIER", "2.0"));
-    private static final Double RANDOMIZATION_FACTOR = Double.parseDouble(System.getenv().getOrDefault("PDV_TOKENIZER_RANDOMIZATION_FACTOR", "0.6"));
-    private static final Integer MAX_RETRIES = Integer.parseInt(System.getenv().getOrDefault("PDV_TOKENIZER_MAX_RETRIES", "3"));
-
     private final PDVTokenizerService pdvTokenizerService;
     private final Retry retry;
 
     @Autowired
-    public PDVTokenizerServiceRetryWrapperImpl(PDVTokenizerService pdvTokenizerService) {
+    public PDVTokenizerServiceRetryWrapperImpl(
+            @Value("${pdv.tokenizer.retry.initial-interval}") Long initialIn,
+            @Value("${pdv.tokenizer.retry.multiplier}") Double multiplier,
+            @Value("${pdv.tokenizer.retry.randomization-factor}") Double randomizationFactor,
+            @Value("${pdv.tokenizer.retry.max-retries}") Integer maxRetries,
+            PDVTokenizerService pdvTokenizerService
+    ) {
         this.pdvTokenizerService = pdvTokenizerService;
 
         RetryConfig config = RetryConfig.custom()
-                .maxAttempts(MAX_RETRIES)
-                .intervalFunction(IntervalFunction.ofExponentialRandomBackoff(INITIAL_INTERVAL, MULTIPLIER, RANDOMIZATION_FACTOR))
+                .maxAttempts(maxRetries)
+                .intervalFunction(IntervalFunction.ofExponentialRandomBackoff(initialIn, multiplier, randomizationFactor))
                 .retryOnException(e -> (e instanceof PDVTokenizerException tokenizerException) && tokenizerException.getStatusCode() == 429)
                 .build();
 

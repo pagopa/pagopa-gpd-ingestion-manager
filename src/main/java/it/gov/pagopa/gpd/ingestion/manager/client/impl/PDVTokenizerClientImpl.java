@@ -23,19 +23,26 @@ import java.net.http.HttpResponse;
 public class PDVTokenizerClientImpl implements PDVTokenizerClient {
 
     private final Logger logger = LoggerFactory.getLogger(PDVTokenizerClientImpl.class);
+
     private final HttpClient client;
-    @Value("${pdv.tokenizer.base-path}")
-    private String basePath;
-    @Value("${pdv.tokenizer.sub-key}")
-    private String subscriptionKey;
-    @Value("${pdv.tokenizer.sub-key-header}")
-    private String subscriptionKeyHeader;
-    @Value("${pdv.tokenizer.create-token.endpoint}")
-    private String createTokenEndpoint;
+    private final String basePath;
+    private final String subscriptionKey;
+    private final String subscriptionKeyHeader;
+    private final String createTokenEndpoint;
 
     @Autowired
-    public PDVTokenizerClientImpl(HttpClient httpClient) {
-        this.client = httpClient;
+    public PDVTokenizerClientImpl(
+            HttpClient client,
+            @Value("${pdv.tokenizer.base-path}") String basePath,
+            @Value("${pdv.tokenizer.sub-key}") String subscriptionKey,
+            @Value("${pdv.tokenizer.sub-key-header}") String subscriptionKeyHeader,
+            @Value("${pdv.tokenizer.create-token.endpoint}") String createTokenEndpoint
+    ) {
+        this.client = client;
+        this.basePath = basePath;
+        this.subscriptionKey = subscriptionKey;
+        this.subscriptionKeyHeader = subscriptionKeyHeader;
+        this.createTokenEndpoint = createTokenEndpoint;
     }
 
     /**
