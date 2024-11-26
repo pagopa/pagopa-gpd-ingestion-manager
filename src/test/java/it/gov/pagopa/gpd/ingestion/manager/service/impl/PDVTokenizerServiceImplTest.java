@@ -39,7 +39,7 @@ class PDVTokenizerServiceImplTest {
     private PDVTokenizerClient pdvTokenizerClientMock;
     @Autowired
     @InjectMocks
-    private PDVTokenizerService sut;
+    private PDVTokenizerServiceImpl sut;
 
     @BeforeEach
     void setUp() {
