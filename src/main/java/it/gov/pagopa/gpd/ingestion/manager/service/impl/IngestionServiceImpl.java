@@ -37,7 +37,6 @@ public class IngestionServiceImpl implements IngestionService {
     @Autowired
     public IngestionServiceImpl(ObjectMapper objectMapper, PDVTokenizerServiceRetryWrapper pdvTokenizerService, IngestedPaymentPositionProducer paymentPositionProducer, IngestedPaymentOptionProducer paymentOptionProducer, IngestedTransferProducer transferProducer) {
         this.objectMapper = objectMapper;
-        this.objectMapper.configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true);
         this.pdvTokenizerService = pdvTokenizerService;
         this.paymentPositionProducer = paymentPositionProducer;
         this.paymentOptionProducer = paymentOptionProducer;
@@ -62,7 +61,7 @@ public class IngestionServiceImpl implements IngestionService {
         // persist the item
         try {
             for (String msg : messages) {
-                DataCaptureMessage<PaymentPosition> paymentPosition = objectMapper.readValue(msg, new TypeReference<DataCaptureMessage<PaymentPosition>>() {});
+                DataCaptureMessage<PaymentPosition> paymentPosition = objectMapper.configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true).readValue(msg, new TypeReference<DataCaptureMessage<PaymentPosition>>() {});
 
                 if (paymentPosition == null) {
                     continue;
@@ -116,7 +115,7 @@ public class IngestionServiceImpl implements IngestionService {
         // persist the item
         try {
             for (String msg : messages) {
-                DataCaptureMessage<PaymentOption> paymentOption = objectMapper.readValue(msg, new TypeReference<DataCaptureMessage<PaymentOption>>() {});
+                DataCaptureMessage<PaymentOption> paymentOption = objectMapper.configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true).readValue(msg, new TypeReference<DataCaptureMessage<PaymentOption>>() {});
 
                 if (paymentOption == null) {
                     continue;
@@ -154,7 +153,7 @@ public class IngestionServiceImpl implements IngestionService {
         // persist the item
         try {
             for (String msg : messages) {
-                DataCaptureMessage<Transfer> transfer = objectMapper.readValue(msg, new TypeReference<DataCaptureMessage<Transfer>>() {});
+                DataCaptureMessage<Transfer> transfer = objectMapper.configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true).readValue(msg, new TypeReference<DataCaptureMessage<Transfer>>() {});
 
                 if (transfer == null) {
                     continue;
