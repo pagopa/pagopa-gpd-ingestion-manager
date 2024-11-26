@@ -33,14 +33,12 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      - uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f # v2.3.4
       - name: Code Review
-        uses: ./.github/maven_code_review
+        uses: pagopa/github-actions-template/maven-code-review@186af0dfc5ee51e6150046051d4e0b6444e15aed # v1.10.6
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           sonar_token: ${{ secrets.SONAR_TOKEN }}
           project_key: ${{env.PROJECT_KEY}}
-          jdk_version: 17
-          maven_version: 3.9.3
-          coverage_exclusions: "**/config/*,**/*Mock*,**/model/**,**/entity/**,**/producer/**,**/enumeration/**,**/exception/**"
-          cpd_exclusions: "**/model/**,**/entity/*"
+          coverage_exclusions: "**/config/*,**/*Mock*,**/model/**,**/entity/**,**/producer/**,**/consumer/**,**/enumeration/**,**/exception/**,**/controller/**,**/Application.java"
+          cpd_exclusions: "**/models/**,**/entity/*"
+          java_version: 17

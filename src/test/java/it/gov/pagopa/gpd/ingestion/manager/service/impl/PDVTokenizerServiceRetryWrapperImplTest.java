@@ -1,99 +1,112 @@
 package it.gov.pagopa.gpd.ingestion.manager.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
-import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerException;
-import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerUnexpectedException;
-import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerService;
-import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerServiceRetryWrapper;
-import org.apache.http.HttpStatus;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import io.github.resilience4j.retry.Retry;
+import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerException;
+import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerUnexpectedException;
+import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerService;
+import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+
+@SpringBootTest(classes = {PDVTokenizerServiceRetryWrapperImpl.class})
 class PDVTokenizerServiceRetryWrapperImplTest {
 
-    private static final String FISCAL_CODE = "fiscalCode";
-    private static final String TOKEN = "token";
-    private static final int MAX_ATTEMPTS = 3;
+  private static final String FISCAL_CODE = "fiscalCode";
+  private static final String TOKEN = "token";
+  private static final int MAX_ATTEMPTS = 3;
 
-    private PDVTokenizerService pdvTokenizerServiceMock;
+  @MockBean private PDVTokenizerService pdvTokenizerServiceMock;
+  @MockBean private Retry retry;
 
-    private PDVTokenizerServiceRetryWrapper sut;
+  @Autowired private PDVTokenizerServiceRetryWrapperImpl sut;
 
-    @BeforeEach
-    void setUp() {
-        pdvTokenizerServiceMock = mock(PDVTokenizerService.class);
+  @Test
+  void generateTokenForFiscalCodeRetryForPDVTokenizerExceptionWithStatus429()
+      throws PDVTokenizerException, JsonProcessingException {
+    String errMsg = "Error";
+    doThrow(new PDVTokenizerException(errMsg, 429))
+        .when(pdvTokenizerServiceMock)
+        .generateTokenForFiscalCode(anyString());
 
-        RetryConfig config = RetryConfig.custom()
-                .maxAttempts(MAX_ATTEMPTS)
-                .retryOnException(e -> (e instanceof PDVTokenizerException tokenizerException) && tokenizerException.getStatusCode() == 429)
-                .build();
-        Retry retry = Retry.of("id", config);
+    PDVTokenizerException e =
+        assertThrows(
+            PDVTokenizerException.class,
+            () -> sut.generateTokenForFiscalCodeWithRetry(FISCAL_CODE));
 
-        sut = Mockito.spy(new PDVTokenizerServiceRetryWrapperImpl(pdvTokenizerServiceMock, retry));
-    }
+    assertNotNull(e);
+    assertEquals(429, e.getStatusCode());
+    assertEquals(errMsg, e.getMessage());
 
-    @Test
-    void generateTokenForFiscalCodeRetryForPDVTokenizerExceptionWithStatus429() throws PDVTokenizerException, JsonProcessingException {
-        String errMsg = "Error";
-        doThrow(new PDVTokenizerException(errMsg, 429)).when(pdvTokenizerServiceMock).generateTokenForFiscalCode(anyString());
+    verify(pdvTokenizerServiceMock, times(MAX_ATTEMPTS)).generateTokenForFiscalCode(anyString());
+  }
 
-        PDVTokenizerException e = assertThrows(PDVTokenizerException.class, () -> sut.generateTokenForFiscalCodeWithRetry(FISCAL_CODE));
+  @Test
+  void generateTokenForFiscalCodeNotRetryForPDVTokenizerExceptionWithoutStatus429()
+      throws PDVTokenizerException, JsonProcessingException {
+    String errMsg = "Error";
+    doThrow(new PDVTokenizerException(errMsg, HttpStatus.SC_INTERNAL_SERVER_ERROR))
+        .when(pdvTokenizerServiceMock)
+        .generateTokenForFiscalCode(anyString());
 
-        assertNotNull(e);
-        assertEquals(429, e.getStatusCode());
-        assertEquals(errMsg, e.getMessage());
+    PDVTokenizerException e =
+        assertThrows(
+            PDVTokenizerException.class,
+            () -> sut.generateTokenForFiscalCodeWithRetry(FISCAL_CODE));
 
-        verify(pdvTokenizerServiceMock, times(MAX_ATTEMPTS)).generateTokenForFiscalCode(anyString());
-    }
+    assertNotNull(e);
+    assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getStatusCode());
+    assertEquals(errMsg, e.getMessage());
 
-    @Test
-    void generateTokenForFiscalCodeNotRetryForPDVTokenizerExceptionWithoutStatus429() throws PDVTokenizerException, JsonProcessingException {
-        String errMsg = "Error";
-        doThrow(new PDVTokenizerException(errMsg, HttpStatus.SC_INTERNAL_SERVER_ERROR)).when(pdvTokenizerServiceMock).generateTokenForFiscalCode(anyString());
+    verify(pdvTokenizerServiceMock).generateTokenForFiscalCode(anyString());
+  }
 
-        PDVTokenizerException e = assertThrows(PDVTokenizerException.class, () -> sut.generateTokenForFiscalCodeWithRetry(FISCAL_CODE));
+  @Test
+  void generateTokenForFiscalCodeNotRetryForJsonProcessingException()
+      throws PDVTokenizerException, JsonProcessingException {
+    doThrow(JsonProcessingException.class)
+        .when(pdvTokenizerServiceMock)
+        .generateTokenForFiscalCode(anyString());
 
-        assertNotNull(e);
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getStatusCode());
-        assertEquals(errMsg, e.getMessage());
+    JsonProcessingException e =
+        assertThrows(
+            JsonProcessingException.class,
+            () -> sut.generateTokenForFiscalCodeWithRetry(FISCAL_CODE));
 
-        verify(pdvTokenizerServiceMock).generateTokenForFiscalCode(anyString());
-    }
+    assertNotNull(e);
+    verify(pdvTokenizerServiceMock).generateTokenForFiscalCode(anyString());
+  }
 
-    @Test
-    void generateTokenForFiscalCodeNotRetryForJsonProcessingException() throws PDVTokenizerException, JsonProcessingException {
-        doThrow(JsonProcessingException.class).when(pdvTokenizerServiceMock).generateTokenForFiscalCode(anyString());
+  @Test
+  void generateTokenForFiscalCodeNotRetryForPDVTokenizerUnexpectedException()
+      throws PDVTokenizerException, JsonProcessingException {
+    doThrow(RuntimeException.class)
+        .when(pdvTokenizerServiceMock)
+        .generateTokenForFiscalCode(anyString());
 
-        JsonProcessingException e = assertThrows(JsonProcessingException.class, () -> sut.generateTokenForFiscalCodeWithRetry(FISCAL_CODE));
+    PDVTokenizerUnexpectedException e =
+        assertThrows(
+            PDVTokenizerUnexpectedException.class,
+            () -> sut.generateTokenForFiscalCodeWithRetry(FISCAL_CODE));
 
-        assertNotNull(e);
-        verify(pdvTokenizerServiceMock).generateTokenForFiscalCode(anyString());
-    }
+    assertNotNull(e);
+    verify(pdvTokenizerServiceMock).generateTokenForFiscalCode(anyString());
+  }
 
-    @Test
-    void generateTokenForFiscalCodeNotRetryForPDVTokenizerUnexpectedException() throws PDVTokenizerException, JsonProcessingException {
-        doThrow(RuntimeException.class).when(pdvTokenizerServiceMock).generateTokenForFiscalCode(anyString());
+  @Test
+  void generateTokenForFiscalCodeSuccessNotRetry()
+      throws PDVTokenizerException, JsonProcessingException {
+    doReturn(TOKEN).when(pdvTokenizerServiceMock).generateTokenForFiscalCode(anyString());
 
-        PDVTokenizerUnexpectedException e = assertThrows(PDVTokenizerUnexpectedException.class, () -> sut.generateTokenForFiscalCodeWithRetry(FISCAL_CODE));
+    String token = sut.generateTokenForFiscalCodeWithRetry(FISCAL_CODE);
 
-        assertNotNull(e);
-        verify(pdvTokenizerServiceMock).generateTokenForFiscalCode(anyString());
-    }
-
-    @Test
-    void generateTokenForFiscalCodeSuccessNotRetry() throws PDVTokenizerException, JsonProcessingException {
-        doReturn(TOKEN).when(pdvTokenizerServiceMock).generateTokenForFiscalCode(anyString());
-
-        String token = sut.generateTokenForFiscalCodeWithRetry(FISCAL_CODE);
-
-        assertEquals(TOKEN, token);
-        verify(pdvTokenizerServiceMock).generateTokenForFiscalCode(anyString());
-    }
+    assertEquals(TOKEN, token);
+    verify(pdvTokenizerServiceMock).generateTokenForFiscalCode(anyString());
+  }
 }

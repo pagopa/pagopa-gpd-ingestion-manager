@@ -2,7 +2,7 @@
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=pagopa_pagopa-gpd-ingestion-manager&metric=alert_status)](https://sonarcloud.io/dashboard?id=pagopa_pagopa-gpd-ingestion-manager)
 
-Java Azure Functions that ingest a message from GPD observer event hub, tokenizes sensitive information and sends it
+Microservice that ingest a message from GPD observer event hub, tokenizes sensitive information and sends it
 again to the event hub
 
 ---

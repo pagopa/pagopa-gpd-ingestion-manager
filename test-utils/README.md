@@ -1,7 +1,9 @@
 # Test util
+
 👀 Test util module, it execute the following app
- - Redis container
- - Kafka to Redis connector
+
+- Redis container
+- Kafka to Redis connector
 
 ## How run on Docker 🐳
 

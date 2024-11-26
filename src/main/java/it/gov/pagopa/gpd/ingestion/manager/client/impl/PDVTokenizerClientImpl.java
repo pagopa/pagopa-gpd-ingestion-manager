@@ -2,10 +2,13 @@ package it.gov.pagopa.gpd.ingestion.manager.client.impl;
 
 
 import it.gov.pagopa.gpd.ingestion.manager.client.PDVTokenizerClient;
-import it.gov.pagopa.gpd.ingestion.manager.entity.enumeration.ReasonErrorCode;
+import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.enumeration.ReasonErrorCode;
 import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.URI;
@@ -16,31 +19,30 @@ import java.net.http.HttpResponse;
 /**
  * {@inheritDoc}
  */
+@Component
 public class PDVTokenizerClientImpl implements PDVTokenizerClient {
 
-    private static final String BASE_PATH = System.getenv().getOrDefault("PDV_TOKENIZER_BASE_PATH", "https://api.uat.tokenizer.pdv.pagopa.it/tokenizer/v1");
-    private static final String SUBSCRIPTION_KEY = System.getenv().getOrDefault("PDV_TOKENIZER_SUBSCRIPTION_KEY", "");
-    private static final String SUBSCRIPTION_KEY_HEADER = System.getenv().getOrDefault("TOKENIZER_APIM_HEADER_KEY", "x-api-key");
-    private static final String CREATE_TOKEN_ENDPOINT = System.getenv().getOrDefault("PDV_TOKENIZER_CREATE_TOKEN_ENDPOINT", "/tokens");
-    private static PDVTokenizerClientImpl instance;
     private final Logger logger = LoggerFactory.getLogger(PDVTokenizerClientImpl.class);
+
     private final HttpClient client;
+    private final String basePath;
+    private final String subscriptionKey;
+    private final String subscriptionKeyHeader;
+    private final String createTokenEndpoint;
 
-    private PDVTokenizerClientImpl() {
-        this.client = HttpClient.newBuilder()
-                .version(HttpClient.Version.HTTP_2)
-                .build();
-    }
-
-    public PDVTokenizerClientImpl(HttpClient client) {
+    @Autowired
+    public PDVTokenizerClientImpl(
+            HttpClient client,
+            @Value("${pdv.tokenizer.base-path}") String basePath,
+            @Value("${pdv.tokenizer.sub-key}") String subscriptionKey,
+            @Value("${pdv.tokenizer.sub-key-header}") String subscriptionKeyHeader,
+            @Value("${pdv.tokenizer.create-token.endpoint}") String createTokenEndpoint
+    ) {
         this.client = client;
-    }
-
-    public static PDVTokenizerClientImpl getInstance() {
-        if (instance == null) {
-            instance = new PDVTokenizerClientImpl();
-        }
-        return instance;
+        this.basePath = basePath;
+        this.subscriptionKey = subscriptionKey;
+        this.subscriptionKeyHeader = subscriptionKeyHeader;
+        this.createTokenEndpoint = createTokenEndpoint;
     }
 
     /**
@@ -48,12 +50,12 @@ public class PDVTokenizerClientImpl implements PDVTokenizerClient {
      */
     @Override
     public HttpResponse<String> createToken(String piiBody) throws PDVTokenizerException {
-        String uri = String.format("%s%s", BASE_PATH, CREATE_TOKEN_ENDPOINT);
+        String uri = String.format("%s%s", basePath, createTokenEndpoint);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(uri))
                 .version(HttpClient.Version.HTTP_2)
-                .header(SUBSCRIPTION_KEY_HEADER, SUBSCRIPTION_KEY)
+                .header(subscriptionKeyHeader, subscriptionKey)
                 .PUT(HttpRequest.BodyPublishers.ofString(piiBody))
                 .build();
 

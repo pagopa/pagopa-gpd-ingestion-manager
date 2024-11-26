@@ -1,43 +1,31 @@
 microservice-chart:
   namespace: "gps"
   nameOverride: ""
-  fullnameOverride: ""
+  fullnameOverride: "pagopa/pagopa-gpd-ingestion-manager"
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-ingestion-manager
     tag: "0.1.2"
     pullPolicy: Always
-  # https://github.com/Azure/azure-functions-host/blob/dev/src/WebJobs.Script.WebHost/Controllers/HostController.cs
   livenessProbe:
     httpGet:
-      path: /info
-      port: 80
+      path: /actuator/health/liveness
+      port: 8080
     initialDelaySeconds: 60
     failureThreshold: 6
     periodSeconds: 10
   readinessProbe:
     httpGet:
-      path: /info
-      port: 80
+      path: /actuator/health/readiness
+      port: 8080
     initialDelaySeconds: 60
     failureThreshold: 6
     periodSeconds: 10
   deployment:
     create: true
-  serviceMonitor:
-    create: true
-    endpoints:
-      - interval: 10s #jmx-exporter
-        targetPort: 12345
-        path: /metrics
-  ports:
-    - 80 #http
-    - 8080
-    - 12345 #jmx-exporter
   service:
+    create: true
     type: ClusterIP
     ports:
-      - 80 #http
-      - 12345 #jmx-exporter
       - 8080
   ingress:
     create: true
@@ -46,9 +34,9 @@ microservice-chart:
     servicePort: 8080
   serviceAccount:
     create: false
-    annotations: {}
+    annotations: { }
     name: ""
-  podAnnotations: {}
+  podAnnotations: { }
   podSecurityContext:
     seccompProfile:
       type: RuntimeDefault
@@ -73,12 +61,6 @@ microservice-chart:
           # Required
           type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
           value: "80"
-      - type: memory
-        metadata:
-          # Required
-          type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
-          value: "80"
-  fileConfig: {}
   envConfig:
     WEBSITE_SITE_NAME: "pagopagpdingestionmanager" # required to show cloud role name in application insights
     FUNCTIONS_WORKER_RUNTIME: "java"
@@ -87,6 +69,7 @@ microservice-chart:
     PDV_TOKENIZER_MULTIPLIER: "2.0"
     PDV_TOKENIZER_RANDOMIZATION_FACTOR: "0.6"
     PDV_TOKENIZER_MAX_RETRIES: "3"
+    KAFKA_BROKER: "pagopa-d-itn-observ-gpd-evh.servicebus.windows.net:9093"
     ENABLE_ECS_CONSOLE: "true"
     CONSOLE_LOG_THRESHOLD: "DEBUG"
     CONSOLE_LOG_PATTERN: "%d{HH:mm:ss.SSS}[%thread]%-5level%logger{36}-%msg%n"
@@ -95,7 +78,13 @@ microservice-chart:
     APP_NAME: "metadata.labels['app.kubernetes.io/instance']"
     APP_VERSION: "metadata.labels['app.kubernetes.io/version']"
   envSecret:
-    AzureWebJobsStorage: 'AzureWebJobsStorage-gdp-ingestion'
+    OTEL_SERVICE_NAME: 'gpd-ingestion-manager'
+    OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=dev"
+    OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.elastic-system.svc:4317"
+    OTEL_TRACES_EXPORTER: otlp
+    OTEL_METRICS_EXPORTER: otlp
+    OTEL_LOGS_EXPORTER: none
+    OTEL_TRACES_SAMPLER: "always_on"
     APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-d-connection-string'
     PAYMENT_POSITION_INPUT_EVENTHUB_CONN_STRING: "payment-position-topic-input-conn-string"
     PAYMENT_POSITION_OUTPUT_EVENTHUB_CONN_STRING: "payment-position-topic-output-conn-string"
@@ -107,8 +96,8 @@ microservice-chart:
   keyvault:
     name: "pagopa-d-gps-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
-  nodeSelector: {}
-  tolerations: []
+  nodeSelector: { }
+  tolerations: [ ]
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -130,10 +119,10 @@ microservice-chart:
     service:
       create: true
     deployment:
-      create: false
+      create: true
       image:
         repository: ghcr.io/pagopa/pagopa-gpd-ingestion-manager
         tag: "0.0.0"
         pullPolicy: Always
-      envConfig: {}
-      envSecret: {}
+      envConfig: { }
+      envSecret: { }
