@@ -11,10 +11,12 @@ import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerUnexpectedExcep
 import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerService;
 import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerServiceRetryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 /**
  * {@inheritDoc}
  */
+@Service
 public class PDVTokenizerServiceRetryWrapperImpl implements PDVTokenizerServiceRetryWrapper {
 
     private static final Long INITIAL_INTERVAL = Long.parseLong(System.getenv().getOrDefault("PDV_TOKENIZER_INITIAL_INTERVAL", "200"));
