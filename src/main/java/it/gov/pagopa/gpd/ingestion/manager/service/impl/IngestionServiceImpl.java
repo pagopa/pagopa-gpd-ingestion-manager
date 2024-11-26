@@ -37,6 +37,7 @@ public class IngestionServiceImpl implements IngestionService {
     @Autowired
     public IngestionServiceImpl(ObjectMapper objectMapper, PDVTokenizerServiceRetryWrapper pdvTokenizerService, IngestedPaymentPositionProducer paymentPositionProducer, IngestedPaymentOptionProducer paymentOptionProducer, IngestedTransferProducer transferProducer) {
         this.objectMapper = objectMapper;
+        this.objectMapper.configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true);
         this.pdvTokenizerService = pdvTokenizerService;
         this.paymentPositionProducer = paymentPositionProducer;
         this.paymentOptionProducer = paymentOptionProducer;
@@ -61,7 +62,7 @@ public class IngestionServiceImpl implements IngestionService {
         // persist the item
         try {
             for (String msg : messages) {
-                DataCaptureMessage<PaymentPosition> paymentPosition = mapDataCapturePaymentPositionString(msg);
+                DataCaptureMessage<PaymentPosition> paymentPosition = objectMapper.readValue(msg, new TypeReference<DataCaptureMessage<PaymentPosition>>() {});
 
                 if (paymentPosition == null) {
                     continue;
@@ -115,7 +116,7 @@ public class IngestionServiceImpl implements IngestionService {
         // persist the item
         try {
             for (String msg : messages) {
-                DataCaptureMessage<PaymentOption> paymentOption = mapDataCapturePaymentOptionString(msg);
+                DataCaptureMessage<PaymentOption> paymentOption = objectMapper.readValue(msg, new TypeReference<DataCaptureMessage<PaymentOption>>() {});
 
                 if (paymentOption == null) {
                     continue;
@@ -153,7 +154,7 @@ public class IngestionServiceImpl implements IngestionService {
         // persist the item
         try {
             for (String msg : messages) {
-                DataCaptureMessage<Transfer> transfer = mapDataCaptureTransferString(msg);
+                DataCaptureMessage<Transfer> transfer = objectMapper.readValue(msg, new TypeReference<DataCaptureMessage<Transfer>>() {});
 
                 if (transfer == null) {
                     continue;
@@ -182,44 +183,5 @@ public class IngestionServiceImpl implements IngestionService {
                     LocalDateTime.now(), e.getMessage());
         }
 
-    }
-
-    /**
-     * Maps string to object of DataCaptureMessage paymentPosition list
-     *
-     * @param string String to map
-     * @return object of the defined Class
-     */
-    private DataCaptureMessage<PaymentPosition> mapDataCapturePaymentPositionString(final String string) throws JsonProcessingException {
-        return objectMapper
-                .configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true)
-                .readValue(string, new TypeReference<DataCaptureMessage<PaymentPosition>>() {
-                });
-    }
-
-    /**
-     * Maps string to object of DataCaptureMessage paymentOption
-     *
-     * @param string String to map
-     * @return object of the defined Class
-     */
-    private DataCaptureMessage<PaymentOption> mapDataCapturePaymentOptionString(final String string) throws JsonProcessingException {
-        return objectMapper
-                .configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true)
-                .readValue(string, new TypeReference<DataCaptureMessage<PaymentOption>>() {
-                });
-    }
-
-    /**
-     * Maps string to object of DataCaptureMessage transfer
-     *
-     * @param string String to map
-     * @return object of the defined Class
-     */
-    private DataCaptureMessage<Transfer> mapDataCaptureTransferString(final String string) throws JsonProcessingException {
-        return objectMapper
-                .configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true)
-                .readValue(string, new TypeReference<DataCaptureMessage<Transfer>>() {
-                });
     }
 }
