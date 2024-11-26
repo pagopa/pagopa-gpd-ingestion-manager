@@ -1,7 +1,7 @@
 microservice-chart:
   namespace: "gps"
   nameOverride: ""
-  fullnameOverride: "pagopa/pagopa-gpd-ingestion-manager"
+  fullnameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-ingestion-manager
     tag: "0.2.0"
