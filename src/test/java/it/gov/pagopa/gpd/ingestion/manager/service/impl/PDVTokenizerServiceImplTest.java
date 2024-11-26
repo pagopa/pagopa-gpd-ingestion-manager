@@ -8,7 +8,6 @@ import it.gov.pagopa.gpd.ingestion.manager.model.tokenizer.ErrorMessage;
 import it.gov.pagopa.gpd.ingestion.manager.model.tokenizer.ErrorResponse;
 import it.gov.pagopa.gpd.ingestion.manager.model.tokenizer.InvalidParam;
 import it.gov.pagopa.gpd.ingestion.manager.model.tokenizer.TokenResource;
-import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerService;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest(classes = {PDVTokenizerServiceImpl.class})
+@SpringBootTest(classes = {PDVTokenizerServiceImpl.class, ObjectMapper.class})
 class PDVTokenizerServiceImplTest {
 
     private static final String TOKEN = "token";
@@ -45,7 +44,7 @@ class PDVTokenizerServiceImplTest {
     void setUp() {
         httpResponseMock = mock(HttpResponse.class);
         pdvTokenizerClientMock = mock(PDVTokenizerClient.class);
-        sut = Mockito.spy(new PDVTokenizerServiceImpl(pdvTokenizerClientMock));
+        sut = Mockito.spy(new PDVTokenizerServiceImpl(pdvTokenizerClientMock, objectMapper));
     }
 
     @Test
