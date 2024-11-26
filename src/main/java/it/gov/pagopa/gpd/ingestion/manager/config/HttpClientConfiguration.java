@@ -1,4 +1,4 @@
-package it.gov.pagopa.gpd.ingestion.manager.configuration;
+package it.gov.pagopa.gpd.ingestion.manager.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
