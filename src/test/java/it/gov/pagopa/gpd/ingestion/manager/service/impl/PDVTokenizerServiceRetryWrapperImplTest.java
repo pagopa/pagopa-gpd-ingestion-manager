@@ -29,7 +29,6 @@ class PDVTokenizerServiceRetryWrapperImplTest {
     private Retry retry;
 
     @Autowired
-    @InjectMocks
     private PDVTokenizerServiceRetryWrapperImpl sut;
 
     @Test
