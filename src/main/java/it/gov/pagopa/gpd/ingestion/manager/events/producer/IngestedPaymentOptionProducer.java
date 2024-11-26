@@ -5,7 +5,7 @@ import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.PaymentOption;
 import org.springframework.stereotype.Service;
 
 /**
- * Interface to use when required to execute sending of a notice generation request through
+ * Interface to use when required to execute sending of a {@link PaymentOption} message through
  * the eventhub channel
  */
 @Service

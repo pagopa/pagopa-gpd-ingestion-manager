@@ -5,14 +5,14 @@ import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.Transfer;
 import org.springframework.stereotype.Service;
 
 /**
- * Interface to use when required to execute sending of a notice generation request through
+ * Interface to use when required to execute sending of a {@link Transfer} message through
  * the eventhub channel
  */
 @Service
 public interface IngestedTransferProducer {
 
     /**
-     * Send an ingested Transfer to GPD eventhub
+     * Send an ingested {@link Transfer} to GPD eventhub
      *
      * @param ingestedTransfer data to send
      * @return boolean referring if the insertion on the sending channel was successfully

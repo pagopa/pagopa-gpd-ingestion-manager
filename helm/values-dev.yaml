@@ -78,7 +78,6 @@ microservice-chart:
     APP_NAME: "metadata.labels['app.kubernetes.io/instance']"
     APP_VERSION: "metadata.labels['app.kubernetes.io/version']"
   envSecret:
-    AzureWebJobsStorage: 'AzureWebJobsStorage-gdp-ingestion'
     OTEL_SERVICE_NAME: 'gpd-ingestion-manager'
     OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=dev"
     OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.elastic-system.svc:4317"
