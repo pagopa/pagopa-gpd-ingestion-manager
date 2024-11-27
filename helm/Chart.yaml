@@ -2,8 +2,8 @@ apiVersion: v2
 name: pagopagpdingestionmanager
 description: Microservice to tokenize eventhub msg
 type: application
-version: 0.14.0
-appVersion: 0.2.0-1-remove-otel-env-helm
+version: 0.15.0
+appVersion: 0.3.0
 dependencies:
   - name: microservice-chart
     version: 2.8.0
