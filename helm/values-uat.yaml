@@ -22,6 +22,12 @@ microservice-chart:
     periodSeconds: 10
   deployment:
     create: true
+  serviceMonitor:
+    create: true
+    endpoints:
+      - interval: 10s #jmx-exporter
+        targetPort: 12345
+        path: /metrics
   service:
     create: true
     type: ClusterIP
