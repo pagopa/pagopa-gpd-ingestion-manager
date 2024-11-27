@@ -48,7 +48,7 @@ steps:
       npm run start-load-events-${ENV}
     displayName: Run insert events on postgres
     env:
-      ENV: ${{ parameters.ENV }}
+      ENV: ${{ parameters.ENVIRONMENT }}
       PG_GPD_USERNAME: ${{ variables.PG_GPD_USERNAME }}
       PG_GPD_PASSWORD: ${{ variables.PG_GPD_PASSWORD }}
       NUMBER_OF_EVENTS: ${{ parameters.NUMBER_OF_EVENTS }}
