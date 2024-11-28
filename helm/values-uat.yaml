@@ -4,24 +4,30 @@ microservice-chart:
   fullnameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-ingestion-manager
-    tag: "0.3.0-1-update-gha-deploy"
+    tag: "0.3.3-1-update-gha-deploy"
     pullPolicy: Always
   livenessProbe:
     httpGet:
       path: /actuator/health/liveness
       port: 8080
-    initialDelaySeconds: 60
+    initialDelaySeconds: 90
     failureThreshold: 6
     periodSeconds: 10
   readinessProbe:
     httpGet:
       path: /actuator/health/readiness
       port: 8080
-    initialDelaySeconds: 60
+    initialDelaySeconds: 90
     failureThreshold: 6
     periodSeconds: 10
   deployment:
     create: true
+  serviceMonitor:
+    create: true
+    endpoints:
+      - interval: 10s #jmx-exporter
+        targetPort: 12345
+        path: /metrics
   service:
     create: true
     type: ClusterIP

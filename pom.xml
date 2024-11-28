@@ -12,7 +12,7 @@
 
     <groupId>it.gov.pagopa.gps</groupId>
     <artifactId>gpd-ingestion-manager</artifactId>
-    <version>0.3.0-1-update-gha-deploy</version>
+    <version>0.3.3-1-update-gha-deploy</version>
     <name>pagopa-gpd-ingestion-manager</name>
     <description>PagoPA GPD ingestion manager</description>
 
@@ -48,21 +48,15 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
-            <version>2.4.1</version>
         </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
-            <version>2.4.1</version>
         </dependency>
 
         <dependency>
