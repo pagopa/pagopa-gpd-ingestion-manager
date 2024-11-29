@@ -33,6 +33,7 @@ microservice-chart:
     type: ClusterIP
     ports:
       - 8080
+      - 12345 #jmx-exporter
   ingress:
     create: true
     host: "weuuat.gps.internal.uat.platform.pagopa.it"
