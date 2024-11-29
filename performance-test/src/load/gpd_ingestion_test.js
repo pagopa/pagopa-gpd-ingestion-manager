@@ -15,11 +15,8 @@ async function insertEvents() {
 
     console.log("Selected number of events: ", NUMBER_OF_EVENTS);
     // SAVE ON DB paymentPositions
-    for (let i = 0; i < (Math.floor(NUMBER_OF_EVENTS / 2)); i++) {
+    for (let i = 0; i < NUMBER_OF_EVENTS; i++) {
         const uniqueId = 120798 + i;
-        const idValidFiscalCode = uniqueId;
-        await insertPaymentPositionWithValidFiscalCode(idValidFiscalCode);
-        arrayIdTokenized.push(idValidFiscalCode);
 
         const idInvalidFiscalCode = uniqueId + (NUMBER_OF_EVENTS * 2);
         await insertPaymentPositionWithInvalidFiscalCode(idInvalidFiscalCode);
