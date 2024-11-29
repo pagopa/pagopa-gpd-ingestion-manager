@@ -35,7 +35,6 @@ pool:
 steps:
   - script: |
       cd ./test-utils
-      echo ${INGESTION_EVENTHUB_CONN_STRING}
       chmod +x ./run_compose.sh
       ./run_compose.sh ${INGESTION_EVENTHUB_CONN_STRING} "gpd-ingestion.apd.payment_position,cdc-raw-auto.apd.payment_position"
     displayName: Run Redis and javascript consumer
