@@ -28,12 +28,14 @@ microservice-chart:
       - interval: 10s #jmx-exporter
         targetPort: 12345
         path: /metrics
+  ports:
+    - 8080
+    - 12345 #jmx-exporter        
   service:
     create: true
     type: ClusterIP
     ports:
       - 8080
-      - 12345 #jmx-exporter
   ingress:
     create: true
     host: "weuprod.gps.internal.platform.pagopa.it"
