@@ -1,8 +1,8 @@
 
 
-const { insertPaymentPositionWithValidFiscalCode, insertPaymentPositionWithInvalidFiscalCode, deletePaymentPositions } = require("./modules/pg_gpd_client.js");
-const { REDIS_ARRAY_IDS_TOKENIZED, REDIS_ARRAY_IDS_NOT_TOKENIZED } = require("./modules/common.js");
-const { setValueRedis, shutDownClient } = require("./modules/redis_client.js");
+const { insertPaymentPositionWithValidFiscalCode, insertPaymentPositionWithInvalidFiscalCode, deletePaymentPositions } = require("../modules/pg_gpd_client.js");
+const { REDIS_ARRAY_IDS_TOKENIZED, REDIS_ARRAY_IDS_NOT_TOKENIZED } = require("../modules/common.js");
+const { setValueRedis, shutDownClient } = require("../modules/redis_client.js");
 
 const NUMBER_OF_EVENTS = JSON.parse(process.env.NUMBER_OF_EVENTS);
 
