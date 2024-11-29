@@ -62,7 +62,6 @@ steps:
     displayName: Wait for timeout
     env:
       TIMEOUT: ${{ parameters.TIMEOUT }}
-    timeoutInMinutes: 10
 
   - script: |
       cd ./performance-test/src
