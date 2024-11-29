@@ -22,12 +22,12 @@ variables:
     poolImage: "pagopa-dev-loadtest-linux"
     PG_GPD_PASSWORD: "$(DEV_PG_GPD_PASSWORD)"
     PG_GPD_USERNAME: "$(DEV_PG_GPD_USER)"
-    INGESTION_EVENTHUB_CONN_STRING: "${DEV_INGESTION_EVENTHUB_CONN_STRING}"
+    INGESTION_EVENTHUB_CONN_STRING: "$(DEV_INGESTION_EVENTHUB_CONN_STRING)"
   ${{ if eq(parameters['ENVIRONMENT'], 'uat') }}:
     poolImage: "pagopa-uat-loadtest-linux"
     PG_GPD_PASSWORD: "$(UAT_PG_GPD_PASSWORD)"
     PG_GPD_USERNAME: "$(UAT_PG_GPD_USER)"
-    INGESTION_EVENTHUB_CONN_STRING: "${UAT_INGESTION_EVENTHUB_CONN_STRING}"
+    INGESTION_EVENTHUB_CONN_STRING: "$(UAT_INGESTION_EVENTHUB_CONN_STRING)"
 
 pool:
   name: $(poolImage)
@@ -36,7 +36,7 @@ steps:
   - script: |
       cd ./test-utils
       chmod +x ./run_compose.sh
-      ./run_compose.sh "${INGESTION_EVENTHUB_CONN_STRING}" "gpd-ingestion.apd.payment_position,cdc-raw-auto.apd.payment_position"
+      ./run_compose.sh ${INGESTION_EVENTHUB_CONN_STRING} "gpd-ingestion.apd.payment_position,cdc-raw-auto.apd.payment_position"
     displayName: Run Redis and javascript consumer
     env:
       INGESTION_EVENTHUB_CONN_STRING: ${{ variables.INGESTION_EVENTHUB_CONN_STRING }}
