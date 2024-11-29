@@ -58,7 +58,7 @@ steps:
       NUMBER_OF_EVENTS: ${{ parameters.NUMBER_OF_EVENTS }}
 
   - script: |
-      timeout ${TIMEOUT}
+      sleep ${TIMEOUT}
     displayName: Wait for timeout
     env:
       TIMEOUT: ${{ parameters.TIMEOUT }}
@@ -73,3 +73,4 @@ steps:
   - script: |
       docker rm -f $(docker ps -aq)
     displayName:  Remove docker containers
+    continueOnError: true
