@@ -45,10 +45,10 @@ steps:
       cd ./performance-test/src
       docker build -f ./load/DockerfileLoad -t exec-node-load .
       docker run --rm --name loadEventsGpdIngestion --network test-utils_test-network \
-      -e ENV="${ENV}" \
-      -e PG_GPD_USERNAME="${PG_GPD_USERNAME}" \
-      -e PG_GPD_PASSWORD="${PG_GPD_PASSWORD}" \
-      -e NUMBER_OF_EVENTS="${NUMBER_OF_EVENTS}" \
+      -e ENV=${ENV} \
+      -e PG_GPD_USERNAME=${PG_GPD_USERNAME} \
+      -e PG_GPD_PASSWORD=${PG_GPD_PASSWORD} \
+      -e NUMBER_OF_EVENTS=${NUMBER_OF_EVENTS} \
       exec-node-load
     displayName: Run insert events on postgres
     env:
