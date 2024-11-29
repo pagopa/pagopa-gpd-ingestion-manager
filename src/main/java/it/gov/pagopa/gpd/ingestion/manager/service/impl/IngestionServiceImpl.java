@@ -64,7 +64,8 @@ public class IngestionServiceImpl implements IngestionService {
         "PaymentPosition ingestion called at {} for payment positions with events list size {}",
         LocalDateTime.now(),
         messages.size());
-
+    int nullMessages = 0;
+    int errorMessages = 0;
     // persist the item
     for (String msg : messages) {
       try {
@@ -73,6 +74,7 @@ public class IngestionServiceImpl implements IngestionService {
                 msg, new TypeReference<DataCaptureMessage<PaymentPosition>>() {});
 
         if (paymentPosition == null) {
+          nullMessages += 1;
           continue;
         }
         PaymentPosition valuesBefore = paymentPosition.getBefore();
@@ -101,27 +103,39 @@ public class IngestionServiceImpl implements IngestionService {
         if (response) {
           log.debug("PaymentPosition ingestion sent to eventhub at {}", LocalDateTime.now());
         } else {
+          errorMessages += 1;
           log.error(
               "PaymentPosition ingestion unable to send to eventhub at {}", LocalDateTime.now());
         }
       } catch (JsonProcessingException e) {
+        errorMessages += 1;
         log.error(
             "PaymentPosition ingestion error JsonProcessingException at {}",
             LocalDateTime.now(),
             e);
       } catch (PDVTokenizerException e) {
+        errorMessages += 1;
         log.error(
             "PaymentPosition ingestion error PDVTokenizerException at {}", LocalDateTime.now(), e);
       } catch (PDVTokenizerUnexpectedException e) {
+        errorMessages += 1;
         log.error(
             "PaymentPosition ingestion error PDVTokenizerUnexpectedException at {}",
             LocalDateTime.now(),
             e);
       } catch (Exception e) {
+        errorMessages += 1;
         log.error(
             "PaymentPosition ingestion error Generic exception at {}", LocalDateTime.now(), e);
       }
     }
+
+    log.debug(
+        "PaymentPosition ingested at {}: total messages {}, {} null and {} errors",
+        LocalDateTime.now(),
+        messages.size(),
+        nullMessages,
+        errorMessages);
   }
 
   public void ingestPaymentOptions(List<String> messages) {
@@ -129,7 +143,8 @@ public class IngestionServiceImpl implements IngestionService {
         "PaymentOption ingestion called at {} for payment positions with events list size {}",
         LocalDateTime.now(),
         messages.size());
-
+    int nullMessages = 0;
+    int errorMessages = 0;
     // persist the item
     for (String msg : messages) {
       try {
@@ -137,6 +152,7 @@ public class IngestionServiceImpl implements IngestionService {
             objectMapper.readValue(msg, new TypeReference<DataCaptureMessage<PaymentOption>>() {});
 
         if (paymentOption == null) {
+          nullMessages += 1;
           continue;
         }
         PaymentOption valuesBefore = paymentOption.getBefore();
@@ -152,16 +168,26 @@ public class IngestionServiceImpl implements IngestionService {
         if (response) {
           log.debug("PaymentOption ingestion sent to eventhub at {}", LocalDateTime.now());
         } else {
+          errorMessages += 1;
           log.error(
               "PaymentOption ingestion unable to send to eventhub at {}", LocalDateTime.now());
         }
       } catch (JsonProcessingException e) {
+        errorMessages += 1;
         log.error(
             "PaymentOption ingestion error JsonProcessingException at {}", LocalDateTime.now(), e);
       } catch (Exception e) {
+        errorMessages += 1;
         log.error("PaymentOption ingestion error Generic exception at {}", LocalDateTime.now(), e);
       }
     }
+
+    log.debug(
+        "PaymentOption ingested at {}: total messages {}, {} null and {} errors",
+        LocalDateTime.now(),
+        messages.size(),
+        nullMessages,
+        errorMessages);
   }
 
   public void ingestTransfers(List<String> messages) {
@@ -170,6 +196,8 @@ public class IngestionServiceImpl implements IngestionService {
         LocalDateTime.now(),
         messages.size());
 
+    int nullMessages = 0;
+    int errorMessages = 0;
     // persist the item
     for (String msg : messages) {
       try {
@@ -177,6 +205,7 @@ public class IngestionServiceImpl implements IngestionService {
             objectMapper.readValue(msg, new TypeReference<DataCaptureMessage<Transfer>>() {});
 
         if (transfer == null) {
+          nullMessages += 1;
           continue;
         }
         Transfer valuesBefore = transfer.getBefore();
@@ -192,13 +221,22 @@ public class IngestionServiceImpl implements IngestionService {
         if (response) {
           log.debug("Transfer ingestion sent to eventhub at {}", LocalDateTime.now());
         } else {
+          errorMessages += 1;
           log.error("Transfer ingestion unable to send to eventhub at {}", LocalDateTime.now());
         }
       } catch (JsonProcessingException e) {
+        errorMessages += 1;
         log.error("Transfer ingestion error JsonProcessingException at {}", LocalDateTime.now(), e);
       } catch (Exception e) {
+        errorMessages += 1;
         log.error("Transfer ingestion error Generic exception at {}", LocalDateTime.now(), e);
       }
     }
+    log.debug(
+        "Transfer ingested at {}: total messages {}, {} null and {} errors",
+        LocalDateTime.now(),
+        messages.size(),
+        nullMessages,
+        errorMessages);
   }
 }
