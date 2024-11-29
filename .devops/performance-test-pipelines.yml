@@ -34,6 +34,17 @@ pool:
 
 steps:
   - script: |
+      echo ${ENV}
+      echo ${PG_GPD_USERNAME}
+      echo ${PG_GPD_PASSWORD}
+      echo ${NUMBER_OF_EVENTS}
+    displayName: Echo variables
+    env:
+      ENV: ${{ parameters.ENVIRONMENT }}
+      PG_GPD_USERNAME: ${{ variables.PG_GPD_USERNAME }}
+      PG_GPD_PASSWORD: ${{ variables.PG_GPD_PASSWORD }}
+      NUMBER_OF_EVENTS: ${{ parameters.NUMBER_OF_EVENTS }}
+  - script: |
       cd ./test-utils
       chmod +x ./run_compose.sh
       ./run_compose.sh "${INGESTION_EVENTHUB_CONN_STRING}" "gpd-ingestion.apd.payment_position,cdc-raw-auto.apd.payment_position"
