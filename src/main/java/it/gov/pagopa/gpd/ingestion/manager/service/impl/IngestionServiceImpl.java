@@ -60,7 +60,7 @@ public class IngestionServiceImpl implements IngestionService {
   }
 
   public void ingestPaymentPositions(List<String> messages) {
-    log.info(
+    log.debug(
         "PaymentPosition ingestion called at {} for payment positions with events list size {}",
         LocalDateTime.now(),
         messages.size());
@@ -78,7 +78,7 @@ public class IngestionServiceImpl implements IngestionService {
         PaymentPosition valuesBefore = paymentPosition.getBefore();
         PaymentPosition valuesAfter = paymentPosition.getAfter();
 
-        log.info(
+        log.debug(
             "PaymentPosition ingestion called at {} with payment position id {}",
             LocalDateTime.now(),
             (valuesAfter != null ? valuesAfter : valuesBefore).getId());
@@ -99,7 +99,7 @@ public class IngestionServiceImpl implements IngestionService {
         boolean response = paymentPositionProducer.sendIngestedPaymentPosition(paymentPosition);
 
         if (response) {
-          log.info("PaymentPosition ingestion sent to eventhub at {}", LocalDateTime.now());
+          log.debug("PaymentPosition ingestion sent to eventhub at {}", LocalDateTime.now());
         } else {
           log.error(
               "PaymentPosition ingestion unable to send to eventhub at {}", LocalDateTime.now());
@@ -125,7 +125,7 @@ public class IngestionServiceImpl implements IngestionService {
   }
 
   public void ingestPaymentOptions(List<String> messages) {
-    log.info(
+    log.debug(
         "PaymentOption ingestion called at {} for payment positions with events list size {}",
         LocalDateTime.now(),
         messages.size());
@@ -142,7 +142,7 @@ public class IngestionServiceImpl implements IngestionService {
         PaymentOption valuesBefore = paymentOption.getBefore();
         PaymentOption valuesAfter = paymentOption.getAfter();
 
-        log.info(
+        log.debug(
             "PaymentOption ingestion called at {} with payment position id {}",
             LocalDateTime.now(),
             (valuesAfter != null ? valuesAfter : valuesBefore).getId());
@@ -150,7 +150,7 @@ public class IngestionServiceImpl implements IngestionService {
         boolean response = paymentOptionProducer.sendIngestedPaymentOption(paymentOption);
 
         if (response) {
-          log.info("PaymentOption ingestion sent to eventhub at {}", LocalDateTime.now());
+          log.debug("PaymentOption ingestion sent to eventhub at {}", LocalDateTime.now());
         } else {
           log.error(
               "PaymentOption ingestion unable to send to eventhub at {}", LocalDateTime.now());
@@ -165,7 +165,7 @@ public class IngestionServiceImpl implements IngestionService {
   }
 
   public void ingestTransfers(List<String> messages) {
-    log.info(
+    log.debug(
         "Transfer ingestion called at {} for payment positions with events list size {}",
         LocalDateTime.now(),
         messages.size());
@@ -182,7 +182,7 @@ public class IngestionServiceImpl implements IngestionService {
         Transfer valuesBefore = transfer.getBefore();
         Transfer valuesAfter = transfer.getAfter();
 
-        log.info(
+        log.debug(
             "Transfer ingestion called at {} with payment position id {}",
             LocalDateTime.now(),
             (valuesAfter != null ? valuesAfter : valuesBefore).getId());
@@ -190,7 +190,7 @@ public class IngestionServiceImpl implements IngestionService {
         boolean response = transferProducer.sendIngestedTransfer(transfer);
 
         if (response) {
-          log.info("Transfer ingestion sent to eventhub at {}", LocalDateTime.now());
+          log.debug("Transfer ingestion sent to eventhub at {}", LocalDateTime.now());
         } else {
           log.error("Transfer ingestion unable to send to eventhub at {}", LocalDateTime.now());
         }
