@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   deploy:
-    runs-on: [ self-hosted-job ]
+    runs-on: [ self-hosted-job, "${{ inputs.environment }}" ]
     name: Deploy on AKS
     environment: ${{ inputs.environment }}
     steps:
