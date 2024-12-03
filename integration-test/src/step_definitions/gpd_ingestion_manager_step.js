@@ -136,13 +136,16 @@ Then('the payment position operations have id {int}', function (id) {
 });
 
 Then('the operations have the fiscal code tokenized', function () {
-  assert.notStrictEqual(this.paymentPositionCreateOp.after.fiscalCode, this.paymentPositionFiscalCode);
-  assert.notStrictEqual(this.paymentPositionUpdateOp.after.fiscalCode, this.paymentPositionFiscalCode);
+  assert.notStrictEqual(this.paymentPositionCreateOp.after.fiscal_code, undefined);
+  assert.notStrictEqual(this.paymentPositionCreateOp.after.fiscal_code, this.paymentPositionFiscalCode);
+  assert.notStrictEqual(this.paymentPositionUpdateOp.after.fiscal_code, undefined);
+  assert.notStrictEqual(this.paymentPositionUpdateOp.after.fiscal_code, this.paymentPositionFiscalCode);
 });
 
 Then('the payment position update operation has the company name updated', function () {
-  assert.notStrictEqual(this.paymentPositionUpdateOp.after.companyName, this.paymentPositionCompanyName);
-  assert.strictEqual(this.paymentPositionUpdateOp.after.companyName, this.paymentPositionUpdatedCompanyName);
+  assert.notStrictEqual(this.paymentPositionUpdateOp.after.company_name, undefined);
+  assert.notStrictEqual(this.paymentPositionUpdateOp.after.company_name, this.paymentPositionCompanyName);
+  assert.strictEqual(this.paymentPositionUpdateOp.after.company_name, this.paymentPositionUpdatedCompanyName);
 });
 
 ///////////////////////////
