@@ -15,6 +15,7 @@ import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerUnexpectedExcep
 import it.gov.pagopa.gpd.ingestion.manager.service.IngestionService;
 import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerServiceRetryWrapper;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
@@ -66,6 +67,7 @@ public class IngestionServiceImpl implements IngestionService {
         messages.size());
     int nullMessages = 0;
     int errorMessages = 0;
+    messages.removeAll(Collections.singleton(null));
     // persist the item
     for (String msg : messages) {
       try {
@@ -145,6 +147,7 @@ public class IngestionServiceImpl implements IngestionService {
         messages.size());
     int nullMessages = 0;
     int errorMessages = 0;
+    messages.removeAll(Collections.singleton(null));
     // persist the item
     for (String msg : messages) {
       try {
@@ -198,6 +201,7 @@ public class IngestionServiceImpl implements IngestionService {
 
     int nullMessages = 0;
     int errorMessages = 0;
+    messages.removeAll(Collections.singleton(null));
     // persist the item
     for (String msg : messages) {
       try {
