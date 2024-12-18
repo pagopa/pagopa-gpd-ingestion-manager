@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-ingestion-manager
-    tag: "0.3.3-3-update-gha-deploy"
+    tag: "0.3.9"
     pullPolicy: Always
   livenessProbe:
     httpGet:
@@ -28,11 +28,15 @@ microservice-chart:
       - interval: 10s #jmx-exporter
         targetPort: 12345
         path: /metrics
+  ports:
+    - 8080
+    - 12345 #jmx-exporter
   service:
     create: true
     type: ClusterIP
     ports:
       - 8080
+      - 12345 #jmx-exporter
   ingress:
     create: true
     host: "weuuat.gps.internal.uat.platform.pagopa.it"

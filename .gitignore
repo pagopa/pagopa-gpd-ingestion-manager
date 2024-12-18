@@ -43,3 +43,4 @@ yarn.lock
 
 # Misc
 .azure/
+local.settings.json

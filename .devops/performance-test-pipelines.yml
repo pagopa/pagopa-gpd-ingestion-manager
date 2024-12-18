@@ -21,13 +21,13 @@ variables:
   ${{ if eq(parameters['ENVIRONMENT'], 'dev') }}:
     poolImage: "pagopa-dev-loadtest-linux"
     PG_GPD_PASSWORD: "$(DEV_PG_GPD_PASSWORD)"
-    PG_GPD_USERNAME: "$(DEV_PG_GPD_USERNAME)"
-    INGESTION_EVENTHUB_CONN_STRING: "${DEV_INGESTION_EVENTHUB_CONN_STRING}"
+    PG_GPD_USERNAME: "$(DEV_PG_GPD_USER)"
+    INGESTION_EVENTHUB_CONN_STRING: "$(DEV_INGESTION_EVENTHUB_CONN_STRING)"
   ${{ if eq(parameters['ENVIRONMENT'], 'uat') }}:
     poolImage: "pagopa-uat-loadtest-linux"
     PG_GPD_PASSWORD: "$(UAT_PG_GPD_PASSWORD)"
-    PG_GPD_USERNAME: "$(UAT_PG_GPD_USERNAME)"
-    INGESTION_EVENTHUB_CONN_STRING: "${UAT_INGESTION_EVENTHUB_CONN_STRING}"
+    PG_GPD_USERNAME: "$(UAT_PG_GPD_USER)"
+    INGESTION_EVENTHUB_CONN_STRING: "$(UAT_INGESTION_EVENTHUB_CONN_STRING)"
 
 pool:
   name: $(poolImage)
@@ -36,31 +36,41 @@ steps:
   - script: |
       cd ./test-utils
       chmod +x ./run_compose.sh
-      ./run_compose.sh "${{ variables.INGESTION_EVENTHUB_CONN_STRING }}" "gpd-ingestion.apd.payment_position,cdc-raw-auto.apd.payment_position"
-    displayName: Run GPD Ingestion Timestamp Review
+      ./run_compose.sh ${INGESTION_EVENTHUB_CONN_STRING} "gpd-ingestion.apd.payment_position,cdc-raw-auto.apd.payment_position"
+    displayName: Run Redis and javascript consumer
     env:
       INGESTION_EVENTHUB_CONN_STRING: ${{ variables.INGESTION_EVENTHUB_CONN_STRING }}
-
+    
   - script: |
       cd ./performance-test/src
-      npm install
-      export PG_GPD_USERNAME=${PG_GPD_USERNAME} PG_GPD_PASSWORD=${PG_GPD_PASSWORD} NUMBER_OF_EVENTS=${NUMBER_OF_EVENTS} && \
-      npm run start-load-events-${ENV}
+      docker build -f ./load/DockerfileLoad -t exec-node-load .
+      docker run --rm --name loadEventsGpdIngestion --network test-utils_test-network \
+      -e ENV=${ENV} \
+      -e PG_GPD_USERNAME=${PG_GPD_USERNAME} \
+      -e PG_GPD_PASSWORD=${PG_GPD_PASSWORD} \
+      -e NUMBER_OF_EVENTS=${NUMBER_OF_EVENTS} \
+      exec-node-load
     displayName: Run insert events on postgres
     env:
-      ENV: ${{ parameters.ENV }}
+      ENV: ${{ parameters.ENVIRONMENT }}
       PG_GPD_USERNAME: ${{ variables.PG_GPD_USERNAME }}
       PG_GPD_PASSWORD: ${{ variables.PG_GPD_PASSWORD }}
       NUMBER_OF_EVENTS: ${{ parameters.NUMBER_OF_EVENTS }}
 
   - script: |
-      timeout ${TIMEOUT}s
+      sleep ${TIMEOUT}
     displayName: Wait for timeout
     env:
       TIMEOUT: ${{ parameters.TIMEOUT }}
 
   - script: |
       cd ./performance-test/src
-      npm install
-      npm run start-performance-review
-    displayName: Run timestamp review
+      docker build -f ./review/DockerfileReview -t exec-node-review .
+      docker run --rm --name reviewEventsGpdIngestion --network test-utils_test-network \
+      exec-node-review       
+    displayName:  Run GPD Ingestion Timestamp Review
+
+  - script: |
+      docker rm -f $(docker ps -aq)
+    displayName:  Remove docker containers
+    continueOnError: true

@@ -4,6 +4,8 @@ services:
     ports:
       - '6379:6379'
       - '8001:8001'
+    networks: 
+      - test-network
   kafka-to-redis:
     restart: on-failure
     build: ./kafka-to-redis
@@ -13,3 +15,8 @@ services:
       - INGESTION_EVENTHUB_TOPICS=${INGESTION_EVENTHUB_TOPICS}
       - REDIS_PORT=6379
       - REDIS_HOST=redis
+    networks: 
+      - test-network
+networks: 
+  test-network: 
+    driver: bridge
