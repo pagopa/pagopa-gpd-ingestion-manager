@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -33,18 +34,22 @@ public class IngestionServiceImpl implements IngestionService {
 
   private final IngestedTransferProducer transferProducer;
 
+  private final Boolean placeholderOnPdvKO;
+
   @Autowired
   public IngestionServiceImpl(
       ObjectMapper objectMapper,
       PDVTokenizerServiceRetryWrapper pdvTokenizerService,
       IngestedPaymentPositionProducer paymentPositionProducer,
       IngestedPaymentOptionProducer paymentOptionProducer,
-      IngestedTransferProducer transferProducer) {
+      IngestedTransferProducer transferProducer,
+      @Value("${pdv.tokenizer.placeholderOnPdvKO}") Boolean placeholderOnPdvKO) {
     this.objectMapper = objectMapper;
     this.pdvTokenizerService = pdvTokenizerService;
     this.paymentPositionProducer = paymentPositionProducer;
     this.paymentOptionProducer = paymentOptionProducer;
     this.transferProducer = transferProducer;
+    this.placeholderOnPdvKO = placeholderOnPdvKO;
   }
 
   private static boolean isValidFiscalCode(String fiscalCode) {
@@ -89,15 +94,37 @@ public class IngestionServiceImpl implements IngestionService {
 
         // tokenize fiscal codes
         if (valuesBefore != null && isValidFiscalCode(valuesBefore.getFiscalCode())) {
-          valuesBefore.setFiscalCode(
-              pdvTokenizerService.generateTokenForFiscalCodeWithRetry(
-                  valuesBefore.getFiscalCode()));
-          paymentPosition.setBefore(valuesBefore);
+          try {
+            valuesBefore.setFiscalCode(
+                    pdvTokenizerService.generateTokenForFiscalCodeWithRetry(
+                            valuesBefore.getFiscalCode()));
+            paymentPosition.setBefore(valuesBefore);
+          } catch (Exception e) {
+            if (!placeholderOnPdvKO) {
+              throw e;
+            } else {
+              log.error(
+                      "PaymentPosition ingestion error PDVTokenizerException at {}", LocalDateTime.now(), e);
+              valuesBefore.setFiscalCode("PDV_CF_TOKENIZER");
+              paymentPosition.setBefore(valuesBefore);
+            }
+          }
         }
         if (valuesAfter != null && isValidFiscalCode(valuesAfter.getFiscalCode())) {
-          valuesAfter.setFiscalCode(
-              pdvTokenizerService.generateTokenForFiscalCodeWithRetry(valuesAfter.getFiscalCode()));
-          paymentPosition.setAfter(valuesAfter);
+          try {
+            valuesAfter.setFiscalCode(
+                    pdvTokenizerService.generateTokenForFiscalCodeWithRetry(valuesAfter.getFiscalCode()));
+            paymentPosition.setAfter(valuesAfter);
+          } catch (Exception e) {
+            if (!placeholderOnPdvKO) {
+              throw e;
+            } else {
+              log.error(
+                      "PaymentPosition ingestion error PDVTokenizerException at {}", LocalDateTime.now(), e);
+              valuesAfter.setFiscalCode("PDV_CF_TOKENIZER");
+              paymentPosition.setAfter(valuesAfter);
+            }
+          }
         }
 
         boolean response = paymentPositionProducer.sendIngestedPaymentPosition(paymentPosition);
