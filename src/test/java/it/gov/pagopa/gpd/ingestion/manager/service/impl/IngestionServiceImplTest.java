@@ -64,7 +64,8 @@ class IngestionServiceImplTest {
             pdvTokenizerServiceMock,
             paymentPositionProducer,
             paymentOptionProducer,
-            transferProducer);
+            transferProducer,
+            false    );
 
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentPositions(paymentPositionsItems));
@@ -91,7 +92,8 @@ class IngestionServiceImplTest {
             pdvTokenizerServiceMock,
             paymentPositionProducer,
             paymentOptionProducer,
-            transferProducer);
+            transferProducer,
+            false    );
 
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentPositions(paymentPositionsItems));
@@ -116,7 +118,7 @@ class IngestionServiceImplTest {
             pdvTokenizerServiceMock,
             paymentPositionProducer,
             paymentOptionProducer,
-            transferProducer);
+            transferProducer, false);
 
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentPositions(paymentPositionsItems));
@@ -142,7 +144,7 @@ class IngestionServiceImplTest {
             pdvTokenizerServiceMock,
             paymentPositionProducer,
             paymentOptionProducer,
-            transferProducer);
+            transferProducer, false);
 
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentPositions(paymentPositionsItems));
@@ -167,7 +169,7 @@ class IngestionServiceImplTest {
             pdvTokenizerServiceMock,
             paymentPositionProducer,
             paymentOptionProducer,
-            transferProducer);
+            transferProducer, false);
 
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentPositions(paymentPositionsItems));
@@ -193,7 +195,7 @@ class IngestionServiceImplTest {
             pdvTokenizerServiceMock,
             paymentPositionProducer,
             paymentOptionProducer,
-            transferProducer);
+            transferProducer, false);
 
     DataCaptureMessage<PaymentPosition> ppList = generateValidPaymentPosition(FISCAL_CODE, false);
     List<String> paymentPositionsItems =
@@ -202,6 +204,34 @@ class IngestionServiceImplTest {
     assertDoesNotThrow(() -> sut.ingestPaymentPositions(paymentPositionsItems));
 
     verify(paymentPositionProducer, never()).sendIngestedPaymentPosition(any());
+  }
+
+  @Test
+  void ingestPaymentPositionRunOkBothAfterAndBeforeWithPlaceolhderOnPDvError()
+          throws PDVTokenizerException, JsonProcessingException {
+    when(pdvTokenizerServiceMock.generateTokenForFiscalCodeWithRetry(FISCAL_CODE))
+            .thenThrow(new PDVTokenizerException("test", 500));
+
+    DataCaptureMessage<PaymentPosition> ppList = generateValidPaymentPosition(FISCAL_CODE, true);
+    List<String> paymentPositionsItems =
+            Collections.singletonList(objectMapper.writeValueAsString(ppList));
+
+    sut =
+            new IngestionServiceImpl(
+                    objectMapper,
+                    pdvTokenizerServiceMock,
+                    paymentPositionProducer,
+                    paymentOptionProducer,
+                    transferProducer,
+                    true    );
+
+    // test execution
+    assertDoesNotThrow(() -> sut.ingestPaymentPositions(paymentPositionsItems));
+
+    verify(paymentPositionProducer).sendIngestedPaymentPosition(paymentPositionCaptor.capture());
+    DataCaptureMessage<PaymentPosition> captured = paymentPositionCaptor.getValue();
+    assertEquals("PDV_CF_TOKENIZER", captured.getBefore().getFiscalCode());
+    assertEquals("PDV_CF_TOKENIZER", captured.getAfter().getFiscalCode());
   }
 
   @Test
@@ -214,7 +244,7 @@ class IngestionServiceImplTest {
             pdvTokenizerServiceMock,
             paymentPositionProducer,
             paymentOptionProducer,
-            transferProducer);
+            transferProducer, false);
 
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentPositions(paymentPositionsItems));
@@ -270,7 +300,7 @@ class IngestionServiceImplTest {
             pdvTokenizerServiceMock,
             paymentPositionProducer,
             paymentOptionProducer,
-            transferProducer);
+            transferProducer, false);
 
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentOptions(paymentOptionsItems));
@@ -280,6 +310,7 @@ class IngestionServiceImplTest {
     assertNull(captured.getBefore());
     assertEquals(po.getAfter().getId(), captured.getAfter().getId());
   }
+
 
   @Test
   void ingestPaymentOptionRunNullMessage() {
@@ -291,7 +322,7 @@ class IngestionServiceImplTest {
             pdvTokenizerServiceMock,
             paymentPositionProducer,
             paymentOptionProducer,
-            transferProducer);
+            transferProducer, false);
 
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentOptions(paymentOptionsItems));
@@ -347,7 +378,7 @@ class IngestionServiceImplTest {
             pdvTokenizerServiceMock,
             paymentPositionProducer,
             paymentOptionProducer,
-            transferProducer);
+            transferProducer, false);
 
     // test execution
     assertDoesNotThrow(() -> sut.ingestTransfers(transferItems));
@@ -368,7 +399,7 @@ class IngestionServiceImplTest {
             pdvTokenizerServiceMock,
             paymentPositionProducer,
             paymentOptionProducer,
-            transferProducer);
+            transferProducer, false);
 
     // test execution
     assertDoesNotThrow(() -> sut.ingestTransfers(transferItems));

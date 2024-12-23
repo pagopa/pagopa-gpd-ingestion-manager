@@ -15,6 +15,8 @@ public enum PaymentPositionStatus {
     EXPIRED,
     @Value("PAID")
     PAID,
+    @Value("PARTIALLY_PAID")
+    PARTIALLY_PAID,
     @Value("REPORTED")
     REPORTED
 }

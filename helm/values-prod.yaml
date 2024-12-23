@@ -85,6 +85,7 @@ microservice-chart:
     CONSOLE_LOG_THRESHOLD: "WARN"
     CONSOLE_LOG_PATTERN: "%d{HH:mm:ss.SSS}[%thread]%-5level%logger{36}-%msg%n"
     CONSOLE_LOG_CHARSET: "UTF-8"
+    PDV_TOKENIZER_PLACEHOLDER_ON_KO: "true"
   envFieldRef:
     APP_NAME: "metadata.labels['app.kubernetes.io/instance']"
     APP_VERSION: "metadata.labels['app.kubernetes.io/version']"
