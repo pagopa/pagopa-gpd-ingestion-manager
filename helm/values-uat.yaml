@@ -1,12 +1,13 @@
 microservice-chart:
   namespace: "gps"
   nameOverride: ""
-  fullnameOverride: ""
+  fullnameOverride: "pagopa-gpd-ingestion-manager"
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-ingestion-manager
     tag: "0.4.1"
     pullPolicy: Always
   livenessProbe:
+    handlerType: httpGet
     httpGet:
       path: /actuator/health/liveness
       port: 8080
@@ -14,6 +15,7 @@ microservice-chart:
     failureThreshold: 6
     periodSeconds: 10
   readinessProbe:
+    handlerType: httpGet
     httpGet:
       path: /actuator/health/readiness
       port: 8080
@@ -43,15 +45,19 @@ microservice-chart:
     path: /pagopa-gpd-ingestion-manager/(.*)
     servicePort: 8080
   serviceAccount:
-    create: false
-    annotations: {}
-    name: ""
+    name: "gps-workload-identity"
+  azure:
+    workloadIdentityClientId: <workload-identity-client-id-set-automatically-by-gha>
   podAnnotations: {}
   podSecurityContext:
     seccompProfile:
       type: RuntimeDefault
   securityContext:
     allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    capabilities:
+      drop:
+        - all
   resources:
     requests:
       memory: "512Mi"
