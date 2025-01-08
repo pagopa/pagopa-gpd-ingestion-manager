@@ -24,21 +24,11 @@ microservice-chart:
     periodSeconds: 10
   deployment:
     create: true
-  serviceMonitor:
-    create: true
-    endpoints:
-      - interval: 10s #jmx-exporter
-        targetPort: 12345
-        path: /metrics
-  ports:
-    - 8080
-    - 12345 #jmx-exporter
   service:
     create: true
     type: ClusterIP
     ports:
       - 8080
-      - 12345 #jmx-exporter
   ingress:
     create: true
     host: "weuprod.gps.internal.platform.pagopa.it"
@@ -77,7 +67,13 @@ microservice-chart:
           # Required
           type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
           value: "80"
+      - type: memory
+        metadata:
+          # Required
+          type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+          value: "70"
   envConfig:
+    ENV: "azure-prod"
     WEBSITE_SITE_NAME: "pagopagpdingestionmanager" # required to show cloud role name in application insights
     FUNCTIONS_WORKER_RUNTIME: "java"
     OTEL_SERVICE_NAME: 'gpd-ingestion-manager'
