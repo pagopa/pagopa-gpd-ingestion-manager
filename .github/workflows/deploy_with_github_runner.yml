@@ -39,8 +39,3 @@ jobs:
           app_name: ${{ env.APP_NAME }}
           helm_upgrade_options: '--debug --set microservice-chart.azure.workloadIdentityClientId=${{vars.WORKLOAD_IDENTITY_ID}}'
           timeout: '10m0s'
-
-      - name: Remove deployment
-        shell: bash
-        run: |
-          helm uninstall ${{ env.APP_NAME }} -n ${{ vars.NAMESPACE }}
