@@ -21,7 +21,7 @@ this.paymentPositionCompanyName = null;
 this.paymentPositionUpdatedCompanyName = null;
 
 ///////////////////////////
-// Payment Options vasrs //
+// Payment Options vars  //
 ///////////////////////////
 this.paymentOptionId = null;
 this.paymentOptionDescription = null;
@@ -31,7 +31,7 @@ this.paymentOptionUpdateOp = null;
 this.paymentOptionDeleteOp = null;
 
 ////////////////////
-// Transfer vasrs //
+// Transfer vars  //
 ////////////////////
 this.transferId = null;
 this.transferCategory = null;
@@ -70,7 +70,7 @@ After(async function () {
   this.paymentPositionUpdatedCompanyName = null;
 
   ///////////////////////////
-  // Payment Options vasrs //
+  // Payment Options vars  //
   ///////////////////////////
   this.paymentOptionId = null;
   this.paymentOptionDescription = null;
@@ -80,7 +80,7 @@ After(async function () {
   this.paymentOptionDeleteOp = null;
 
   ////////////////////
-  // Transfer vasrs //
+  // Transfer vars  //
   ////////////////////
   this.transferId = null;
   this.transferCategory = null;
