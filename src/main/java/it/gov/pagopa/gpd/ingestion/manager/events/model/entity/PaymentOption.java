@@ -12,46 +12,70 @@ import lombok.*;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PaymentOption {
-    private int id;
-    @JsonProperty("payment_position_id")
-    private int paymentPositionId;
-    private int amount;
-    private String description;
+  private int id;
 
-    @JsonProperty("due_date")
-    private Long dueDate;
-    private int fee;
-    @JsonProperty("flow_reporting_id")
-    private String flowReportingId;
-    @JsonProperty("receipt_id")
-    private String receiptId;
+  @JsonProperty("payment_position_id")
+  private int paymentPositionId;
 
-    @JsonProperty("inserted_date")
-    private Long insertedDate;
-    @JsonProperty("is_partial_payment")
-    private boolean isPartialPayment;
+  private int amount;
+  private String description;
 
-    private String iuv;
+  @JsonProperty("due_date")
+  private Long dueDate;
 
-    @JsonProperty("last_update_date")
-    private Long lastUpdateDate;
+  private int fee;
 
-    @JsonProperty("organization_fiscal_code")
-    private String organizationFiscalCode;
+  @JsonProperty("flow_reporting_id")
+  private String flowReportingId;
 
-    private PaymentOptionStatus status;
-    @JsonProperty("payment_date")
-    private Long paymentDate;
-    @JsonProperty("payment_method")
-    private String paymentMethod;
-    @JsonProperty("psp_company")
-    private String pspCompany;
-    @JsonProperty("reporting_date")
-    private Long reportingDate;
-    @JsonProperty("retention_date")
-    private Long retentionDate;
-    @JsonProperty("notification_fee")
-    private int notificationFee;
-    @JsonProperty("last_updated_date_notification_fee")
-    private Long lastUpdatedDateNotificationFee;
+  @JsonProperty("receipt_id")
+  private String receiptId;
+
+  @JsonProperty("inserted_date")
+  private Long insertedDate;
+
+  @JsonProperty("is_partial_payment")
+  private boolean isPartialPayment;
+
+  private String iuv;
+
+  @JsonProperty("last_update_date")
+  private Long lastUpdateDate;
+
+  @JsonProperty("organization_fiscal_code")
+  private String organizationFiscalCode;
+
+  private PaymentOptionStatus status;
+
+  @JsonProperty("payment_date")
+  private Long paymentDate;
+
+  @JsonProperty("payment_method")
+  private String paymentMethod;
+
+  @JsonProperty("psp_company")
+  private String pspCompany;
+
+  @JsonProperty("reporting_date")
+  private Long reportingDate;
+
+  @JsonProperty("retention_date")
+  private Long retentionDate;
+
+  @JsonProperty("notification_fee")
+  private int notificationFee;
+
+  @JsonProperty("last_updated_date_notification_fee")
+  private Long lastUpdatedDateNotificationFee;
+
+  // Debtor info
+  @JsonProperty("fiscal_code")
+  private String fiscalCode;
+
+  @JsonProperty("postal_code")
+  private String postalCode;
+
+  private String province;
+  private String region;
+  private String type;
 }
