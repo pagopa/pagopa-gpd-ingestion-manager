@@ -2,8 +2,8 @@ apiVersion: v2
 name: pagopagpdingestionmanager
 description: Microservice to tokenize eventhub msg
 type: application
-version: 0.29.0
-appVersion: 0.5.1
+version: 0.32.0
+appVersion: 0.5.1-3-PAGOPA-2586-new-fields-payment-option
 dependencies:
   - name: microservice-chart
     version: 7.1.1
