@@ -12,7 +12,7 @@
 
     <groupId>it.gov.pagopa.gps</groupId>
     <artifactId>gpd-ingestion-manager</artifactId>
-    <version>0.5.1-2-PAGOPA-2586-new-fields-payment-option</version>
+    <version>0.5.1-3-PAGOPA-2586-new-fields-payment-option</version>
     <name>pagopa-gpd-ingestion-manager</name>
     <description>PagoPA GPD ingestion manager</description>
 
