@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: "pagopa-gpd-ingestion-manager"
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-ingestion-manager
-    tag: "0.5.1"
+    tag: "0.5.1-3-PAGOPA-2586-new-fields-payment-option"
     pullPolicy: Always
   livenessProbe:
     handlerType: httpGet
