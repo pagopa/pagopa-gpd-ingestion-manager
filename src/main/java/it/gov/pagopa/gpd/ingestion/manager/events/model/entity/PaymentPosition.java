@@ -52,4 +52,7 @@ public class PaymentPosition {
 
     @JsonProperty("inserted_date")
     private Long insertedDate;
+
+    @JsonProperty("service_type")
+    private String serviceType;
 }
