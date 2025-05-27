@@ -24,7 +24,6 @@ microservice-chart:
     periodSeconds: 10
   deployment:
     create: true
-    replicas: 1
   service:
     create: true
     type: ClusterIP
