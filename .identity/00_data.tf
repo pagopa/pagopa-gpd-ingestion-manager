@@ -57,6 +57,8 @@ data "azurerm_key_vault_secret" "key_vault_cucumber_token" {
 # }
 
 data "azurerm_key_vault_secret" "key_vault_integration_test_evh_conn_string" {
+  count = var.env_short != "p" ? 1 : 0
+  
   name         = "cdc-gpd-test-connection-string"
   key_vault_id = data.azurerm_key_vault.domain_key_vault.id
 }
