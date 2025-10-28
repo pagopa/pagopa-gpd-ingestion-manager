@@ -68,6 +68,15 @@ public class PaymentOption {
   @JsonProperty("last_updated_date_notification_fee")
   private Long lastUpdatedDateNotificationFee;
 
+  @JsonProperty("payment_plan_id")
+  private String paymentPlanId;
+
+  @JsonProperty("switch_to_expired")
+  private boolean switchToExpired;
+
+  @JsonProperty("validity_date")
+  private Long validityDate;
+
   // Debtor info
   @JsonProperty("fiscal_code")
   private String fiscalCode;
