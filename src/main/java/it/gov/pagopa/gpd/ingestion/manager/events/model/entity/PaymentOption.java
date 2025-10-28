@@ -85,6 +85,8 @@ public class PaymentOption {
   private String postalCode;
 
   private String province;
+
   private String region;
+
   private String type;
 }
