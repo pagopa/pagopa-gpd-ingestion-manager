@@ -18,6 +18,7 @@ public class PaymentOption {
   private int paymentPositionId;
 
   private int amount;
+
   private String description;
 
   @JsonProperty("due_date")
@@ -84,9 +85,26 @@ public class PaymentOption {
   @JsonProperty("postal_code")
   private String postalCode;
 
+  @JsonProperty("street_name")
+  private String streetName;
+
+  @JsonProperty("civic_number")
+  private String civicNumber;
+
+  private String city;
+
   private String province;
 
   private String region;
 
+  private String country;
+
   private String type;
+
+  @JsonProperty("full_name")
+  private String fullName;
+
+  private String email;
+
+  private String phone;
 }

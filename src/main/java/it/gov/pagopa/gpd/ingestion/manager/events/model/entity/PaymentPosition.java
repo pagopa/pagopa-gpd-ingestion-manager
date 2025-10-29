@@ -56,4 +56,9 @@ public class PaymentPosition {
 
     @JsonProperty("service_type")
     private String serviceType;
+
+    @JsonProperty("pay_stand_in")
+    private String payStandIn;
+
+    private boolean pull;
 }
