@@ -18,8 +18,10 @@ public class PaymentPosition {
 
     @JsonProperty("fiscal_code")
     private String fiscalCode;
+
     @JsonProperty("postal_code")
     private String postalCode;
+
     private String province;
 
     @JsonProperty("max_due_date")
@@ -33,17 +35,16 @@ public class PaymentPosition {
 
     @JsonProperty("company_name")
     private String companyName;
+
     @JsonProperty("publish_date")
     private Long publishDate;
+
     private String region;
 
     private PaymentPositionStatus status;
 
     private String type;
-    @JsonProperty("validity_date")
-    private Long validityDate;
-    @JsonProperty("switch_to_expired")
-    private boolean switchToExpired;
+
     @JsonProperty("payment_date")
     private Long paymentDate;
 
@@ -55,4 +56,9 @@ public class PaymentPosition {
 
     @JsonProperty("service_type")
     private String serviceType;
+
+    @JsonProperty("pay_stand_in")
+    private boolean payStandIn;
+
+    private boolean pull;
 }
