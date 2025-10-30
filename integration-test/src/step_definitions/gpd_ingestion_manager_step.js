@@ -116,6 +116,7 @@ When('the payment position operations have been properly published on data lake 
 
 Then('the data lake topic returns the payment position {string} operation with id {string}', async function (operation, id) {
   let operationMessage = await readFromRedisWithKey(id);
+  console.log(operationMessage);
   let pp = JSON.parse(operationMessage).value;
   if (operation === "create") {
     this.paymentPositionCreateOp = pp;
