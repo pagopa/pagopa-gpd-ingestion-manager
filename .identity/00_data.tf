@@ -42,8 +42,8 @@ data "azurerm_key_vault_secret" "key_vault_sonar" {
 }
 
 data "azurerm_key_vault_secret" "key_vault_bot_token" {
-  name = "bot-token-github"
-  key_vault_id = data.azurerm_key_vault.key_vault.id
+  name = "pagopa-platform-domain-github-bot-cd-pat"
+  key_vault_id = data.azurerm_key_vault.domain_key_vault.id
 }
 
 data "azurerm_key_vault_secret" "key_vault_cucumber_token" {
@@ -55,6 +55,11 @@ data "azurerm_key_vault_secret" "key_vault_cucumber_token" {
 #   name         = "webhook-slack"
 #   key_vault_id = data.azurerm_key_vault.domain_key_vault.id
 # }
+
+data "azurerm_key_vault_secret" "key_vault_deploy_webhook_slack" {
+  name         = "pagopa-pagamenti-deploy-slack-webhook"
+  key_vault_id = data.azurerm_key_vault.domain_key_vault.id
+}
 
 data "azurerm_key_vault_secret" "key_vault_integration_test_evh_conn_string" {
   count = var.env_short != "p" ? 1 : 0
