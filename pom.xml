@@ -12,7 +12,7 @@
 
     <groupId>it.gov.pagopa.gps</groupId>
     <artifactId>gpd-ingestion-manager</artifactId>
-    <version>0.5.4-1-PIDM-1277</version>
+    <version>0.5.5</version>
     <name>pagopa-gpd-ingestion-manager</name>
     <description>PagoPA GPD ingestion manager</description>
 
