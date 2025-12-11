@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: "pagopa-gpd-ingestion-manager"
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-ingestion-manager
-    tag: "0.5.5"
+    tag: "0.5.6"
     pullPolicy: Always
   livenessProbe:
     handlerType: httpGet
