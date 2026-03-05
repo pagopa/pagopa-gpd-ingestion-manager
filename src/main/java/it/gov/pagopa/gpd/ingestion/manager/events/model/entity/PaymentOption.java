@@ -75,6 +75,9 @@ public class PaymentOption {
   @JsonProperty("postal_code")
   private String postalCode;
 
+  @JsonProperty("archived")
+  private Boolean archived;
+
   private String province;
   private String region;
   private String type;

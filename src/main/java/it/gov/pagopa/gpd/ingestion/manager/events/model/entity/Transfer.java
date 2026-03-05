@@ -37,4 +37,7 @@ public class Transfer {
 
     @JsonProperty("payment_option_id")
     private int paymentOptionId;
+
+    @JsonProperty("archived")
+    private Boolean archived;
 }
