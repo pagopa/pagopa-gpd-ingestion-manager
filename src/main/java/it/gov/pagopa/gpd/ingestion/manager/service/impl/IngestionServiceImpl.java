@@ -92,6 +92,17 @@ public class IngestionServiceImpl implements IngestionService {
         PaymentPosition valuesBefore = paymentPosition.getBefore();
         PaymentPosition valuesAfter = paymentPosition.getAfter();
 
+        // Filter events on archived PaymentPosition
+        boolean isArchivedBefore = valuesBefore != null && Boolean.TRUE.equals(valuesBefore.getArchived());
+        boolean isArchivedAfter = valuesAfter != null && Boolean.TRUE.equals(valuesAfter.getArchived());
+        if (isArchivedBefore || isArchivedAfter) {
+          log.info(
+                  "PaymentPosition ingestion skipped for archived id {} at {}",
+                  (valuesAfter != null ? valuesAfter : valuesBefore).getId(),
+                  LocalDateTime.now());
+          continue;
+        }
+
         log.debug(
             "PaymentPosition ingestion called at {} with payment position id {}",
             LocalDateTime.now(),
@@ -191,6 +202,17 @@ public class IngestionServiceImpl implements IngestionService {
         PaymentOption valuesBefore = paymentOption.getBefore();
         PaymentOption valuesAfter = paymentOption.getAfter();
 
+        // Filter events on archived PaymentOption
+        boolean isArchivedBefore = valuesBefore != null && Boolean.TRUE.equals(valuesBefore.getArchived());
+        boolean isArchivedAfter = valuesAfter != null && Boolean.TRUE.equals(valuesAfter.getArchived());
+        if (isArchivedBefore || isArchivedAfter) {
+          log.info(
+                  "PaymentOption ingestion skipped for archived id {} at {}",
+                  (valuesAfter != null ? valuesAfter : valuesBefore).getId(),
+                  LocalDateTime.now());
+          continue;
+        }
+
         log.debug(
             "PaymentOption ingestion called at {} with payment position id {}",
             LocalDateTime.now(),
@@ -287,6 +309,17 @@ public class IngestionServiceImpl implements IngestionService {
         }
         Transfer valuesBefore = transfer.getBefore();
         Transfer valuesAfter = transfer.getAfter();
+
+        // Filter events on archived Transfer
+        boolean isArchivedBefore = valuesBefore != null && Boolean.TRUE.equals(valuesBefore.getArchived());
+        boolean isArchivedAfter = valuesAfter != null && Boolean.TRUE.equals(valuesAfter.getArchived());
+        if (isArchivedBefore || isArchivedAfter) {
+          log.info(
+                  "Transfer ingestion skipped for archived id {} at {}",
+                  (valuesAfter != null ? valuesAfter : valuesBefore).getId(),
+                  LocalDateTime.now());
+          continue;
+        }
 
         log.debug(
             "Transfer ingestion called at {} with payment position id {}",

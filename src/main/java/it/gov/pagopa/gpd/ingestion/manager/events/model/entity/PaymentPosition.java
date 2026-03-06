@@ -55,4 +55,7 @@ public class PaymentPosition {
 
     @JsonProperty("service_type")
     private String serviceType;
+
+    @JsonProperty("archived")
+    private Boolean archived;
 }

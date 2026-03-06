@@ -78,4 +78,7 @@ public class PaymentOption {
   private String province;
   private String region;
   private String type;
+
+  @JsonProperty("archived")
+  private Boolean archived;
 }
