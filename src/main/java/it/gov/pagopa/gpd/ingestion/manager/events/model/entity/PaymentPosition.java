@@ -56,6 +56,6 @@ public class PaymentPosition {
     @JsonProperty("service_type")
     private String serviceType;
 
-    @JsonProperty("archived")
+    @JsonProperty(value = "archived", access = JsonProperty.Access.WRITE_ONLY)
     private Boolean archived;
 }

@@ -79,6 +79,6 @@ public class PaymentOption {
   private String region;
   private String type;
 
-  @JsonProperty("archived")
+  @JsonProperty(value = "archived", access = JsonProperty.Access.WRITE_ONLY)
   private Boolean archived;
 }
