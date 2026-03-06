@@ -298,6 +298,37 @@ class IngestionServiceImplTest {
                 .build();
     }
 
+    @Test
+    void ingestPaymentPositionSkippedWhenArchivedAfterIsTrue() throws JsonProcessingException, PDVTokenizerException {
+      DataCaptureMessage<PaymentPosition> msg = generateValidPaymentPosition(FISCAL_CODE, false);
+      msg.getAfter().setArchived(true); // Simulate that the element in after is archived
+
+      List<String> paymentPositionsItems = Collections.singletonList(objectMapper.writeValueAsString(msg));
+
+      sut = new IngestionServiceImpl(objectMapper, pdvTokenizerServiceMock, paymentPositionProducer, paymentOptionProducer, transferProducer, false);
+
+      assertDoesNotThrow(() -> sut.ingestPaymentPositions(paymentPositionsItems));
+
+      // Verify that processing is skipped: no tokenizer and no sending
+      verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
+      verify(paymentPositionProducer, never()).sendIngestedPaymentPosition(any());
+    }
+
+    @Test
+    void ingestPaymentPositionSkippedWhenArchivedBeforeIsTrue() throws JsonProcessingException, PDVTokenizerException {
+      DataCaptureMessage<PaymentPosition> msg = generateValidPaymentPosition(FISCAL_CODE, true);
+      msg.getBefore().setArchived(true); // Simulate that the element in before is archived
+
+      List<String> paymentPositionsItems = Collections.singletonList(objectMapper.writeValueAsString(msg));
+
+      sut = new IngestionServiceImpl(objectMapper, pdvTokenizerServiceMock, paymentPositionProducer, paymentOptionProducer, transferProducer, false);
+
+      assertDoesNotThrow(() -> sut.ingestPaymentPositions(paymentPositionsItems));
+
+      verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
+      verify(paymentPositionProducer, never()).sendIngestedPaymentPosition(any());
+    }
+
     // Test Ingestion Payment Option
     @Test
     void ingestPaymentOptionRunOk() throws PDVTokenizerException, JsonProcessingException {
@@ -503,6 +534,36 @@ class IngestionServiceImplTest {
         verify(paymentOptionProducer, never()).sendIngestedPaymentOption(any());
     }
 
+    @Test
+    void ingestPaymentOptionSkippedWhenArchivedAfterIsTrue() throws JsonProcessingException, PDVTokenizerException {
+      DataCaptureMessage<PaymentOption> msg = generateValidPaymentOption(FISCAL_CODE, false);
+      msg.getAfter().setArchived(true);
+
+      List<String> paymentOptionsItems = Collections.singletonList(objectMapper.writeValueAsString(msg));
+
+      sut = new IngestionServiceImpl(objectMapper, pdvTokenizerServiceMock, paymentPositionProducer, paymentOptionProducer, transferProducer, false);
+
+      assertDoesNotThrow(() -> sut.ingestPaymentOptions(paymentOptionsItems));
+
+      verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
+      verify(paymentOptionProducer, never()).sendIngestedPaymentOption(any());
+    }
+
+    @Test
+    void ingestPaymentOptionSkippedWhenArchivedBeforeIsTrue() throws JsonProcessingException, PDVTokenizerException {
+      DataCaptureMessage<PaymentOption> msg = generateValidPaymentOption(FISCAL_CODE, true);
+      msg.getBefore().setArchived(true);
+
+      List<String> paymentOptionsItems = Collections.singletonList(objectMapper.writeValueAsString(msg));
+
+      sut = new IngestionServiceImpl(objectMapper, pdvTokenizerServiceMock, paymentPositionProducer, paymentOptionProducer, transferProducer, false);
+
+      assertDoesNotThrow(() -> sut.ingestPaymentOptions(paymentOptionsItems));
+
+      verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
+      verify(paymentOptionProducer, never()).sendIngestedPaymentOption(any());
+    }
+
     private DataCaptureMessage<PaymentOption> generateValidPaymentOption(String fiscalCode, Boolean withBefore) {
         PaymentOption pp =
                 PaymentOption.builder()
@@ -583,6 +644,37 @@ class IngestionServiceImplTest {
         assertDoesNotThrow(() -> sut.ingestTransfers(transferItems));
 
         verify(transferProducer, never()).sendIngestedTransfer(any());
+    }
+
+    @Test
+    void ingestTransfersSkippedWhenArchivedAfterIsTrue() throws JsonProcessingException {
+      DataCaptureMessage<Transfer> msg = generateValidTransfer();
+      msg.getAfter().setArchived(true);
+
+      List<String> transferItems = Collections.singletonList(objectMapper.writeValueAsString(msg));
+
+      sut = new IngestionServiceImpl(objectMapper, pdvTokenizerServiceMock, paymentPositionProducer, paymentOptionProducer, transferProducer, false);
+
+      assertDoesNotThrow(() -> sut.ingestTransfers(transferItems));
+
+      // Since it has been skipped, it must never reach the producer.
+      verify(transferProducer, never()).sendIngestedTransfer(any());
+    }
+
+    @Test
+    void ingestTransfersSkippedWhenArchivedBeforeIsTrue() throws JsonProcessingException {
+      DataCaptureMessage<Transfer> msg = generateValidTransfer();
+      // We manually generate a before for this test by cloning the after.
+      msg.setBefore(msg.getAfter());
+      msg.getBefore().setArchived(true);
+
+      List<String> transferItems = Collections.singletonList(objectMapper.writeValueAsString(msg));
+
+      sut = new IngestionServiceImpl(objectMapper, pdvTokenizerServiceMock, paymentPositionProducer, paymentOptionProducer, transferProducer, false);
+
+      assertDoesNotThrow(() -> sut.ingestTransfers(transferItems));
+
+      verify(transferProducer, never()).sendIngestedTransfer(any());
     }
 
     private DataCaptureMessage<Transfer> generateValidTransfer() {
