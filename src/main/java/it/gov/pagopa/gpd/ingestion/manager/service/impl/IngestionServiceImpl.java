@@ -70,6 +70,8 @@ public class IngestionServiceImpl implements IngestionService {
     return false;
   }
 
+  // Payment Position Ingestion
+
   public void ingestPaymentPositions(List<String> messages) {
     log.debug(
         "PaymentPosition ingestion called at {} for payment positions with events list size {}",
@@ -181,6 +183,8 @@ public class IngestionServiceImpl implements IngestionService {
         errorMessages);
   }
 
+  // Payment Option Ingestion
+
   public void ingestPaymentOptions(List<String> messages) {
     log.debug(
         "PaymentOption ingestion called at {} for payment positions with events list size {}",
@@ -288,6 +292,8 @@ public class IngestionServiceImpl implements IngestionService {
         errorMessages);
   }
 
+  // Transfer Ingestion
+
   public void ingestTransfers(List<String> messages) {
     log.debug(
         "Transfer ingestion called at {} for payment positions with events list size {}",
@@ -329,41 +335,50 @@ public class IngestionServiceImpl implements IngestionService {
         errorMessages);
   }
 
-    private boolean processSingleTransfer(DataCaptureMessage<Transfer> transfer) {
-      Transfer valuesBefore = transfer.getBefore();
-      Transfer valuesAfter = transfer.getAfter();
+  // Filter-out archived events and send the single Transfer to Event Hub.
+  private boolean processSingleTransfer(DataCaptureMessage<Transfer> transfer) {
+    Transfer valuesBefore = transfer.getBefore();
+    Transfer valuesAfter = transfer.getAfter();
 
-      if (isTransferArchived(valuesBefore, valuesAfter)) {
-        log.info(
-                "Transfer ingestion skipped for archived id {} at {}",
-                getTransferId(valuesBefore, valuesAfter),
-                LocalDateTime.now());
-        return true;
-      }
-
-      log.debug(
-              "Transfer ingestion called at {} with payment position id {}",
-              LocalDateTime.now(),
-              getTransferId(valuesBefore, valuesAfter));
-
-      boolean response = transferProducer.sendIngestedTransfer(transfer);
-
-      if (response) {
-        log.debug("Transfer ingestion sent to eventhub at {}", LocalDateTime.now());
-        return true;
-      } else {
-        log.error("Transfer ingestion unable to send to eventhub at {}", LocalDateTime.now());
-        return false;
-      }
+    if (isTransferArchived(valuesBefore, valuesAfter)) {
+      log.info(
+              "Transfer ingestion skipped for archived id {} at {}",
+              getTransferId(valuesBefore, valuesAfter),
+              LocalDateTime.now());
+      return true;
     }
 
-    private boolean isTransferArchived(Transfer before, Transfer after) {
-      boolean isArchivedBefore = before != null && Boolean.TRUE.equals(before.getArchived());
-      boolean isArchivedAfter = after != null && Boolean.TRUE.equals(after.getArchived());
-      return isArchivedBefore || isArchivedAfter;
+    log.debug(
+            "Transfer ingestion called at {} with payment position id {}",
+            LocalDateTime.now(),
+            getTransferId(valuesBefore, valuesAfter));
+
+    boolean response = transferProducer.sendIngestedTransfer(transfer);
+
+    if (response) {
+      log.debug("Transfer ingestion sent to eventhub at {}", LocalDateTime.now());
+      return true;
+    } else {
+      log.error("Transfer ingestion unable to send to eventhub at {}", LocalDateTime.now());
+      return false;
+    }
+  }
+
+  private boolean isTransferArchived(Transfer before, Transfer after) {
+    boolean isArchivedBefore = before != null && Boolean.TRUE.equals(before.getArchived());
+    boolean isArchivedAfter = after != null && Boolean.TRUE.equals(after.getArchived());
+    return isArchivedBefore || isArchivedAfter;
+  }
+
+  private Integer getTransferId(Transfer before, Transfer after) {
+    if (after != null) {
+      return after.getId();
     }
 
-    private Integer getTransferId(Transfer before, Transfer after) {
-      return after != null ? after.getId() : (before != null ? before.getId() : null);
+    if (before != null) {
+      return before.getId();
     }
+
+    return null;
+  }
 }
