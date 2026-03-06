@@ -307,32 +307,11 @@ public class IngestionServiceImpl implements IngestionService {
           nullMessages += 1;
           continue;
         }
-        Transfer valuesBefore = transfer.getBefore();
-        Transfer valuesAfter = transfer.getAfter();
 
-        // Filter events on archived Transfer
-        boolean isArchivedBefore = valuesBefore != null && Boolean.TRUE.equals(valuesBefore.getArchived());
-        boolean isArchivedAfter = valuesAfter != null && Boolean.TRUE.equals(valuesAfter.getArchived());
-        if (isArchivedBefore || isArchivedAfter) {
-          log.info(
-                  "Transfer ingestion skipped for archived id {} at {}",
-                  (valuesAfter != null ? valuesAfter : valuesBefore).getId(),
-                  LocalDateTime.now());
-          continue;
-        }
+        boolean success = processSingleTransfer(transfer);
 
-        log.debug(
-            "Transfer ingestion called at {} with payment position id {}",
-            LocalDateTime.now(),
-            (valuesAfter != null ? valuesAfter : valuesBefore).getId());
-
-        boolean response = transferProducer.sendIngestedTransfer(transfer);
-
-        if (response) {
-          log.debug("Transfer ingestion sent to eventhub at {}", LocalDateTime.now());
-        } else {
+        if (!success) {
           errorMessages += 1;
-          log.error("Transfer ingestion unable to send to eventhub at {}", LocalDateTime.now());
         }
       } catch (JsonProcessingException e) {
         errorMessages += 1;
@@ -349,4 +328,42 @@ public class IngestionServiceImpl implements IngestionService {
         nullMessages,
         errorMessages);
   }
+
+    private boolean processSingleTransfer(DataCaptureMessage<Transfer> transfer) {
+      Transfer valuesBefore = transfer.getBefore();
+      Transfer valuesAfter = transfer.getAfter();
+
+      if (isTransferArchived(valuesBefore, valuesAfter)) {
+        log.info(
+                "Transfer ingestion skipped for archived id {} at {}",
+                getTransferId(valuesBefore, valuesAfter),
+                LocalDateTime.now());
+        return true;
+      }
+
+      log.debug(
+              "Transfer ingestion called at {} with payment position id {}",
+              LocalDateTime.now(),
+              getTransferId(valuesBefore, valuesAfter));
+
+      boolean response = transferProducer.sendIngestedTransfer(transfer);
+
+      if (response) {
+        log.debug("Transfer ingestion sent to eventhub at {}", LocalDateTime.now());
+        return true;
+      } else {
+        log.error("Transfer ingestion unable to send to eventhub at {}", LocalDateTime.now());
+        return false;
+      }
+    }
+
+    private boolean isTransferArchived(Transfer before, Transfer after) {
+      boolean isArchivedBefore = before != null && Boolean.TRUE.equals(before.getArchived());
+      boolean isArchivedAfter = after != null && Boolean.TRUE.equals(after.getArchived());
+      return isArchivedBefore || isArchivedAfter;
+    }
+
+    private Integer getTransferId(Transfer before, Transfer after) {
+      return after != null ? after.getId() : (before != null ? before.getId() : null);
+    }
 }
