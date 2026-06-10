@@ -12,7 +12,7 @@ Feature: All about ingestion events consumed by Azure functions gpd-ingestion-ma
     And the payment position update operation has the company name updated
 
   Scenario: CRUD operations on payment option table in GPD database are published into data lake event hub
-    Given a payment position with id '22222222' and fiscal code '77777777777' and company name 'SkyLab Inc.' in GPD database
+    Given a payment position with id '22222222' and company name 'SkyLab Inc.' in GPD database
     And a create operation on payment option table with id '21111111' and description 'Canone Unico Patrimoniale - SkyLab Inc.' and fiscalCode 'GNNLTT23H45E654L' and associated to payment position with id 22222222 in GPD database
     And an update operation on field description with new value 'Updated description' on the same payment option in GPD database
     And a delete operation on the same payment option in GPD database
@@ -25,7 +25,7 @@ Feature: All about ingestion events consumed by Azure functions gpd-ingestion-ma
     And the payment option update operation has the description updated
 
   Scenario: CRUD operations on transfer table in GPD database are published into data lake event hub
-    Given a payment position with id '33333333' and fiscal code '77777777777' and company name 'SkyLab Inc.' in GPD database
+    Given a payment position with id '33333333' and company name 'SkyLab Inc.' in GPD database
     And a payment option with id '32222222' and description 'Canone Unico Patrimoniale - SkyLab Inc.' and fiscalCode 'GNNLTT23H45E654L' and associated to payment position with id 33333333 in GPD database
     And a create operation on transfer table with id '32111111' and category '9/0101108TS/' and remittanceInformation 'Multa targa AN09WQS' and associated to payment option with id 32222222 in GPD database
     And an update operation on field category with new value 'Updated category' on the same transfer in GPD database
