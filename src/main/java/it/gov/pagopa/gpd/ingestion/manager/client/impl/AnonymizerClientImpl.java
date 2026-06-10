@@ -36,7 +36,7 @@ public class AnonymizerClientImpl implements AnonymizerClient {
             @Value("${anonymizer.endpoint}") String anonymizerEndpoint,
             @Value("${anonymizer.sub-key}") String subscriptionKey,
             @Value("${anonymizer.sub-key-header}") String subscriptionKeyHeader,
-            @Value("${anonymizer.request-id-header") String requestIdHeader
+            @Value("${anonymizer.request-id-header}") String requestIdHeader
     ) {
         this.client = client;
         this.anonymizerEndpoint = anonymizerEndpoint;
