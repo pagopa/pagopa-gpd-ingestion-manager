@@ -2,7 +2,6 @@ package it.gov.pagopa.gpd.ingestion.manager.events.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.enumeration.PaymentOptionStatus;
 import lombok.*;
 
 @Getter
@@ -28,9 +27,6 @@ public class PaymentOption {
   @JsonProperty("flow_reporting_id")
   private String flowReportingId;
 
-  @JsonProperty("receipt_id")
-  private String receiptId;
-
   @JsonProperty("inserted_date")
   private Long insertedDate;
 
@@ -38,6 +34,7 @@ public class PaymentOption {
   private boolean isPartialPayment;
 
   private String iuv;
+  private String nav;
 
   @JsonProperty("last_update_date")
   private Long lastUpdateDate;
@@ -45,19 +42,7 @@ public class PaymentOption {
   @JsonProperty("organization_fiscal_code")
   private String organizationFiscalCode;
 
-  private PaymentOptionStatus status;
-
-  @JsonProperty("payment_date")
-  private Long paymentDate;
-
-  @JsonProperty("payment_method")
-  private String paymentMethod;
-
-  @JsonProperty("psp_company")
-  private String pspCompany;
-
-  @JsonProperty("reporting_date")
-  private Long reportingDate;
+  private String status;
 
   @JsonProperty("retention_date")
   private Long retentionDate;
@@ -72,10 +57,25 @@ public class PaymentOption {
   @JsonProperty("fiscal_code")
   private String fiscalCode;
 
-  @JsonProperty("postal_code")
-  private String postalCode;
-
-  private String province;
-  private String region;
   private String type;
+
+  private String region;
+
+  @JsonProperty("send_sync")
+  private boolean sendSync;
+
+  @JsonProperty("psp_code")
+  private String pspCode;
+
+  @JsonProperty("switch_to_expired")
+  private boolean switchToExpired;
+
+  @JsonProperty("validity_date")
+  private Long validityDate;
+
+  @JsonProperty("payment_plan_id")
+  private String paymentPlanId;
+
+  @JsonProperty("payment_option_description")
+  private String paymentOptionDescription;
 }
