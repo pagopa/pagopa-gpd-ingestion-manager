@@ -25,10 +25,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.temporal.TemporalField;
+import java.time.ZoneOffset;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -40,7 +38,10 @@ class IngestionServiceImplTest {
     public static final String TOKENIZED_FISCAL_CODE = "tokenizedFiscalCode";
     public static final String REMITTANCE_INFORMATION = "remittanceInformation";
     public static final String ANONYMIZED_REMITTANCE_INFORMATION = "anonymizedRemittanceInformation";
-    public static final long DATE = new Date(2026,1,1).getTime();
+    public static final long DATE = LocalDate.of(2026, 1, 1)
+            .atStartOfDay()
+            .toInstant(ZoneOffset.UTC)
+            .toEpochMilli();
     private final String FISCAL_CODE = "AAAAAA00A00A000D";
     private final String INVALID_FISCAL_CODE = "invalidFiscalCode";
     @MockBean
@@ -77,13 +78,13 @@ class IngestionServiceImplTest {
                 Collections.singletonList(objectMapper.writeValueAsString(ppList));
 
         sut = new IngestionServiceImpl(
-                        objectMapper,
-                        pdvTokenizerServiceMock,
-                        anonimizerServiceMock,
-                        paymentPositionProducer,
-                        paymentOptionProducer,
-                        transferProducer,
-                        false, false);
+                objectMapper,
+                pdvTokenizerServiceMock,
+                anonimizerServiceMock,
+                paymentPositionProducer,
+                paymentOptionProducer,
+                transferProducer,
+                false, false);
 
         // test execution
         assertDoesNotThrow(() -> sut.ingestPaymentPositions(paymentPositionsItems));
