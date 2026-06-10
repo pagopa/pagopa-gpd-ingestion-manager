@@ -60,7 +60,7 @@ public class IngestionServiceImpl implements IngestionService {
       IngestedPaymentOptionProducer paymentOptionProducer,
       IngestedTransferProducer transferProducer,
       @Value("${pdv.tokenizer.placeholderOnPdvKO}") Boolean placeholderOnPdvKO,
-      @Value("${pdv.tokenizer.placeholderOnAnonymizerKO}") Boolean placeholderOnAnonymizerKO
+      @Value("${anonymizer.placeholderOnAnonymizerKO}") Boolean placeholderOnAnonymizerKO
       ) {
     this.objectMapper = objectMapper;
     this.pdvTokenizerService = pdvTokenizerService;
