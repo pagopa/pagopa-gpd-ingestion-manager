@@ -1,13 +1,14 @@
 package it.gov.pagopa.gpd.ingestion.manager.model;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
-@Setter
+/**
+ * Model class used for request and response of the AnonymizerClient
+ */
+@Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AnonymizerModel {
-
     String text;
 }
