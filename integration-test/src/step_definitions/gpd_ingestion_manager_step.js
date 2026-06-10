@@ -16,7 +16,6 @@ this.paymentPositionId = null;
 this.paymentPositionCreateOp = null;
 this.paymentPositionUpdateOp = null;
 this.paymentPositionDeleteOp = null;
-this.paymentPositionFiscalCode = null;
 this.paymentPositionCompanyName = null;
 this.paymentPositionUpdatedCompanyName = null;
 
@@ -26,6 +25,7 @@ this.paymentPositionUpdatedCompanyName = null;
 this.paymentOptionId = null;
 this.paymentOptionDescription = null;
 this.paymentOptionUpdatedDescription = null;
+this.paymentOptionFiscalCode = null;
 this.paymentOptionCreateOp = null;
 this.paymentOptionUpdateOp = null;
 this.paymentOptionDeleteOp = null;
@@ -36,6 +36,7 @@ this.paymentOptionDeleteOp = null;
 this.transferId = null;
 this.transferCategory = null;
 this.transferUpdatedCategory = null;
+this.transferRemittanceInformation = null;
 this.transferCreateOp = null;
 this.transferUpdateOp = null;
 this.transferDeleteOp = null;
@@ -65,7 +66,6 @@ After(async function () {
   this.paymentPositionCreateOp = null;
   this.paymentPositionUpdateOp = null;
   this.paymentPositionDeleteOp = null;
-  this.paymentPositionFiscalCode = null;
   this.paymentPositionCompanyName = null;
   this.paymentPositionUpdatedCompanyName = null;
 
@@ -75,6 +75,7 @@ After(async function () {
   this.paymentOptionId = null;
   this.paymentOptionDescription = null;
   this.paymentOptionUpdatedDescription = null;
+  this.paymentOptionFiscalCode = null;
   this.paymentOptionCreateOp = null;
   this.paymentOptionUpdateOp = null;
   this.paymentOptionDeleteOp = null;
@@ -85,6 +86,7 @@ After(async function () {
   this.transferId = null;
   this.transferCategory = null;
   this.transferUpdatedCategory = null;
+  this.transferRemittanceInformation = null;
   this.transferCreateOp = null;
   this.transferUpdateOp = null;
   this.transferDeleteOp = null;
@@ -93,10 +95,9 @@ After(async function () {
 /////////////////////////////
 // Payment Positions steps //
 /////////////////////////////
-Given('a create operation on payment position table with id {string} and fiscal code {string} and company name {string} in GPD database', async function (id, fiscalCode, companyName) {
-  await insertPaymentPosition(id, fiscalCode, companyName);
+Given('a create operation on payment position table with id {string} and company name {string} in GPD database', async function (id, companyName) {
+  await insertPaymentPosition(id, companyName);
   this.paymentPositionId = id;
-  this.paymentPositionFiscalCode = fiscalCode;
   this.paymentPositionCompanyName = companyName;
 });
 
@@ -135,13 +136,6 @@ Then('the payment position operations have id {int}', function (id) {
   assert.strictEqual(this.paymentPositionDeleteOp.before.id, id);
 });
 
-Then('the operations have the fiscal code tokenized', function () {
-  assert.notStrictEqual(this.paymentPositionCreateOp.after.fiscal_code, undefined);
-  assert.notStrictEqual(this.paymentPositionCreateOp.after.fiscal_code, this.paymentPositionFiscalCode);
-  assert.notStrictEqual(this.paymentPositionUpdateOp.after.fiscal_code, undefined);
-  assert.notStrictEqual(this.paymentPositionUpdateOp.after.fiscal_code, this.paymentPositionFiscalCode);
-});
-
 Then('the payment position update operation has the company name updated', function () {
   assert.notStrictEqual(this.paymentPositionUpdateOp.after.company_name, undefined);
   assert.notStrictEqual(this.paymentPositionUpdateOp.after.company_name, this.paymentPositionCompanyName);
@@ -151,16 +145,17 @@ Then('the payment position update operation has the company name updated', funct
 ///////////////////////////
 // Payment Options steps //
 ///////////////////////////
-Given('a payment position with id {string} and fiscal code {string} and company name {string} in GPD database', async function (id, fiscalCode, companyName) {
-  await insertPaymentPosition(id, fiscalCode, companyName);
+Given('a payment position with id {string} and company name {string} in GPD database', async function (id, companyName) {
+  await insertPaymentPosition(id, companyName);
   this.paymentPositionId = id;
 });
 
 
-Given('a create operation on payment option table with id {string} and description {string} and associated to payment position with id {int} in GPD database', async function (id, description, paymentPositionId) {
-  await insertPaymentOption(id, description, paymentPositionId);
+Given('a create operation on payment option table with id {string} and description {string} and fiscal code {string} and associated to payment position with id {int} in GPD database', async function (id, description, fiscalCode, paymentPositionId) {
+  await insertPaymentOption(id, description, fiscalCode, paymentPositionId);
   this.paymentOptionId = id;
   this.paymentOptionDescription = description;
+  this.paymentOptionFiscalCode = fiscalCode;
 });
 
 Given('an update operation on field description with new value {string} on the same payment option in GPD database', async function (description) {
@@ -198,6 +193,13 @@ Then('the payment option operations have id {int}', function (id) {
   assert.strictEqual(this.paymentOptionDeleteOp.before.id, id);
 });
 
+Then('the operations have the fiscal code tokenized', function () {
+  assert.notStrictEqual(this.paymentOptionCreateOp.after.fiscal_code, undefined);
+  assert.notStrictEqual(this.paymentOptionCreateOp.after.fiscal_code, this.paymentOptionFiscalCode);
+  assert.notStrictEqual(this.paymentOptionUpdateOp.after.fiscal_code, undefined);
+  assert.notStrictEqual(this.paymentOptionUpdateOp.after.fiscal_code, this.paymentOptionFiscalCode);
+});
+
 Then('the payment option update operation has the description updated', function () {
   assert.notStrictEqual(this.paymentOptionUpdateOp.after.description, this.paymentOptionDescription);
   assert.strictEqual(this.paymentOptionUpdateOp.after.description, this.paymentOptionUpdatedDescription);
@@ -206,15 +208,17 @@ Then('the payment option update operation has the description updated', function
 ////////////////////
 // Transfer steps //
 ////////////////////
-Given('a payment option with id {string} and description {string} and associated to payment position with id {int} in GPD database', async function (id, description, paymentPositionId) {
-  await insertPaymentOption(id, description, paymentPositionId);
+Given('a payment option with id {string} and description {string} and fiscalCode {string} and associated to payment position with id {int} in GPD database', async function (id, description, fiscalCode, paymentPositionId) {
+  await insertPaymentOption(id, description, fiscalCode, paymentPositionId);
   this.paymentOptionId = id;
+  this.paymentOptionFiscalCode = fiscalCode;
 });
 
-Given('a create operation on transfer table with id {string} and category {string} and associated to payment option with id {int} in GPD database', async function (id, category, paymentOptionId) {
-  await insertTransfer(id, category, paymentOptionId);
+Given('a create operation on transfer table with id {string} and category {string} and remittanceInformation {string} and associated to payment option with id {int} in GPD database', async function (id, category, remittanceInformation, paymentOptionId) {
+  await insertTransfer(id, category, remittanceInformation, paymentOptionId);
   this.transferId = id;
   this.transferCategory = category;
+  this.transferRemittanceInformation = remittanceInformation;
 });
 
 Given('an update operation on field category with new value {string} on the same transfer in GPD database', async function (category) {
@@ -255,4 +259,11 @@ Then('the transfer operations have id {int}', function (id) {
 Then('the transfer update operation has the category updated', function () {
   assert.notStrictEqual(this.transferUpdateOp.after.category, this.transferCategory);
   assert.strictEqual(this.transferUpdateOp.after.category, this.transferUpdatedCategory);
+});
+
+Then('the operations have the remittanceInformation anonimized', function () {
+  assert.notStrictEqual(this.transferCreateOp.after.remittanceInformation, undefined);
+  assert.notStrictEqual(this.transferCreateOp.after.remittanceInformation, this.transferRemittanceInformation);
+  assert.notStrictEqual(this.transferUpdateOp.after.remittanceInformation, undefined);
+  assert.notStrictEqual(this.transferUpdateOp.after.remittanceInformation, this.transferRemittanceInformation);
 });
