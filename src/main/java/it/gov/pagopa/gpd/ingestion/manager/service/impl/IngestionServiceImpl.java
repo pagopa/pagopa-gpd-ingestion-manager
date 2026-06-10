@@ -18,6 +18,7 @@ import it.gov.pagopa.gpd.ingestion.manager.service.AnonymizerServiceRetryWrapper
 import it.gov.pagopa.gpd.ingestion.manager.service.IngestionService;
 import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerServiceRetryWrapper;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -90,7 +91,7 @@ public class IngestionServiceImpl implements IngestionService {
     public void ingestPaymentPositions(List<String> messages) {
         log.debug(
                 "PaymentPosition ingestion called at {} for payment positions with events list size {}",
-                LocalDateTime.now(),
+                getDateNow(),
                 messages.size());
         int nullMessages = 0;
         int errorMessages = 0;
@@ -112,34 +113,34 @@ public class IngestionServiceImpl implements IngestionService {
 
                 log.debug(
                         "PaymentPosition ingestion called at {} with payment position id {}",
-                        LocalDateTime.now(),
+                        getDateNow(),
                         (valuesAfter != null ? valuesAfter : valuesBefore).getId());
 
                 boolean response = paymentPositionProducer.sendIngestedPaymentPosition(paymentPosition);
 
                 if (response) {
-                    log.debug("PaymentPosition ingestion sent to eventhub at {}", LocalDateTime.now());
+                    log.debug("PaymentPosition ingestion sent to eventhub at {}", getDateNow());
                 } else {
                     errorMessages += 1;
                     log.error(
-                            "PaymentPosition ingestion unable to send to eventhub at {}", LocalDateTime.now());
+                            "PaymentPosition ingestion unable to send to eventhub at {}", getDateNow());
                 }
             } catch (JsonProcessingException e) {
                 errorMessages += 1;
                 log.error(
                         "PaymentPosition ingestion error JsonProcessingException at {}",
-                        LocalDateTime.now(),
+                        getDateNow(),
                         e);
             } catch (Exception e) {
                 errorMessages += 1;
                 log.error(
-                        "PaymentPosition ingestion error Generic exception at {}", LocalDateTime.now(), e);
+                        "PaymentPosition ingestion error Generic exception at {}", getDateNow(), e);
             }
         }
 
         log.debug(
                 "PaymentPosition ingested at {}: total messages {}, {} null and {} errors",
-                LocalDateTime.now(),
+                getDateNow(),
                 messages.size(),
                 nullMessages,
                 errorMessages);
@@ -148,7 +149,7 @@ public class IngestionServiceImpl implements IngestionService {
     public void ingestPaymentOptions(List<String> messages) {
         log.debug(
                 "PaymentOption ingestion called at {} for payment positions with events list size {}",
-                LocalDateTime.now(),
+                getDateNow(),
                 messages.size());
         int nullMessages = 0;
         int errorMessages = 0;
@@ -169,7 +170,7 @@ public class IngestionServiceImpl implements IngestionService {
 
                 log.debug(
                         "PaymentOption ingestion called at {} with payment position id {}",
-                        LocalDateTime.now(),
+                        getDateNow(),
                         (valuesAfter != null ? valuesAfter : valuesBefore).getId());
 
                 paymentOption.setBefore(tokenizeFiscalCode(valuesBefore));
@@ -178,34 +179,34 @@ public class IngestionServiceImpl implements IngestionService {
                 boolean response = paymentOptionProducer.sendIngestedPaymentOption(paymentOption);
 
                 if (response) {
-                    log.debug("PaymentOption ingestion sent to eventhub at {}", LocalDateTime.now());
+                    log.debug("PaymentOption ingestion sent to eventhub at {}", getDateNow());
                 } else {
                     errorMessages += 1;
                     log.error(
-                            "PaymentOption ingestion unable to send to eventhub at {}", LocalDateTime.now());
+                            "PaymentOption ingestion unable to send to eventhub at {}", getDateNow());
                 }
             } catch (JsonProcessingException e) {
                 errorMessages += 1;
                 log.error(
-                        "PaymentOption ingestion error JsonProcessingException at {}", LocalDateTime.now(), e);
+                        "PaymentOption ingestion error JsonProcessingException at {}", getDateNow(), e);
             } catch (PDVTokenizerException e) {
                 errorMessages += 1;
-                log.error(PDV_TOKENIZER_EXCEPTION_MESSAGE, LocalDateTime.now(), e);
+                log.error(PDV_TOKENIZER_EXCEPTION_MESSAGE, getDateNow(), e);
             } catch (PDVTokenizerUnexpectedException e) {
                 errorMessages += 1;
                 log.error(
                         "PaymentOption ingestion error PDVTokenizerUnexpectedException at {}",
-                        LocalDateTime.now(),
+                        getDateNow(),
                         e);
             } catch (Exception e) {
                 errorMessages += 1;
-                log.error("PaymentOption ingestion error Generic exception at {}", LocalDateTime.now(), e);
+                log.error("PaymentOption ingestion error Generic exception at {}", getDateNow(), e);
             }
         }
 
         log.debug(
                 "PaymentOption ingested at {}: total messages {}, {} null and {} errors",
-                LocalDateTime.now(),
+                getDateNow(),
                 messages.size(),
                 nullMessages,
                 errorMessages);
@@ -221,7 +222,7 @@ public class IngestionServiceImpl implements IngestionService {
                 if (Boolean.FALSE.equals(placeholderOnPdvKO)) {
                     throw e;
                 } else {
-                    log.error(PDV_TOKENIZER_EXCEPTION_MESSAGE, LocalDateTime.now(), e);
+                    log.error(PDV_TOKENIZER_EXCEPTION_MESSAGE, getDateNow(), e);
                     values.setFiscalCode(PDV_CF_TOKENIZER);
                 }
             }
@@ -233,7 +234,7 @@ public class IngestionServiceImpl implements IngestionService {
     public void ingestTransfers(List<String> messages) {
         log.debug(
                 "Transfer ingestion called at {} for payment positions with events list size {}",
-                LocalDateTime.now(),
+                getDateNow(),
                 messages.size());
 
         int nullMessages = 0;
@@ -255,7 +256,7 @@ public class IngestionServiceImpl implements IngestionService {
 
                 log.debug(
                         "Transfer ingestion called at {} with payment position id {}",
-                        LocalDateTime.now(),
+                        getDateNow(),
                         (valuesAfter != null ? valuesAfter : valuesBefore).getId());
 
                 transfer.setBefore(anonymizeRemittanceInformation(valuesBefore));
@@ -264,31 +265,31 @@ public class IngestionServiceImpl implements IngestionService {
                 boolean response = transferProducer.sendIngestedTransfer(transfer);
 
                 if (response) {
-                    log.debug("Transfer ingestion sent to eventhub at {}", LocalDateTime.now());
+                    log.debug("Transfer ingestion sent to eventhub at {}", getDateNow());
                 } else {
                     errorMessages += 1;
-                    log.error("Transfer ingestion unable to send to eventhub at {}", LocalDateTime.now());
+                    log.error("Transfer ingestion unable to send to eventhub at {}", getDateNow());
                 }
             } catch (JsonProcessingException e) {
                 errorMessages += 1;
-                log.error("Transfer ingestion error JsonProcessingException at {}", LocalDateTime.now(), e);
+                log.error("Transfer ingestion error JsonProcessingException at {}", getDateNow(), e);
             } catch (AnonymizerException e) {
                 errorMessages += 1;
-                log.error(ANONYMIZER_EXCEPTION_MESSAGE, LocalDateTime.now(), e);
+                log.error(ANONYMIZER_EXCEPTION_MESSAGE, getDateNow(), e);
             } catch (AnonymizerUnexpectedException e) {
                 errorMessages += 1;
                 log.error(
                         "Transfer ingestion error AnonymizerUnexpectedException at {}",
-                        LocalDateTime.now(),
+                        getDateNow(),
                         e);
             } catch (Exception e) {
                 errorMessages += 1;
-                log.error("Transfer ingestion error Generic exception at {}", LocalDateTime.now(), e);
+                log.error("Transfer ingestion error Generic exception at {}", getDateNow(), e);
             }
         }
         log.debug(
                 "Transfer ingested at {}: total messages {}, {} null and {} errors",
-                LocalDateTime.now(),
+                getDateNow(),
                 messages.size(),
                 nullMessages,
                 errorMessages);
@@ -304,11 +305,15 @@ public class IngestionServiceImpl implements IngestionService {
                 if (Boolean.FALSE.equals(placeholderOnAnonymizerKO)) {
                     throw e;
                 } else {
-                    log.error(ANONYMIZER_EXCEPTION_MESSAGE, LocalDateTime.now(), e);
+                    log.error(ANONYMIZER_EXCEPTION_MESSAGE, getDateNow(), e);
                     values.setRemittanceInformation(ANONYMIZE_PLACEHOLDER);
                 }
             }
         }
         return values;
+    }
+
+    private static LocalDateTime getDateNow() {
+        return LocalDateTime.now(Clock.systemDefaultZone());
     }
 }
