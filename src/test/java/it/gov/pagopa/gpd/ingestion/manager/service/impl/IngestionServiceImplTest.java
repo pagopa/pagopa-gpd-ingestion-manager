@@ -24,6 +24,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.TemporalField;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -37,6 +40,7 @@ class IngestionServiceImplTest {
     public static final String TOKENIZED_FISCAL_CODE = "tokenizedFiscalCode";
     public static final String REMITTANCE_INFORMATION = "remittanceInformation";
     public static final String ANONYMIZED_REMITTANCE_INFORMATION = "anonymizedRemittanceInformation";
+    public static final long DATE = new Date(2026,1,1).getTime();
     private final String FISCAL_CODE = "AAAAAA00A00A000D";
     private final String INVALID_FISCAL_CODE = "invalidFiscalCode";
     @MockBean
@@ -140,15 +144,15 @@ class IngestionServiceImplTest {
                 PaymentPosition.builder()
                         .id(0)
                         .iupd("iupd")
-                        .maxDueDate(new Date().getTime())
-                        .minDueDate(new Date().getTime())
+                        .maxDueDate(DATE)
+                        .minDueDate(DATE)
                         .organizationFiscalCode("orgFiscalCode")
                         .companyName("companyName")
-                        .publishDate(new Date().getTime())
+                        .publishDate(DATE)
                         .status(PaymentPositionStatus.VALID.name())
-                        .paymentDate(new Date().getTime())
-                        .lastUpdatedDate(new Date().getTime())
-                        .insertedDate(new Date().getTime())
+                        .paymentDate(DATE)
+                        .lastUpdatedDate(DATE)
+                        .insertedDate(DATE)
                         .pull(false)
                         .payStandIn(false)
                         .serviceType("GPD")
@@ -381,17 +385,17 @@ class IngestionServiceImplTest {
                         .paymentPositionId(0)
                         .amount(0)
                         .description("description")
-                        .dueDate(new Date().getTime())
+                        .dueDate(DATE)
                         .fee(0)
                         .flowReportingId("flowReportingId")
-                        .insertedDate(new Date().getTime())
+                        .insertedDate(DATE)
                         .isPartialPayment(true)
                         .iuv("iuv")
                         .nav("nav")
-                        .lastUpdateDate(new Date().getTime())
+                        .lastUpdateDate(DATE)
                         .organizationFiscalCode("organizationFiscalCode")
                         .status(PaymentOptionStatus.PO_PAID.name())
-                        .retentionDate(new Date().getTime())
+                        .retentionDate(DATE)
                         .notificationFee(0)
                         .lastUpdatedDateNotificationFee(0L)
                         .fiscalCode(fiscalCode)
@@ -400,7 +404,7 @@ class IngestionServiceImplTest {
                         .sendSync(false)
                         .pspCode("pspCode")
                         .switchToExpired(false)
-                        .validityDate(new Date().getTime())
+                        .validityDate(DATE)
                         .paymentPlanId("paymentPlanId-0")
                         .paymentOptionDescription("paymentOptionDescription")
                         .build();
@@ -583,9 +587,9 @@ class IngestionServiceImplTest {
                         .amount(0)
                         .category("category")
                         .transferId("transferId")
-                        .insertedDate(new Date().getTime())
+                        .insertedDate(DATE)
                         .iuv("iuv")
-                        .lastUpdateDate(new Date().getTime())
+                        .lastUpdateDate(DATE)
                         .organizationFiscalCode("organizationFiscalCode")
                         .remittanceInformation(REMITTANCE_INFORMATION)
                         .status(TransferStatus.T_REPORTED.name())
