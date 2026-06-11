@@ -119,8 +119,9 @@ public class IngestionServiceImpl implements IngestionService {
                 errorMessages = verifySendToEventhub(response, errorMessages, PAYMENT_POSITION_ENTITY_NAME);
             } catch (Exception e) {
                 errorMessages = handleException(e, errorMessages, PAYMENT_POSITION_ENTITY_NAME);
+            } finally {
+                MDC.clear();
             }
-            MDC.clear();
         }
 
         logTotalMessagesElaborated(PAYMENT_POSITION_ENTITY_NAME, messages, nullMessages, errorMessages);
@@ -161,8 +162,9 @@ public class IngestionServiceImpl implements IngestionService {
                 errorMessages = verifySendToEventhub(response, errorMessages, PAYMENT_OPTION_ENTITY_NAME);
             } catch (Exception e) {
                 errorMessages = handleException(e, errorMessages, PAYMENT_OPTION_ENTITY_NAME);
+            } finally {
+                MDC.clear();
             }
-            MDC.clear();
         }
 
         logTotalMessagesElaborated(PAYMENT_OPTION_ENTITY_NAME, messages, nullMessages, errorMessages);
@@ -223,8 +225,9 @@ public class IngestionServiceImpl implements IngestionService {
                 errorMessages = verifySendToEventhub(response, errorMessages, TRANSFER_ENTITY_NAME);
             } catch (Exception e) {
                 errorMessages = handleException(e, errorMessages, TRANSFER_ENTITY_NAME);
+            } finally {
+                MDC.clear();
             }
-            MDC.clear();
         }
         logTotalMessagesElaborated(TRANSFER_ENTITY_NAME, messages, nullMessages, errorMessages);
     }
