@@ -22,9 +22,11 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -98,6 +100,8 @@ public class IngestionServiceImpl implements IngestionService {
         messages.removeAll(Collections.singleton(null));
         // persist the item
         for (String msg : messages) {
+            MDC.put("requestId", String.valueOf(UUID.randomUUID()));
+            MDC.put("type", "paymentPosition");
             try {
                 DataCaptureMessage<PaymentPosition> paymentPosition =
                         objectMapper.readValue(
@@ -105,19 +109,18 @@ public class IngestionServiceImpl implements IngestionService {
                                 });
 
                 if (paymentPosition == null) {
+                    MDC.put("id", "null");
                     nullMessages += 1;
                     continue;
                 }
                 PaymentPosition valuesBefore = paymentPosition.getBefore();
                 PaymentPosition valuesAfter = paymentPosition.getAfter();
-
-                log.debug(
-                        "PaymentPosition ingestion called at {} with payment position id {}",
-                        getDateNow(),
-                        (valuesAfter != null ? valuesAfter : valuesBefore).getId());
+                int id = (valuesAfter != null ? valuesAfter : valuesBefore).getId();
+                log.debug("PaymentPosition ingestion called at {} with payment position id {}", getDateNow(), id);
+                MDC.put("id", String.valueOf(id));
 
                 boolean response = paymentPositionProducer.sendIngestedPaymentPosition(paymentPosition);
-
+                MDC.put("sendResult", response ? "OK" : "KO");
                 if (response) {
                     log.debug("PaymentPosition ingestion sent to eventhub at {}", getDateNow());
                 } else {
@@ -126,16 +129,21 @@ public class IngestionServiceImpl implements IngestionService {
                             "PaymentPosition ingestion unable to send to eventhub at {}", getDateNow());
                 }
             } catch (JsonProcessingException e) {
+                MDC.put("errorType", "JsonProcessingException");
+                MDC.put("errorMessage", e.getMessage());
                 errorMessages += 1;
                 log.error(
                         "PaymentPosition ingestion error JsonProcessingException at {}",
                         getDateNow(),
                         e);
             } catch (Exception e) {
+                MDC.put("errorType", "Exception");
+                MDC.put("errorMessage", e.getMessage());
                 errorMessages += 1;
                 log.error(
                         "PaymentPosition ingestion error Generic exception at {}", getDateNow(), e);
             }
+            MDC.clear();
         }
 
         log.debug(
@@ -156,28 +164,34 @@ public class IngestionServiceImpl implements IngestionService {
         messages.removeAll(Collections.singleton(null));
         // persist the item
         for (String msg : messages) {
+            MDC.put("requestId", String.valueOf(UUID.randomUUID()));
+            MDC.put("type", "paymentOption");
             try {
                 DataCaptureMessage<PaymentOption> paymentOption =
                         objectMapper.readValue(msg, new TypeReference<DataCaptureMessage<PaymentOption>>() {
                         });
 
                 if (paymentOption == null) {
+                    MDC.put("id", "null");
                     nullMessages += 1;
                     continue;
                 }
                 PaymentOption valuesBefore = paymentOption.getBefore();
                 PaymentOption valuesAfter = paymentOption.getAfter();
+                int id = (valuesAfter != null ? valuesAfter : valuesBefore).getId();
 
                 log.debug(
                         "PaymentOption ingestion called at {} with payment position id {}",
                         getDateNow(),
-                        (valuesAfter != null ? valuesAfter : valuesBefore).getId());
+                        id);
+                MDC.put("id", String.valueOf(id));
 
                 paymentOption.setBefore(tokenizeFiscalCode(valuesBefore));
                 paymentOption.setAfter(tokenizeFiscalCode(valuesAfter));
 
                 boolean response = paymentOptionProducer.sendIngestedPaymentOption(paymentOption);
 
+                MDC.put("sendResult", response ? "OK" : "KO");
                 if (response) {
                     log.debug("PaymentOption ingestion sent to eventhub at {}", getDateNow());
                 } else {
@@ -186,22 +200,31 @@ public class IngestionServiceImpl implements IngestionService {
                             "PaymentOption ingestion unable to send to eventhub at {}", getDateNow());
                 }
             } catch (JsonProcessingException e) {
+                MDC.put("errorType", "JsonProcessingException");
+                MDC.put("errorMessage", e.getMessage());
                 errorMessages += 1;
                 log.error(
                         "PaymentOption ingestion error JsonProcessingException at {}", getDateNow(), e);
             } catch (PDVTokenizerException e) {
+                MDC.put("errorType", "PDVTokenizerException");
+                MDC.put("errorMessage", e.getMessage());
                 errorMessages += 1;
                 log.error(PDV_TOKENIZER_EXCEPTION_MESSAGE, getDateNow(), e);
             } catch (PDVTokenizerUnexpectedException e) {
+                MDC.put("errorType", "PDVTokenizerUnexpectedException");
+                MDC.put("errorMessage", e.getMessage());
                 errorMessages += 1;
                 log.error(
                         "PaymentOption ingestion error PDVTokenizerUnexpectedException at {}",
                         getDateNow(),
                         e);
             } catch (Exception e) {
+                MDC.put("errorType", "Exception");
+                MDC.put("errorMessage", e.getMessage());
                 errorMessages += 1;
                 log.error("PaymentOption ingestion error Generic exception at {}", getDateNow(), e);
             }
+            MDC.clear();
         }
 
         log.debug(
@@ -242,27 +265,33 @@ public class IngestionServiceImpl implements IngestionService {
         messages.removeAll(Collections.singleton(null));
         // persist the item
         for (String msg : messages) {
+            MDC.put("requestId", String.valueOf(UUID.randomUUID()));
+            MDC.put("type", "transfer");
             try {
                 DataCaptureMessage<Transfer> transfer =
                         objectMapper.readValue(msg, new TypeReference<DataCaptureMessage<Transfer>>() {
                         });
 
                 if (transfer == null) {
+                    MDC.put("id", "null");
                     nullMessages += 1;
                     continue;
                 }
                 Transfer valuesBefore = transfer.getBefore();
                 Transfer valuesAfter = transfer.getAfter();
+                int id = (valuesAfter != null ? valuesAfter : valuesBefore).getId();
 
                 log.debug(
                         "Transfer ingestion called at {} with payment position id {}",
                         getDateNow(),
-                        (valuesAfter != null ? valuesAfter : valuesBefore).getId());
+                        id);
+                MDC.put("id", String.valueOf(id));
 
                 transfer.setBefore(anonymizeRemittanceInformation(valuesBefore));
                 transfer.setAfter(anonymizeRemittanceInformation(valuesAfter));
 
                 boolean response = transferProducer.sendIngestedTransfer(transfer);
+                MDC.put("sendResult", response ? "OK" : "KO");
 
                 if (response) {
                     log.debug("Transfer ingestion sent to eventhub at {}", getDateNow());
@@ -271,21 +300,30 @@ public class IngestionServiceImpl implements IngestionService {
                     log.error("Transfer ingestion unable to send to eventhub at {}", getDateNow());
                 }
             } catch (JsonProcessingException e) {
+                MDC.put("errorType", "JsonProcessingException");
+                MDC.put("errorMessage", e.getMessage());
                 errorMessages += 1;
                 log.error("Transfer ingestion error JsonProcessingException at {}", getDateNow(), e);
             } catch (AnonymizerException e) {
+                MDC.put("errorType", "AnonymizerException");
+                MDC.put("errorMessage", e.getMessage());
                 errorMessages += 1;
                 log.error(ANONYMIZER_EXCEPTION_MESSAGE, getDateNow(), e);
             } catch (AnonymizerUnexpectedException e) {
+                MDC.put("errorType", "AnonymizerUnexpectedException");
+                MDC.put("errorMessage", e.getMessage());
                 errorMessages += 1;
                 log.error(
                         "Transfer ingestion error AnonymizerUnexpectedException at {}",
                         getDateNow(),
                         e);
             } catch (Exception e) {
+                MDC.put("errorType", "Exception");
+                MDC.put("errorMessage", e.getMessage());
                 errorMessages += 1;
                 log.error("Transfer ingestion error Generic exception at {}", getDateNow(), e);
             }
+            MDC.clear();
         }
         log.debug(
                 "Transfer ingested at {}: total messages {}, {} null and {} errors",
@@ -296,7 +334,7 @@ public class IngestionServiceImpl implements IngestionService {
     }
 
     private Transfer anonymizeRemittanceInformation(Transfer values) throws AnonymizerException, JsonProcessingException {
-        if (values != null && values.getRemittanceInformation() != null) {
+        if (values != null && values.getRemittanceInformation() != null && !values.getRemittanceInformation().isBlank()) {
             try {
                 values.setRemittanceInformation(
                         anonymizerService.anonymizeWithRetry(
