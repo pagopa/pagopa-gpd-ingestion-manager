@@ -35,7 +35,7 @@ public class Transfer {
     @JsonProperty("organization_fiscal_code")
     private String organizationFiscalCode;
 
-    @JsonProperty("remittanceInformation")
+    @JsonProperty("remittance_information")
     private String remittanceInformation;
 
     private String status;
