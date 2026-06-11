@@ -53,6 +53,7 @@ public class AnonymizerClientImpl implements AnonymizerClient {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(anonymizerEndpoint))
                 .version(HttpClient.Version.HTTP_2)
+                .header("Content-Type", "application/json")
                 .headers(
                         subscriptionKeyHeader, subscriptionKey,
                         requestIdHeader, MDC.get("requestId")
