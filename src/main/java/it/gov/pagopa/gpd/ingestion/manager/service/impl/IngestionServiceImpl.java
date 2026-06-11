@@ -99,8 +99,7 @@ public class IngestionServiceImpl implements IngestionService {
 
         // persist the item
         for (String msg : messages) {
-            MDC.put("requestId", String.valueOf(UUID.randomUUID()));
-            MDC.put("type", "paymentPosition");
+            initMDC(PAYMENT_POSITION_ENTITY_NAME);
             try {
                 DataCaptureMessage<PaymentPosition> paymentPosition =
                         mapMessageToObject(msg, new TypeReference<DataCaptureMessage<PaymentPosition>>() {
@@ -135,8 +134,7 @@ public class IngestionServiceImpl implements IngestionService {
 
         // persist the item
         for (String msg : messages) {
-            MDC.put("requestId", String.valueOf(UUID.randomUUID()));
-            MDC.put("type", "paymentOption");
+            initMDC(PAYMENT_OPTION_ENTITY_NAME);
             try {
                 DataCaptureMessage<PaymentOption> paymentOption =
                         mapMessageToObject(msg, new TypeReference<DataCaptureMessage<PaymentOption>>() {
@@ -197,8 +195,7 @@ public class IngestionServiceImpl implements IngestionService {
 
         // persist the item
         for (String msg : messages) {
-            MDC.put("requestId", String.valueOf(UUID.randomUUID()));
-            MDC.put("type", "transfer");
+            initMDC(TRANSFER_ENTITY_NAME);
             try {
                 DataCaptureMessage<Transfer> transfer =
                         mapMessageToObject(msg, new TypeReference<DataCaptureMessage<Transfer>>() {
@@ -252,6 +249,11 @@ public class IngestionServiceImpl implements IngestionService {
 
     private static LocalDateTime getDateNow() {
         return LocalDateTime.now(Clock.systemDefaultZone());
+    }
+
+    private static void initMDC(String entityName) {
+        MDC.put("requestId", String.valueOf(UUID.randomUUID()));
+        MDC.put("entity", entityName);
     }
 
     private <T> DataCaptureMessage<T> mapMessageToObject(String msg, TypeReference<DataCaptureMessage<T>> typeReference) throws JsonProcessingException {

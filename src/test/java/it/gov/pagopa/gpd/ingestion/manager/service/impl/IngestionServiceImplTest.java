@@ -25,6 +25,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.time.LocalDate;
+import java.time.Month;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
@@ -38,7 +39,7 @@ class IngestionServiceImplTest {
     public static final String TOKENIZED_FISCAL_CODE = "tokenizedFiscalCode";
     public static final String REMITTANCE_INFORMATION = "remittanceInformation";
     public static final String ANONYMIZED_REMITTANCE_INFORMATION = "anonymizedRemittanceInformation";
-    public static final long DATE = LocalDate.of(2026, 1, 1)
+    public static final long DATE = LocalDate.of(2026, Month.JANUARY, 1)
             .atStartOfDay()
             .toInstant(ZoneOffset.UTC)
             .toEpochMilli();
