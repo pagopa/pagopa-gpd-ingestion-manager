@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: "pagopa-gpd-ingestion-manager"
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-ingestion-manager
-    tag: "0.5.6-1-PIDM-1917-update-data-models"
+    tag: "0.5.6-2-PIDM-1917-update-data-models"
     pullPolicy: Always
   livenessProbe:
     handlerType: httpGet
