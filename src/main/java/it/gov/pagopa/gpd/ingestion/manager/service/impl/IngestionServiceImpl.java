@@ -96,7 +96,7 @@ public class IngestionServiceImpl implements IngestionService {
 
         int nullMessages = 0;
         int errorMessages = 0;
-        messages.removeAll(Collections.singleton(null));
+
         // persist the item
         for (String msg : messages) {
             MDC.put("requestId", String.valueOf(UUID.randomUUID()));
@@ -132,7 +132,7 @@ public class IngestionServiceImpl implements IngestionService {
 
         int nullMessages = 0;
         int errorMessages = 0;
-        messages.removeAll(Collections.singleton(null));
+
         // persist the item
         for (String msg : messages) {
             MDC.put("requestId", String.valueOf(UUID.randomUUID()));
@@ -194,7 +194,7 @@ public class IngestionServiceImpl implements IngestionService {
 
         int nullMessages = 0;
         int errorMessages = 0;
-        messages.removeAll(Collections.singleton(null));
+
         // persist the item
         for (String msg : messages) {
             MDC.put("requestId", String.valueOf(UUID.randomUUID()));
@@ -308,7 +308,7 @@ public class IngestionServiceImpl implements IngestionService {
         Throwable cause = e.getCause() != null ? e.getCause() : e;
         String errorType = cause.getClass().getSimpleName();
         MDC.put("errorType", errorType);
-        MDC.put("errorMessage", e.getMessage());
+        MDC.put("errorMessage", cause.getMessage());
         errorMessages += 1;
         log.error("{} ingestion error {} at {}", entityName, errorType, getDateNow(), e);
         return errorMessages;
