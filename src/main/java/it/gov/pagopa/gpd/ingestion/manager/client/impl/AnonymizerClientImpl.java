@@ -57,7 +57,7 @@ public class AnonymizerClientImpl implements AnonymizerClient {
                         subscriptionKeyHeader, subscriptionKey,
                         requestIdHeader, MDC.get("requestId")
                 )
-                .PUT(HttpRequest.BodyPublishers.ofString(body))
+                .POST(HttpRequest.BodyPublishers.ofString(body))
                 .build();
 
         return makeCall(request);
