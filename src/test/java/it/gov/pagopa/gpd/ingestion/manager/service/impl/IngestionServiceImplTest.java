@@ -227,6 +227,35 @@ class IngestionServiceImplTest {
     }
 
     @Test
+    void ingestPaymentOptionRunFiscalCodeLowerCase()
+            throws PDVTokenizerException, JsonProcessingException {
+        when(pdvTokenizerServiceMock.generateTokenForFiscalCodeWithRetry(FISCAL_CODE.toLowerCase()))
+                .thenReturn(TOKENIZED_FISCAL_CODE);
+
+        DataCaptureMessage<PaymentOption> poList =
+                generateValidPaymentOption(FISCAL_CODE.toLowerCase(), false);
+        List<String> paymentPositionsItems =
+                Collections.singletonList(objectMapper.writeValueAsString(poList));
+
+        sut =
+                new IngestionServiceImpl(
+                        objectMapper,
+                        pdvTokenizerServiceMock,
+                        paymentPositionProducer,
+                        paymentOptionProducer,
+                        transferProducer, false);
+
+        // test execution
+        assertDoesNotThrow(() -> sut.ingestPaymentOptions(paymentPositionsItems));
+
+        verify(pdvTokenizerServiceMock, times(1)).generateTokenForFiscalCodeWithRetry(FISCAL_CODE.toLowerCase());
+        verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
+        DataCaptureMessage<PaymentOption> captured = paymentOptionCaptor.getValue();
+        assertNull(captured.getBefore());
+        assertEquals(TOKENIZED_FISCAL_CODE, captured.getAfter().getFiscalCode());
+    }
+
+    @Test
     void ingestPaymentOptionRunInvalidFiscalCode()
             throws PDVTokenizerException, JsonProcessingException {
         DataCaptureMessage<PaymentOption> poList =
