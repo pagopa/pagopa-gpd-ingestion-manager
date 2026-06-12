@@ -151,7 +151,7 @@ Given('a payment position with id {string} and company name {string} in GPD data
 });
 
 
-Given('a create operation on payment option table with id {string} and description {string} and fiscal code {string} and associated to payment position with id {int} in GPD database', async function (id, description, fiscalCode, paymentPositionId) {
+Given('a create operation on payment option table with id {string} and description {string} and fiscalCode {string} and associated to payment position with id {int} in GPD database', async function (id, description, fiscalCode, paymentPositionId) {
   await insertPaymentOption(id, description, fiscalCode, paymentPositionId);
   this.paymentOptionId = id;
   this.paymentOptionDescription = description;
@@ -262,8 +262,8 @@ Then('the transfer update operation has the category updated', function () {
 });
 
 Then('the operations have the remittanceInformation anonimized', function () {
-  assert.notStrictEqual(this.transferCreateOp.after.remittanceInformation, undefined);
-  assert.notStrictEqual(this.transferCreateOp.after.remittanceInformation, this.transferRemittanceInformation);
-  assert.notStrictEqual(this.transferUpdateOp.after.remittanceInformation, undefined);
-  assert.notStrictEqual(this.transferUpdateOp.after.remittanceInformation, this.transferRemittanceInformation);
+  assert.notStrictEqual(this.transferCreateOp.after.remittance_information, undefined);
+  assert.notStrictEqual(this.transferCreateOp.after.remittance_information, this.transferRemittanceInformation);
+  assert.notStrictEqual(this.transferUpdateOp.after.remittance_information, undefined);
+  assert.notStrictEqual(this.transferUpdateOp.after.remittance_information, this.transferRemittanceInformation);
 });
