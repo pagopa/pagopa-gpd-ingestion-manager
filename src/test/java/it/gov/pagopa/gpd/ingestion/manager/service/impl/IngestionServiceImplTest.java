@@ -241,9 +241,10 @@ class IngestionServiceImplTest {
                 new IngestionServiceImpl(
                         objectMapper,
                         pdvTokenizerServiceMock,
+                        anonimizerServiceMock,
                         paymentPositionProducer,
                         paymentOptionProducer,
-                        transferProducer, false);
+                        transferProducer, false, false);
 
         // test execution
         assertDoesNotThrow(() -> sut.ingestPaymentOptions(paymentPositionsItems));

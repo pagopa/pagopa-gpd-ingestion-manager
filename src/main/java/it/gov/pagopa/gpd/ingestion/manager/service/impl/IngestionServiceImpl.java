@@ -40,15 +40,16 @@ public class IngestionServiceImpl implements IngestionService {
 
     private static final String ANONYMIZER_EXCEPTION_MESSAGE =
             "Transfer ingestion error AnonymizerException at {}";
-  private static final Pattern PATTERN_CF = Pattern.compile(
-            "^[A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]$"
-    );
-    private static final Pattern PATTERN_IVA = Pattern.compile("^\\d{11}$");
-
     private static final String ANONYMIZE_PLACEHOLDER = "Anonymized";
+
     private static final String TRANSFER_ENTITY_NAME = "Transfer";
     private static final String PAYMENT_OPTION_ENTITY_NAME = "PaymentOption";
     private static final String PAYMENT_POSITION_ENTITY_NAME = "PaymentPosition";
+
+    private static final Pattern PATTERN_CF = Pattern.compile(
+            "^[A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]$"
+    );
+    private static final Pattern PATTERN_IVA = Pattern.compile("^\\d{11}$");
 
     private final ObjectMapper objectMapper;
 
@@ -158,7 +159,7 @@ public class IngestionServiceImpl implements IngestionService {
                 MDC.put("id", String.valueOf(id));
 
                 paymentOption.setBefore(tokenizeFiscalCode(valuesBefore));
-                                paymentOption.setAfter(tokenizeFiscalCode(valuesAfter));
+                paymentOption.setAfter(tokenizeFiscalCode(valuesAfter));
 
                 boolean response = paymentOptionProducer.sendIngestedPaymentOption(paymentOption);
                 errorMessages = verifySendToEventhub(response, errorMessages, PAYMENT_OPTION_ENTITY_NAME);
@@ -173,12 +174,12 @@ public class IngestionServiceImpl implements IngestionService {
     }
 
     private PaymentOption tokenizeFiscalCode(PaymentOption values) throws PDVTokenizerException, JsonProcessingException {
-                if (values != null && isValidFiscalCode(values.getFiscalCode())) {
+        if (values != null && isValidFiscalCode(values.getFiscalCode())) {
             try {
                 values.setFiscalCode(
                         pdvTokenizerService.generateTokenForFiscalCodeWithRetry(
                                 values.getFiscalCode()));
-                        } catch (Exception e) {
+            } catch (Exception e) {
                 if (Boolean.FALSE.equals(placeholderOnPdvKO)) {
                     throw e;
                 } else {
@@ -188,7 +189,7 @@ public class IngestionServiceImpl implements IngestionService {
             }
         }
 
-                return values;
+        return values;
     }
 
     public void ingestTransfers(List<String> messages) {
@@ -252,7 +253,7 @@ public class IngestionServiceImpl implements IngestionService {
         return values;
     }
 
-            private static LocalDateTime getDateNow() {
+    private static LocalDateTime getDateNow() {
         return LocalDateTime.now(Clock.systemDefaultZone());
     }
 
@@ -287,14 +288,14 @@ public class IngestionServiceImpl implements IngestionService {
     }
 
     private static void logIngestionInit(List<String> messages, String entityName) {
-                log.debug(
+        log.debug(
                 "{} ingestion called at {} with events list size {}",
                 entityName,
                 getDateNow(),
                 messages.size());
     }
 
-        private static void logTotalMessagesElaborated(String entityName, List<String> messages, int nullMessages, int errorMessages) {
+    private static void logTotalMessagesElaborated(String entityName, List<String> messages, int nullMessages, int errorMessages) {
         log.debug(
                 "{} ingested at {}: total messages {}, {} null and {} errors",
                 entityName,
