@@ -4,8 +4,10 @@ import it.gov.pagopa.gpd.ingestion.manager.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.PaymentPosition;
 import it.gov.pagopa.gpd.ingestion.manager.events.producer.IngestedPaymentPositionProducer;
 import java.util.function.Supplier;
+
+import it.gov.pagopa.gpd.ingestion.manager.exception.AppError;
+import it.gov.pagopa.gpd.ingestion.manager.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Bean;
@@ -32,14 +34,14 @@ public class IngestedPaymentPositionProducerImpl implements IngestedPaymentPosit
   }
 
   @Override
-  public boolean sendIngestedPaymentPosition(
+  public void sendIngestedPaymentPosition(
       DataCaptureMessage<PaymentPosition> ingestedPaymentPosition) {
     var res =
         streamBridge.send("ingestPaymentPosition-out-0", buildMessage(ingestedPaymentPosition));
 
-    log.debug("Payment Position Retry Sent");
-
-    return res;
+    if(!res){
+      throw new AppException(AppError.MESSAGE_NOT_SENT);
+    }
   }
 
   /** Declared just to let know Spring to connect the producer at startup */

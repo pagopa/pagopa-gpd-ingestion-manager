@@ -4,8 +4,10 @@ import it.gov.pagopa.gpd.ingestion.manager.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.Transfer;
 import it.gov.pagopa.gpd.ingestion.manager.events.producer.IngestedTransferProducer;
 import java.util.function.Supplier;
+
+import it.gov.pagopa.gpd.ingestion.manager.exception.AppError;
+import it.gov.pagopa.gpd.ingestion.manager.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Bean;
@@ -32,12 +34,12 @@ public class IngestedTransferProducerImpl implements IngestedTransferProducer {
   }
 
   @Override
-  public boolean sendIngestedTransfer(DataCaptureMessage<Transfer> ingestedTransfer) {
+  public void sendIngestedTransfer(DataCaptureMessage<Transfer> ingestedTransfer) {
     var res = streamBridge.send("ingestTransfer-out-0", buildMessage(ingestedTransfer));
 
-    log.debug("Transfer Retry Sent");
-
-    return res;
+    if(!res){
+      throw new AppException(AppError.MESSAGE_NOT_SENT);
+    }
   }
 
   /** Declared just to let know Spring to connect the producer at startup */

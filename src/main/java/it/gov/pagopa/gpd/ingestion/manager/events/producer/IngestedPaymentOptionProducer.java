@@ -15,8 +15,7 @@ public interface IngestedPaymentOptionProducer {
      * Send an ingested {@link PaymentOption} to GPD eventhub
      *
      * @param ingestedPaymentOption data to send
-     * @return boolean referring if the insertion on the sending channel was successfully
      */
-    boolean sendIngestedPaymentOption(DataCaptureMessage<PaymentOption> ingestedPaymentOption);
+    void sendIngestedPaymentOption(DataCaptureMessage<PaymentOption> ingestedPaymentOption);
 
 }
