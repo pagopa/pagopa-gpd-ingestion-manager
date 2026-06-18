@@ -35,11 +35,7 @@ public class IngestedTransferProducerImpl implements IngestedTransferProducer {
   public boolean sendIngestedTransfer(DataCaptureMessage<Transfer> ingestedTransfer) {
     var res = streamBridge.send("ingestTransfer-out-0", buildMessage(ingestedTransfer));
 
-    MDC.put("topic", "transfer");
-    MDC.put("action", "sent");
     log.debug("Transfer Retry Sent");
-    MDC.remove("topic");
-    MDC.remove("action");
 
     return res;
   }

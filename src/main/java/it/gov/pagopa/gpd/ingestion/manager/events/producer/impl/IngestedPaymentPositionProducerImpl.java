@@ -37,11 +37,7 @@ public class IngestedPaymentPositionProducerImpl implements IngestedPaymentPosit
     var res =
         streamBridge.send("ingestPaymentPosition-out-0", buildMessage(ingestedPaymentPosition));
 
-    MDC.put("topic", "payment position");
-    MDC.put("action", "sent");
     log.debug("Payment Position Retry Sent");
-    MDC.remove("topic");
-    MDC.remove("action");
 
     return res;
   }

@@ -36,11 +36,7 @@ public class IngestedPaymentOptionProducerImpl implements IngestedPaymentOptionP
       DataCaptureMessage<PaymentOption> ingestedPaymentOption) {
     var res = streamBridge.send("ingestPaymentOption-out-0", buildMessage(ingestedPaymentOption));
 
-    MDC.put("topic", "payment option");
-    MDC.put("action", "sent");
     log.debug("Payment Option Retry Sent");
-    MDC.remove("topic");
-    MDC.remove("action");
 
     return res;
   }
