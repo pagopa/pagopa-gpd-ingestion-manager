@@ -12,6 +12,7 @@ import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.enumeration.Trans
 import it.gov.pagopa.gpd.ingestion.manager.events.producer.impl.IngestedPaymentOptionProducerImpl;
 import it.gov.pagopa.gpd.ingestion.manager.events.producer.impl.IngestedPaymentPositionProducerImpl;
 import it.gov.pagopa.gpd.ingestion.manager.events.producer.impl.IngestedTransferProducerImpl;
+import it.gov.pagopa.gpd.ingestion.manager.exception.AppException;
 import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerException;
 import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerServiceRetryWrapper;
 import org.junit.jupiter.api.Test;
@@ -212,7 +213,7 @@ class IngestionServiceImplTest {
         List<String> paymentPositionsItems =
                 Collections.singletonList(objectMapper.writeValueAsString(ppList));
 
-        assertDoesNotThrow(() -> sut.ingestPaymentPositions(paymentPositionsItems));
+        assertThrows(AppException.class, () -> sut.ingestPaymentPositions(paymentPositionsItems));
 
         verify(paymentPositionProducer, never()).sendIngestedPaymentPosition(any());
     }
@@ -480,7 +481,7 @@ class IngestionServiceImplTest {
         List<String> paymentOptionsItems =
                 Collections.singletonList(objectMapper.writeValueAsString(poList));
 
-        assertDoesNotThrow(() -> sut.ingestPaymentOptions(paymentOptionsItems));
+        assertThrows(AppException.class, () -> sut.ingestPaymentOptions(paymentOptionsItems));
 
         verify(paymentOptionProducer, never()).sendIngestedPaymentOption(any());
     }
