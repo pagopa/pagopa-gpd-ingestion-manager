@@ -1,6 +1,5 @@
 package it.gov.pagopa.gpd.ingestion.manager.service.impl;
 
-import it.gov.pagopa.gpd.ingestion.manager.Application;
 import it.gov.pagopa.gpd.ingestion.manager.exception.AppError;
 import it.gov.pagopa.gpd.ingestion.manager.exception.AppException;
 import it.gov.pagopa.gpd.ingestion.manager.model.DeadLetterRecord;

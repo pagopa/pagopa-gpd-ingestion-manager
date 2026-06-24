@@ -4,10 +4,12 @@ import it.gov.pagopa.gpd.ingestion.manager.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.ingestion.manager.exception.AppError;
 import it.gov.pagopa.gpd.ingestion.manager.exception.AppException;
 import it.gov.pagopa.gpd.ingestion.manager.model.DeadLetterRecord;
+import it.gov.pagopa.gpd.ingestion.manager.model.enumeration.EntityType;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -32,6 +34,13 @@ class DeadLetterServiceImplTest {
     private static final byte[] CDC_MESSAGE_KEY = ("{\"id\":\"" + CDC_MESSAGE_ID + "\"}").getBytes();
     private static final String ORIGINAL_MESSAGE_PAYLOAD =
             "[ERROR] Retrieving original message payload";
+    private static final String UNKNOWN_TOPIC = "unknown_topic";
+    @Value("${spring.cloud.stream.bindings.ingestPaymentPosition-in-0.destination}")
+    private String paymentPositionTopic;
+    @Value("${spring.cloud.stream.bindings.ingestPaymentOption-in-0.destination}")
+    private String paymentOptionTopic;
+    @Value("${spring.cloud.stream.bindings.ingestTransfer-in-0.destination}")
+    private String transferTopic;
 
     @MockBean
     private StorageTableServiceImpl storageTableService;
@@ -44,7 +53,7 @@ class DeadLetterServiceImplTest {
 
     @Test
     void sendToDeadLetter_OK() {
-        ErrorMessage errorMessage = buildErrorMessage();
+        ErrorMessage errorMessage = buildErrorMessage(UNKNOWN_TOPIC);
 
         assertDoesNotThrow(() -> sut.sendToDeadLetter(errorMessage));
 
@@ -57,6 +66,60 @@ class DeadLetterServiceImplTest {
                 capturedDeadLetterRecord.getCause());
         assertEquals(AppError.INTERNAL_SERVER_ERROR.name(),
                 capturedDeadLetterRecord.getErrorCode());
+    }
+
+    @Test
+    void sendToDeadLetter_OK_paymentPosition() {
+        ErrorMessage errorMessage = buildErrorMessage(paymentPositionTopic);
+
+        assertDoesNotThrow(() -> sut.sendToDeadLetter(errorMessage));
+
+        verify(storageTableService)
+                .saveDeadLetter(deadLetterRecordCaptor.capture());
+        DeadLetterRecord capturedDeadLetterRecord = deadLetterRecordCaptor.getValue();
+
+        assertEquals(CDC_MESSAGE_ID, capturedDeadLetterRecord.getEntityId());
+        assertEquals(AppError.INTERNAL_SERVER_ERROR.getDetails(),
+                capturedDeadLetterRecord.getCause());
+        assertEquals(AppError.INTERNAL_SERVER_ERROR.name(),
+                capturedDeadLetterRecord.getErrorCode());
+        assertEquals(EntityType.PAYMENT_POSITION, capturedDeadLetterRecord.getEntityType());
+    }
+
+    @Test
+    void sendToDeadLetter_OK_paymentOption() {
+        ErrorMessage errorMessage = buildErrorMessage(paymentOptionTopic);
+
+        assertDoesNotThrow(() -> sut.sendToDeadLetter(errorMessage));
+
+        verify(storageTableService)
+                .saveDeadLetter(deadLetterRecordCaptor.capture());
+        DeadLetterRecord capturedDeadLetterRecord = deadLetterRecordCaptor.getValue();
+
+        assertEquals(CDC_MESSAGE_ID, capturedDeadLetterRecord.getEntityId());
+        assertEquals(AppError.INTERNAL_SERVER_ERROR.getDetails(),
+                capturedDeadLetterRecord.getCause());
+        assertEquals(AppError.INTERNAL_SERVER_ERROR.name(),
+                capturedDeadLetterRecord.getErrorCode());
+        assertEquals(EntityType.PAYMENT_OPTION, capturedDeadLetterRecord.getEntityType());
+    }
+
+    @Test
+    void sendToDeadLetter_OK_transfer() {
+        ErrorMessage errorMessage = buildErrorMessage(transferTopic);
+
+        assertDoesNotThrow(() -> sut.sendToDeadLetter(errorMessage));
+
+        verify(storageTableService)
+                .saveDeadLetter(deadLetterRecordCaptor.capture());
+        DeadLetterRecord capturedDeadLetterRecord = deadLetterRecordCaptor.getValue();
+
+        assertEquals(CDC_MESSAGE_ID, capturedDeadLetterRecord.getEntityId());
+        assertEquals(AppError.INTERNAL_SERVER_ERROR.getDetails(),
+                capturedDeadLetterRecord.getCause());
+        assertEquals(AppError.INTERNAL_SERVER_ERROR.name(),
+                capturedDeadLetterRecord.getErrorCode());
+        assertEquals(EntityType.TRANSFER, capturedDeadLetterRecord.getEntityType());
     }
 
     @Test
@@ -102,11 +165,11 @@ class DeadLetterServiceImplTest {
         assertEquals(ORIGINAL_MESSAGE_PAYLOAD, capturedDeadLetterRecord.getOriginalMessage());
     }
 
-    private ErrorMessage buildErrorMessage() {
+    private ErrorMessage buildErrorMessage(String topic) {
         AppException appException = new AppException(AppError.INTERNAL_SERVER_ERROR);
 
         MessageHeaders originalMessageHeaders =
-                new MessageHeaders(Map.of(KafkaHeaders.RECEIVED_KEY, CDC_MESSAGE_KEY, KafkaHeaders.RECEIVED_TOPIC, "cdc-topic", "id", UUID.randomUUID()));
+                new MessageHeaders(Map.of(KafkaHeaders.RECEIVED_KEY, CDC_MESSAGE_KEY, KafkaHeaders.RECEIVED_TOPIC, topic, "id", UUID.randomUUID()));
         MessageHeaders errorMessageHeaders = new MessageHeaders(Collections.emptyMap());
         Message<byte[]> originalMessage =
                 new GenericMessage<>(
