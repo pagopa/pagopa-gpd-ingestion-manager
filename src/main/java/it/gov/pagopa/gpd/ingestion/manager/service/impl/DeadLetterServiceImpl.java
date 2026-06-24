@@ -9,6 +9,7 @@ import it.gov.pagopa.gpd.ingestion.manager.service.DeadLetterService;
 import it.gov.pagopa.gpd.ingestion.manager.service.StorageTableService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -110,13 +111,7 @@ public class DeadLetterServiceImpl implements DeadLetterService {
 
         if (originalMessage != null) {
             Object topicHeader = originalMessage.getHeaders().get(KafkaHeaders.RECEIVED_TOPIC);
-            String receivedTopic = null;
-
-            if (topicHeader instanceof List<?> list && !list.isEmpty()) {
-                receivedTopic = String.valueOf(list.get(0));
-            } else if (topicHeader != null) {
-                receivedTopic = String.valueOf(topicHeader);
-            }
+            String receivedTopic = getReceivedTopic(topicHeader);
 
             if (receivedTopic != null) {
                 if (receivedTopic.equals(paymentPositionTopic)) {
@@ -132,6 +127,18 @@ public class DeadLetterServiceImpl implements DeadLetterService {
         }
 
         return EntityType.UNKNOWN;
+    }
+
+    @Nullable
+    private static String getReceivedTopic(Object topicHeader) {
+        String receivedTopic = null;
+
+        if (topicHeader instanceof List<?> list && !list.isEmpty()) {
+            receivedTopic = String.valueOf(list.get(0));
+        } else if (topicHeader != null) {
+            receivedTopic = String.valueOf(topicHeader);
+        }
+        return receivedTopic;
     }
 
     public static String messageToString(Object message) {
