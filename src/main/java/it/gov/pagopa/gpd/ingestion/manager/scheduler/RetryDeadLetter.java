@@ -34,7 +34,7 @@ public class RetryDeadLetter {
 
     // Runs every 5 minutes
     @Scheduled(cron = "* */5 * * * *")
-    public void processRetries() {
+    public void retryDeadLetter() {
         if (isRetryEnabled.get()) {
             List<DeadLetterRecord> deadLetterRecords = this.storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY);
 
@@ -42,27 +42,11 @@ public class RetryDeadLetter {
                 EntityType entityType = dlRecord.getEntityType();
 
                 try {
-                    if (entityType == null || entityType.equals(EntityType.UNKNOWN)) {
-                        throw new AppException(AppError.DEAD_LETTER_NOT_PROCESSABLE);
-                    }
-                    String originalMessageString = dlRecord.getOriginalMessage();
-                    if (entityType.equals(EntityType.PAYMENT_POSITION)) {
-                        ingestionService.ingestPaymentPositions(List.of(originalMessageString));
-                    }
-                    if (entityType.equals(EntityType.PAYMENT_OPTION)) {
-                        ingestionService.ingestPaymentOptions(List.of(originalMessageString));
-                    }
-                    if (entityType.equals(EntityType.TRANSFER)) {
-                        ingestionService.ingestTransfers(List.of(originalMessageString));
-                    }
+                    ingestDeadLetter(dlRecord, entityType);
 
                     this.storageTableService.deleteDeadLetter(dlRecord.getRetryStatus(), dlRecord.getMessageId());
                 } catch (AppException e) {
-                    if (e.getAppErrorCode().equals(AppError.DEAD_LETTER_NOT_PROCESSABLE) ||
-                            e.getAppErrorCode().equals(AppError.JSON_NOT_PROCESSABLE) ||
-                            e.getAppErrorCode().equals(AppError.NULL_MESSAGE)) {
-                        dlRecord.setRetryStatus(DeadLetterRetryStatus.RETRY_MALFORMED);
-                    }
+                    setRetryStatusMalformed(dlRecord, e);
                     handleRetryException(dlRecord, e);
                 } catch (Exception e) {
                     handleRetryException(dlRecord, e);
@@ -71,7 +55,30 @@ public class RetryDeadLetter {
         } else {
             log.info("Retry scheduler is currently PAUSED.");
         }
+    }
 
+    private static void setRetryStatusMalformed(DeadLetterRecord dlRecord, AppException e) {
+        if (e.getAppErrorCode().equals(AppError.DEAD_LETTER_NOT_PROCESSABLE) ||
+                e.getAppErrorCode().equals(AppError.JSON_NOT_PROCESSABLE) ||
+                e.getAppErrorCode().equals(AppError.NULL_MESSAGE)) {
+            dlRecord.setRetryStatus(DeadLetterRetryStatus.RETRY_MALFORMED);
+        }
+    }
+
+    private void ingestDeadLetter(DeadLetterRecord dlRecord, EntityType entityType) {
+        if (entityType == null || entityType.equals(EntityType.UNKNOWN)) {
+            throw new AppException(AppError.DEAD_LETTER_NOT_PROCESSABLE);
+        }
+        String originalMessageString = dlRecord.getOriginalMessage();
+        if (entityType.equals(EntityType.PAYMENT_POSITION)) {
+            ingestionService.ingestPaymentPositions(List.of(originalMessageString));
+        }
+        if (entityType.equals(EntityType.PAYMENT_OPTION)) {
+            ingestionService.ingestPaymentOptions(List.of(originalMessageString));
+        }
+        if (entityType.equals(EntityType.TRANSFER)) {
+            ingestionService.ingestTransfers(List.of(originalMessageString));
+        }
     }
 
     private void handleRetryException(DeadLetterRecord record, Exception e) {

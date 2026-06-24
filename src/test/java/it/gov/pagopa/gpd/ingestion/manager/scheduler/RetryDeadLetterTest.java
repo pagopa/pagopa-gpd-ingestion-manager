@@ -43,22 +43,22 @@ class RetryDeadLetterTest {
     }
 
     @Test
-    void processRetries_disabled_shouldDoNothing() {
+    void retryDeadLetter_disabled_shouldDoNothing() {
         retryDeadLetter.setRetryEnabled(false);
 
-        retryDeadLetter.processRetries();
+        retryDeadLetter.retryDeadLetter();
 
         verifyNoInteractions(storageTableService);
         verifyNoInteractions(ingestionService);
     }
 
     @Test
-    void processRetries_noRecords() {
+    void retryDeadLetter_noRecords() {
         retryDeadLetter.setRetryEnabled(true);
         when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
                 .thenReturn(Collections.emptyList());
 
-        retryDeadLetter.processRetries();
+        retryDeadLetter.retryDeadLetter();
 
         verify(storageTableService, times(1)).getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY);
         verifyNoMoreInteractions(storageTableService);
@@ -66,14 +66,14 @@ class RetryDeadLetterTest {
     }
 
     @Test
-    void processRetries_nullEntityType_OK_MALFORMED() {
+    void retryDeadLetter_nullEntityType_OK_MALFORMED() {
         retryDeadLetter.setRetryEnabled(true);
         baseRecord.setEntityType(null);
 
         when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
                 .thenReturn(List.of(baseRecord));
 
-        retryDeadLetter.processRetries();
+        retryDeadLetter.retryDeadLetter();
 
         assertEquals(DeadLetterRetryStatus.RETRY_MALFORMED, baseRecord.getRetryStatus());
         verify(storageTableService, times(1)).updateDeadLetter(baseRecord);
@@ -82,14 +82,14 @@ class RetryDeadLetterTest {
     }
 
     @Test
-    void processRetries_unknownEntityType_OK_MALFORMED() {
+    void retryDeadLetter_unknownEntityType_OK_MALFORMED() {
         retryDeadLetter.setRetryEnabled(true);
         baseRecord.setEntityType(EntityType.UNKNOWN);
 
         when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
                 .thenReturn(List.of(baseRecord));
 
-        retryDeadLetter.processRetries();
+        retryDeadLetter.retryDeadLetter();
 
         assertEquals(DeadLetterRetryStatus.RETRY_MALFORMED, baseRecord.getRetryStatus());
         verify(storageTableService, times(1)).updateDeadLetter(baseRecord);
@@ -97,14 +97,14 @@ class RetryDeadLetterTest {
     }
 
     @Test
-    void processRetries_withPaymentPosition_OK() {
+    void retryDeadLetter_withPaymentPosition_OK() {
         retryDeadLetter.setRetryEnabled(true);
         baseRecord.setEntityType(EntityType.PAYMENT_POSITION);
 
         when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
                 .thenReturn(List.of(baseRecord));
 
-        retryDeadLetter.processRetries();
+        retryDeadLetter.retryDeadLetter();
 
         verify(ingestionService, times(1)).ingestPaymentPositions(List.of(baseRecord.getOriginalMessage()));
         verify(storageTableService, times(1)).deleteDeadLetter(baseRecord.getRetryStatus(), baseRecord.getMessageId());
@@ -112,35 +112,35 @@ class RetryDeadLetterTest {
     }
 
     @Test
-    void processRetries_withPaymentOption_OK() {
+    void retryDeadLetter_withPaymentOption_OK() {
         retryDeadLetter.setRetryEnabled(true);
         baseRecord.setEntityType(EntityType.PAYMENT_OPTION);
 
         when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
                 .thenReturn(List.of(baseRecord));
 
-        retryDeadLetter.processRetries();
+        retryDeadLetter.retryDeadLetter();
 
         verify(ingestionService, times(1)).ingestPaymentOptions(List.of(baseRecord.getOriginalMessage()));
         verify(storageTableService, times(1)).deleteDeadLetter(baseRecord.getRetryStatus(), baseRecord.getMessageId());
     }
 
     @Test
-    void processRetries_withTransfer_OK() {
+    void retryDeadLetter_withTransfer_OK() {
         retryDeadLetter.setRetryEnabled(true);
         baseRecord.setEntityType(EntityType.TRANSFER);
 
         when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
                 .thenReturn(List.of(baseRecord));
 
-        retryDeadLetter.processRetries();
+        retryDeadLetter.retryDeadLetter();
 
         verify(ingestionService, times(1)).ingestTransfers(List.of(baseRecord.getOriginalMessage()));
         verify(storageTableService, times(1)).deleteDeadLetter(baseRecord.getRetryStatus(), baseRecord.getMessageId());
     }
 
     @Test
-    void processRetries_KO_updateNumRetry() {
+    void retryDeadLetter_KO_updateNumRetry() {
         retryDeadLetter.setRetryEnabled(true);
         baseRecord.setEntityType(EntityType.PAYMENT_POSITION);
         int initialRetries = baseRecord.getNumOfRetries(); // 0
@@ -151,7 +151,7 @@ class RetryDeadLetterTest {
         doThrow(new RuntimeException("Kafka or DB connection error"))
                 .when(ingestionService).ingestPaymentPositions(anyList());
 
-        retryDeadLetter.processRetries();
+        retryDeadLetter.retryDeadLetter();
 
         assertEquals(initialRetries + 1, baseRecord.getNumOfRetries());
         verify(storageTableService, times(1)).updateDeadLetter(baseRecord);
