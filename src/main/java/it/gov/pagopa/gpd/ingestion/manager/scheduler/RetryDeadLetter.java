@@ -38,14 +38,14 @@ public class RetryDeadLetter {
         if (isRetryEnabled.get()) {
             List<DeadLetterRecord> deadLetterRecords = this.storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY);
 
-            for (DeadLetterRecord record : deadLetterRecords) {
-                EntityType entityType = record.getEntityType();
+            for (DeadLetterRecord dlRecord : deadLetterRecords) {
+                EntityType entityType = dlRecord.getEntityType();
 
                 try {
                     if (entityType == null || entityType.equals(EntityType.UNKNOWN)) {
                         throw new AppException(AppError.DEAD_LETTER_NOT_PROCESSABLE);
                     }
-                    String originalMessageString = record.getOriginalMessage();
+                    String originalMessageString = dlRecord.getOriginalMessage();
                     if (entityType.equals(EntityType.PAYMENT_POSITION)) {
                         ingestionService.ingestPaymentPositions(List.of(originalMessageString));
                     }
@@ -56,16 +56,16 @@ public class RetryDeadLetter {
                         ingestionService.ingestTransfers(List.of(originalMessageString));
                     }
 
-                    this.storageTableService.deleteDeadLetter(record.getRetryStatus(), record.getMessageId());
+                    this.storageTableService.deleteDeadLetter(dlRecord.getRetryStatus(), dlRecord.getMessageId());
                 } catch (AppException e) {
                     if (e.getAppErrorCode().equals(AppError.DEAD_LETTER_NOT_PROCESSABLE) ||
                             e.getAppErrorCode().equals(AppError.JSON_NOT_PROCESSABLE) ||
                             e.getAppErrorCode().equals(AppError.NULL_MESSAGE)) {
-                        record.setRetryStatus(DeadLetterRetryStatus.RETRY_MALFORMED);
+                        dlRecord.setRetryStatus(DeadLetterRetryStatus.RETRY_MALFORMED);
                     }
-                    handleRetryException(record, e);
+                    handleRetryException(dlRecord, e);
                 } catch (Exception e) {
-                    handleRetryException(record, e);
+                    handleRetryException(dlRecord, e);
                 }
             }
         } else {

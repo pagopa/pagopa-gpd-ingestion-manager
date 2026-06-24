@@ -40,7 +40,7 @@ public class StorageTableServiceImpl implements StorageTableService {
 
         return tableClient.listEntities(options, null, null).stream()
                 .map(DeadLetterRecord::fromTableEntity)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

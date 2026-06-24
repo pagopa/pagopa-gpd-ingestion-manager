@@ -16,12 +16,12 @@ import java.util.Formatter;
 public class AppException extends RuntimeException {
 
   /** title returned to the response when this exception occurred */
-  String title;
+  private final String title;
 
   /** http status returned to the response when this exception occurred */
-  HttpStatus httpStatus;
+  private final HttpStatus httpStatus;
 
-  AppError appErrorCode;
+  private final AppError appErrorCode;
 
   /**
    * @param appError Response template returned to the response

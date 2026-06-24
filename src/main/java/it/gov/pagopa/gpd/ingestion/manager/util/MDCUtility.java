@@ -13,6 +13,8 @@ public class MDCUtility {
     private static final String MDC_KEY_ERROR_TYPE = "errorType";
     private static final String MDC_KEY_ERROR_MESSAGE = "errorMessage";
 
+    MDCUtility(){}
+
     public static void initMDC(String entityName) {
         MDC.put(MDC_KEY_REQUEST_ID, String.valueOf(UUID.randomUUID()));
         MDC.put(MDC_KEY_ENTITY, entityName);
