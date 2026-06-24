@@ -1,0 +1,160 @@
+package it.gov.pagopa.gpd.ingestion.manager.scheduler;
+
+import it.gov.pagopa.gpd.ingestion.manager.model.DeadLetterRecord;
+import it.gov.pagopa.gpd.ingestion.manager.model.enumeration.DeadLetterRetryStatus;
+import it.gov.pagopa.gpd.ingestion.manager.model.enumeration.EntityType;
+import it.gov.pagopa.gpd.ingestion.manager.service.impl.IngestionServiceImpl;
+import it.gov.pagopa.gpd.ingestion.manager.service.impl.StorageTableServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class RetryDeadLetterTest {
+
+    @Mock
+    private StorageTableServiceImpl storageTableService;
+
+    @Mock
+    private IngestionServiceImpl ingestionService;
+
+    @InjectMocks
+    private RetryDeadLetter retryDeadLetter;
+
+    private DeadLetterRecord baseRecord;
+
+    @BeforeEach
+    void setUp() {
+        baseRecord = DeadLetterRecord.builder()
+                .messageId("msg-123")
+                .retryStatus(DeadLetterRetryStatus.TO_RETRY)
+                .originalMessage("{\"key\":\"value\"}")
+                .numOfRetries(0)
+                .build();
+    }
+
+    @Test
+    void processRetries_disabled_shouldDoNothing() {
+        retryDeadLetter.setRetryEnabled(false);
+
+        retryDeadLetter.processRetries();
+
+        verifyNoInteractions(storageTableService);
+        verifyNoInteractions(ingestionService);
+    }
+
+    @Test
+    void processRetries_noRecords() {
+        retryDeadLetter.setRetryEnabled(true);
+        when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
+                .thenReturn(Collections.emptyList());
+
+        retryDeadLetter.processRetries();
+
+        verify(storageTableService, times(1)).getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY);
+        verifyNoMoreInteractions(storageTableService);
+        verifyNoInteractions(ingestionService);
+    }
+
+    @Test
+    void processRetries_nullEntityType_OK_MALFORMED() {
+        retryDeadLetter.setRetryEnabled(true);
+        baseRecord.setEntityType(null);
+
+        when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
+                .thenReturn(List.of(baseRecord));
+
+        retryDeadLetter.processRetries();
+
+        assertEquals(DeadLetterRetryStatus.RETRY_MALFORMED, baseRecord.getRetryStatus());
+        verify(storageTableService, times(1)).updateDeadLetter(baseRecord);
+        verify(storageTableService, never()).deleteDeadLetter(any(), any());
+        verifyNoInteractions(ingestionService);
+    }
+
+    @Test
+    void processRetries_unknownEntityType_OK_MALFORMED() {
+        retryDeadLetter.setRetryEnabled(true);
+        baseRecord.setEntityType(EntityType.UNKNOWN);
+
+        when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
+                .thenReturn(List.of(baseRecord));
+
+        retryDeadLetter.processRetries();
+
+        assertEquals(DeadLetterRetryStatus.RETRY_MALFORMED, baseRecord.getRetryStatus());
+        verify(storageTableService, times(1)).updateDeadLetter(baseRecord);
+        verifyNoInteractions(ingestionService);
+    }
+
+    @Test
+    void processRetries_withPaymentPosition_OK() {
+        retryDeadLetter.setRetryEnabled(true);
+        baseRecord.setEntityType(EntityType.PAYMENT_POSITION);
+
+        when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
+                .thenReturn(List.of(baseRecord));
+
+        retryDeadLetter.processRetries();
+
+        verify(ingestionService, times(1)).ingestPaymentPositions(List.of(baseRecord.getOriginalMessage()));
+        verify(storageTableService, times(1)).deleteDeadLetter(baseRecord.getRetryStatus(), baseRecord.getMessageId());
+        verify(storageTableService, never()).updateDeadLetter(any());
+    }
+
+    @Test
+    void processRetries_withPaymentOption_OK() {
+        retryDeadLetter.setRetryEnabled(true);
+        baseRecord.setEntityType(EntityType.PAYMENT_OPTION);
+
+        when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
+                .thenReturn(List.of(baseRecord));
+
+        retryDeadLetter.processRetries();
+
+        verify(ingestionService, times(1)).ingestPaymentOptions(List.of(baseRecord.getOriginalMessage()));
+        verify(storageTableService, times(1)).deleteDeadLetter(baseRecord.getRetryStatus(), baseRecord.getMessageId());
+    }
+
+    @Test
+    void processRetries_withTransfer_OK() {
+        retryDeadLetter.setRetryEnabled(true);
+        baseRecord.setEntityType(EntityType.TRANSFER);
+
+        when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
+                .thenReturn(List.of(baseRecord));
+
+        retryDeadLetter.processRetries();
+
+        verify(ingestionService, times(1)).ingestTransfers(List.of(baseRecord.getOriginalMessage()));
+        verify(storageTableService, times(1)).deleteDeadLetter(baseRecord.getRetryStatus(), baseRecord.getMessageId());
+    }
+
+    @Test
+    void processRetries_KO_updateNumRetry() {
+        retryDeadLetter.setRetryEnabled(true);
+        baseRecord.setEntityType(EntityType.PAYMENT_POSITION);
+        int initialRetries = baseRecord.getNumOfRetries(); // 0
+
+        when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
+                .thenReturn(List.of(baseRecord));
+
+        doThrow(new RuntimeException("Kafka or DB connection error"))
+                .when(ingestionService).ingestPaymentPositions(anyList());
+
+        retryDeadLetter.processRetries();
+
+        assertEquals(initialRetries + 1, baseRecord.getNumOfRetries());
+        verify(storageTableService, times(1)).updateDeadLetter(baseRecord);
+        verify(storageTableService, never()).deleteDeadLetter(any(), any());
+    }
+}
