@@ -14,7 +14,11 @@ public enum AppError {
   JSON_NOT_PROCESSABLE(
       HttpStatus.INTERNAL_SERVER_ERROR,
       "JSON not processable",
-      "Payment option message is not a processable JSON"),
+      "Message is not a processable JSON"),
+  DEAD_LETTER_NOT_PROCESSABLE(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          "Dead letter message not processable",
+          "The message has not a processable entity type"),
   MESSAGE_NOT_SENT(
       HttpStatus.INTERNAL_SERVER_ERROR,
       "Message not sent",
