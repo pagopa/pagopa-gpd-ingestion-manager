@@ -81,10 +81,10 @@ public class RetryDeadLetter {
         }
     }
 
-    private void handleRetryException(DeadLetterRecord record, Exception e) {
+    private void handleRetryException(DeadLetterRecord dlRecord, Exception e) {
         log.error(e.getMessage());
-        record.setNumOfRetries(record.getNumOfRetries() + 1);
-        this.storageTableService.updateDeadLetter(record);
+        dlRecord.setNumOfRetries(dlRecord.getNumOfRetries() + 1);
+        this.storageTableService.updateDeadLetter(dlRecord);
     }
 
     // Expose endpoints or JMX beans to flip this toggle manually if needed
