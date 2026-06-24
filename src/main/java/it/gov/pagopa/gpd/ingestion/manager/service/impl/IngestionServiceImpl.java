@@ -28,7 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import static it.gov.pagopa.gpd.ingestion.manager.util.MDCUtils.*;
+import static it.gov.pagopa.gpd.ingestion.manager.util.MDCUtility.*;
 
 @Service
 @Slf4j
@@ -286,6 +286,5 @@ public class IngestionServiceImpl implements IngestionService {
         String errorType = cause.getClass().getSimpleName();
         setMDCError(errorType, cause.getMessage());
         log.error("{} ingestion error {} at {}", entityName, errorType, getDateNow(), e);
-        throw new AppException(AppError.INTERNAL_SERVER_ERROR, e);
     }
 }

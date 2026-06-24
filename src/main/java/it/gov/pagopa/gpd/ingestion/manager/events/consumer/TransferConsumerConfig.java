@@ -20,7 +20,7 @@ public class TransferConsumerConfig {
     }
 
     @Bean
-    public Consumer<ErrorMessage> deadLetterErrorHandler(DeadLetterService deadLetterService) {
+    public Consumer<ErrorMessage> deadLetterTransferErrorHandler(DeadLetterService deadLetterService) {
         return deadLetterService::sendToDeadLetter;
     }
 }

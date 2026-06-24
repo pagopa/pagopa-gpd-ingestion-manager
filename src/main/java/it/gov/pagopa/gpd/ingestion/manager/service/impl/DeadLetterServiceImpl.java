@@ -16,6 +16,10 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -93,17 +97,21 @@ public class DeadLetterServiceImpl implements DeadLetterService {
     }
 
     private EntityType getEntityType(ErrorMessage errorMessage) {
-        String receivedTopic = errorMessage != null ? errorMessage.getHeaders().get(KafkaHeaders.RECEIVED_TOPIC, String.class) : null;
+        Message<?> originalMessage = errorMessage.getOriginalMessage();
 
-        if (receivedTopic != null) {
-            if (receivedTopic.equals(paymentPositionTopic)) {
-                return EntityType.PAYMENT_POSITION;
-            }
-            if (receivedTopic.equals(paymentOptionTopic)) {
-                return EntityType.PAYMENT_OPTION;
-            }
-            if (receivedTopic.equals(transferTopic)) {
-                return EntityType.TRANSFER;
+        if(originalMessage != null){
+            ArrayList<?> headerTopic = originalMessage.getHeaders().get(KafkaHeaders.RECEIVED_TOPIC, ArrayList.class);
+            String receivedTopic = headerTopic == null || headerTopic.isEmpty() ? null : String.valueOf(headerTopic.get(0));
+            if (receivedTopic != null) {
+                if (receivedTopic.equals(paymentPositionTopic)) {
+                    return EntityType.PAYMENT_POSITION;
+                }
+                if (receivedTopic.equals(paymentOptionTopic)) {
+                    return EntityType.PAYMENT_OPTION;
+                }
+                if (receivedTopic.equals(transferTopic)) {
+                    return EntityType.TRANSFER;
+                }
             }
         }
 
@@ -111,14 +119,21 @@ public class DeadLetterServiceImpl implements DeadLetterService {
     }
 
     public static String messageToString(Object message) {
-        log.info("Payload from ErrorMessage to convert: {}", message);
         if (message == null) {
             return "message is null";
         }
+
         if (message instanceof byte[] byteArray) {
-            return new String(byteArray);
-        } else {
-            return String.valueOf(message);
+            return new String(byteArray, StandardCharsets.UTF_8);
         }
+
+        if (message instanceof List<?> list && !list.isEmpty()) {
+            Object firstElement = list.get(0);
+            if (firstElement instanceof byte[] byteArray) {
+                return new String(byteArray, StandardCharsets.UTF_8);
+            }
+        }
+
+        return String.valueOf(message);
     }
 }

@@ -1,6 +1,7 @@
 package it.gov.pagopa.gpd.ingestion.manager.service;
 
 import it.gov.pagopa.gpd.ingestion.manager.model.DeadLetterRecord;
+import it.gov.pagopa.gpd.ingestion.manager.model.enumeration.DeadLetterRetryStatus;
 
 import java.util.List;
 
@@ -17,19 +18,25 @@ public interface StorageTableService {
      * @param messageId Record's rowKey
      * @return found {@link DeadLetterRecord}
      */
-    DeadLetterRecord getDeadLetter(String retryStatus, String messageId);
+    DeadLetterRecord getDeadLetter(DeadLetterRetryStatus retryStatus, String messageId);
 
     /**
      * Retrieve all dead letter records by retry status
      * @param retryStatus Record's partitionKey
      * @return list of all {@link DeadLetterRecord} found by partitionKey
      */
-    List<DeadLetterRecord> getDeadLetterByRetryStatus(String retryStatus);
+    List<DeadLetterRecord> getDeadLetterByRetryStatus(DeadLetterRetryStatus retryStatus);
+
+    /**
+     * Update the dead letter record
+     * @param deadLetterRecord the data to update the record with
+     */
+    void updateDeadLetter(DeadLetterRecord deadLetterRecord);
 
     /**
      * Delete a dead letter record
      * @param retryStatus Record's partitionKey
      * @param messageId Record's rowKey
      */
-    void deleteDeadLetter(String retryStatus, String messageId);
+    void deleteDeadLetter(DeadLetterRetryStatus retryStatus, String messageId);
 }

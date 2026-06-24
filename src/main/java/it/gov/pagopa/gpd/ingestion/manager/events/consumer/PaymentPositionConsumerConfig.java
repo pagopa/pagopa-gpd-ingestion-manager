@@ -20,7 +20,7 @@ public class PaymentPositionConsumerConfig {
     }
 
     @Bean
-    public Consumer<ErrorMessage> deadLetterErrorHandler(DeadLetterService deadLetterService) {
+    public Consumer<ErrorMessage> deadLetterPaymentPositionErrorHandler(DeadLetterService deadLetterService) {
         return deadLetterService::sendToDeadLetter;
     }
 }

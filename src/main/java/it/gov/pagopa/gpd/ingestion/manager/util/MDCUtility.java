@@ -4,7 +4,7 @@ import org.slf4j.MDC;
 
 import java.util.UUID;
 
-public class MDCUtils {
+public class MDCUtility {
 
     private static final String MDC_KEY_REQUEST_ID = "requestId";
     private static final String MDC_KEY_ENTITY = "entity";

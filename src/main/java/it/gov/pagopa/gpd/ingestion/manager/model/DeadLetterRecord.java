@@ -18,6 +18,7 @@ public class DeadLetterRecord {
     private String errorCode;
     private String originalMessage;
     private EntityType entityType;
+    private int numOfRetries;
 
     public TableEntity toTableEntity() {
         TableEntity entity = new TableEntity(retryStatus.name(), messageId);
@@ -25,6 +26,7 @@ public class DeadLetterRecord {
         entity.getProperties().put("errorCode", errorCode);
         entity.getProperties().put("originalMessage", originalMessage);
         entity.getProperties().put("entityType", entityType.name());
+        entity.getProperties().put("numOfRetries", numOfRetries);
         return entity;
     }
 
@@ -37,6 +39,7 @@ public class DeadLetterRecord {
                 .errorCode((String) props.get("errorCode"))
                 .originalMessage((String) props.get("originalMessage"))
                 .entityType(EntityType.valueOf((String) props.get("entityType")))
+                .numOfRetries((Integer) props.get("numOfRetries"))
                 .build();
     }
 }
