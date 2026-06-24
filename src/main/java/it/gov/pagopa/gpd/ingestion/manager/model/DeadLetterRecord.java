@@ -12,8 +12,16 @@ import java.util.Map;
 @AllArgsConstructor()
 @Builder
 public class DeadLetterRecord {
+    private static final String TABLE_KEY_ENTITY_ID = "entityId";
+    private static final String TABLE_KEY_CAUSE = "cause";
+    private static final String TABLE_KEY_ERROR_CODE = "errorCode";
+    private static final String TABLE_KEY_ORIGINAL_MESSAGE = "originalMessage";
+    private static final String TABLE_KEY_ENTITY_TYPE = "entityType";
+    private static final String TABLE_KEY_NUM_OF_RETRIES = "numOfRetries";
+
     private DeadLetterRetryStatus retryStatus;
     private String messageId;
+    private String entityId;
     private String cause;
     private String errorCode;
     private String originalMessage;
@@ -22,11 +30,12 @@ public class DeadLetterRecord {
 
     public TableEntity toTableEntity() {
         TableEntity entity = new TableEntity(retryStatus.name(), messageId);
-        entity.getProperties().put("cause", cause);
-        entity.getProperties().put("errorCode", errorCode);
-        entity.getProperties().put("originalMessage", originalMessage);
-        entity.getProperties().put("entityType", entityType.name());
-        entity.getProperties().put("numOfRetries", numOfRetries);
+        entity.getProperties().put(TABLE_KEY_ENTITY_ID, entityId);
+        entity.getProperties().put(TABLE_KEY_CAUSE, cause);
+        entity.getProperties().put(TABLE_KEY_ERROR_CODE, errorCode);
+        entity.getProperties().put(TABLE_KEY_ORIGINAL_MESSAGE, originalMessage);
+        entity.getProperties().put(TABLE_KEY_ENTITY_TYPE, entityType.name());
+        entity.getProperties().put(TABLE_KEY_NUM_OF_RETRIES, numOfRetries);
         return entity;
     }
 
@@ -35,11 +44,12 @@ public class DeadLetterRecord {
         return DeadLetterRecord.builder()
                 .retryStatus(DeadLetterRetryStatus.valueOf(entity.getPartitionKey()))
                 .messageId(entity.getRowKey())
-                .cause((String) props.get("cause"))
-                .errorCode((String) props.get("errorCode"))
-                .originalMessage((String) props.get("originalMessage"))
-                .entityType(EntityType.valueOf((String) props.get("entityType")))
-                .numOfRetries((Integer) props.get("numOfRetries"))
+                .entityId((String) props.get(TABLE_KEY_ENTITY_ID))
+                .cause((String) props.get(TABLE_KEY_CAUSE))
+                .errorCode((String) props.get(TABLE_KEY_ERROR_CODE))
+                .originalMessage((String) props.get(TABLE_KEY_ORIGINAL_MESSAGE))
+                .entityType(EntityType.valueOf((String) props.get(TABLE_KEY_ENTITY_TYPE)))
+                .numOfRetries((Integer) props.get(TABLE_KEY_NUM_OF_RETRIES))
                 .build();
     }
 }

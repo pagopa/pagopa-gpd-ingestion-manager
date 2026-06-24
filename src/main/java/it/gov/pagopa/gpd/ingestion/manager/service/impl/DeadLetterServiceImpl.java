@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -48,31 +49,29 @@ public class DeadLetterServiceImpl implements DeadLetterService {
     public void sendToDeadLetter(ErrorMessage errorMessage) {
         String cause;
         String errorCode = AppError.INTERNAL_SERVER_ERROR.name();
-        if (errorMessage.getPayload() instanceof AppException appException) {
+        if (errorMessage.getPayload().getCause() instanceof AppException appException) {
             cause = appException.getMessage();
-            errorCode = String.valueOf(appException.getAppErrorCode());
+            errorCode = appException.getAppErrorCode().name();
         } else {
             cause = errorMessage.getPayload().getMessage();
         }
 
-        String messageId = getMessageId(errorMessage);
-        String originalMessagePayload = getOriginalMessagePayload(errorMessage);
-        EntityType entityType = getEntityType(errorMessage);
-
+        UUID errorMessageId = (UUID) errorMessage.getHeaders().get("id");
         DeadLetterRecord deadLetterRecord = DeadLetterRecord.builder()
                 .retryStatus(DeadLetterRetryStatus.TO_RETRY)
-                .messageId(messageId)
+                .messageId(errorMessageId != null ? errorMessageId.toString() : UUID.randomUUID().toString())
+                .entityId(getEntityId(errorMessage))
                 .cause(cause)
                 .errorCode(errorCode)
-                .originalMessage(originalMessagePayload)
-                .entityType(entityType)
+                .originalMessage(getOriginalMessagePayload(errorMessage))
+                .entityType(getEntityType(errorMessage))
                 .build();
 
         storageTableService.saveDeadLetter(deadLetterRecord);
     }
 
     private String getOriginalMessagePayload(ErrorMessage errorMessage) {
-        String originalMessagePayload = "\"[ERROR] Retrieving original message payload\"";
+        String originalMessagePayload = "[ERROR] Retrieving original message payload";
         Message<?> originalMessage = errorMessage.getOriginalMessage();
         if (originalMessage != null) {
             try {
@@ -84,7 +83,7 @@ public class DeadLetterServiceImpl implements DeadLetterService {
         return originalMessagePayload;
     }
 
-    private String getMessageId(ErrorMessage errorMessage) {
+    private String getEntityId(ErrorMessage errorMessage) {
         String messageId = String.valueOf(errorMessage.getHeaders().getId());
         Message<?> originalMessage = errorMessage.getOriginalMessage();
 
