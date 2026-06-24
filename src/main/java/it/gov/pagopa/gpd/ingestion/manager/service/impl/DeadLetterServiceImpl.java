@@ -1,5 +1,7 @@
 package it.gov.pagopa.gpd.ingestion.manager.service.impl;
 
+import it.gov.pagopa.gpd.ingestion.manager.Application;
+import it.gov.pagopa.gpd.ingestion.manager.exception.AppError;
 import it.gov.pagopa.gpd.ingestion.manager.exception.AppException;
 import it.gov.pagopa.gpd.ingestion.manager.model.DeadLetterRecord;
 import it.gov.pagopa.gpd.ingestion.manager.model.enumeration.DeadLetterRetryStatus;
@@ -17,7 +19,6 @@ import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -33,12 +34,9 @@ public class DeadLetterServiceImpl implements DeadLetterService {
     @Autowired
     public DeadLetterServiceImpl(
             StorageTableServiceImpl storageTableService,
-            @Value("${spring.cloud.stream.bindings.ingestPaymentPosition-in-0.destination}")
-            String paymentPositionTopic,
-            @Value("${spring.cloud.stream.bindings.ingestPaymentOption-in-0.destination}")
-            String paymentOptionTopic,
-            @Value("${spring.cloud.stream.bindings.ingestTransfer-in-0.destination}")
-            String transferTopic
+            @Value("${spring.cloud.stream.bindings.ingestPaymentPosition-in-0.destination}") String paymentPositionTopic,
+            @Value("${spring.cloud.stream.bindings.ingestPaymentOption-in-0.destination}") String paymentOptionTopic,
+            @Value("${spring.cloud.stream.bindings.ingestTransfer-in-0.destination}") String transferTopic
     ) {
         this.storageTableService = storageTableService;
         this.paymentPositionTopic = paymentPositionTopic;
@@ -48,7 +46,14 @@ public class DeadLetterServiceImpl implements DeadLetterService {
 
     @Override
     public void sendToDeadLetter(ErrorMessage errorMessage) {
-        AppException appException = (AppException) errorMessage.getPayload().getCause();
+        String cause;
+        String errorCode = AppError.INTERNAL_SERVER_ERROR.name();
+        if (errorMessage.getPayload() instanceof AppException appException) {
+            cause = appException.getMessage();
+            errorCode = String.valueOf(appException.getAppErrorCode());
+        } else {
+            cause = errorMessage.getPayload().getMessage();
+        }
 
         String messageId = getMessageId(errorMessage);
         String originalMessagePayload = getOriginalMessagePayload(errorMessage);
@@ -57,8 +62,8 @@ public class DeadLetterServiceImpl implements DeadLetterService {
         DeadLetterRecord deadLetterRecord = DeadLetterRecord.builder()
                 .retryStatus(DeadLetterRetryStatus.TO_RETRY)
                 .messageId(messageId)
-                .cause(appException.getMessage())
-                .errorCode(String.valueOf(appException.getAppErrorCode()))
+                .cause(cause)
+                .errorCode(errorCode)
                 .originalMessage(originalMessagePayload)
                 .entityType(entityType)
                 .build();
@@ -72,9 +77,8 @@ public class DeadLetterServiceImpl implements DeadLetterService {
         if (originalMessage != null) {
             try {
                 originalMessagePayload = messageToString(originalMessage.getPayload());
-            } catch (Exception ignored) {
-                // handled after
-                log.warn("Unable to retrieve original message payload for messageId", ignored);
+            } catch (Exception e) {
+                log.warn("Unable to retrieve original message payload", e);
             }
         }
         return originalMessagePayload;
@@ -83,13 +87,20 @@ public class DeadLetterServiceImpl implements DeadLetterService {
     private String getMessageId(ErrorMessage errorMessage) {
         String messageId = String.valueOf(errorMessage.getHeaders().getId());
         Message<?> originalMessage = errorMessage.getOriginalMessage();
+
         if (originalMessage != null) {
             Object cdcMessageKey = originalMessage.getHeaders().get(KafkaHeaders.RECEIVED_KEY);
             if (cdcMessageKey != null) {
                 try {
-                    messageId = new JSONObject(messageToString(cdcMessageKey)).get("id").toString();
-                } catch (Exception ignored) {
-                    // handled after
+                    String keyString = messageToString(cdcMessageKey);
+
+                    if (keyString.trim().startsWith("{")) {
+                        messageId = new JSONObject(keyString).get("id").toString();
+                    } else {
+                        messageId = keyString;
+                    }
+                } catch (Exception e) {
+                    log.warn("Unable to parse Kafka RECEIVED_KEY to JSON object for id extraction", e);
                 }
             }
         }
@@ -99,9 +110,16 @@ public class DeadLetterServiceImpl implements DeadLetterService {
     private EntityType getEntityType(ErrorMessage errorMessage) {
         Message<?> originalMessage = errorMessage.getOriginalMessage();
 
-        if(originalMessage != null){
-            ArrayList<?> headerTopic = originalMessage.getHeaders().get(KafkaHeaders.RECEIVED_TOPIC, ArrayList.class);
-            String receivedTopic = headerTopic == null || headerTopic.isEmpty() ? null : String.valueOf(headerTopic.get(0));
+        if (originalMessage != null) {
+            Object topicHeader = originalMessage.getHeaders().get(KafkaHeaders.RECEIVED_TOPIC);
+            String receivedTopic = null;
+
+            if (topicHeader instanceof List<?> list && !list.isEmpty()) {
+                receivedTopic = String.valueOf(list.get(0));
+            } else if (topicHeader != null) {
+                receivedTopic = String.valueOf(topicHeader);
+            }
+
             if (receivedTopic != null) {
                 if (receivedTopic.equals(paymentPositionTopic)) {
                     return EntityType.PAYMENT_POSITION;
