@@ -65,6 +65,8 @@ public class DeadLetterServiceImpl implements DeadLetterService {
                 .errorCode(errorCode)
                 .originalMessage(getOriginalMessagePayload(errorMessage))
                 .entityType(getEntityType(errorMessage))
+                .lockExpiration(0L)
+                .numOfRetries(0)
                 .build();
 
         storageTableService.saveDeadLetter(deadLetterRecord);

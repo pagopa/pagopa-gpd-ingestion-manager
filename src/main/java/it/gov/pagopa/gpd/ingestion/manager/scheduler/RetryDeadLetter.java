@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -36,17 +37,12 @@ public class RetryDeadLetter {
     @Scheduled(cron = "* */5 * * * *")
     public void retryDeadLetter() {
         if (isRetryEnabled.get()) {
-            List<DeadLetterRecord> deadLetterRecords = this.storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY);
-
-            for (DeadLetterRecord dlRecord : deadLetterRecords) {
+            for (DeadLetterRecord dlRecord : retrieveAndAcquireLock()) {
                 try {
-                    if (this.storageTableService.acquireLockOptimistic(dlRecord)) {
+                    EntityType entityType = dlRecord.getEntityType();
+                    ingestDeadLetter(dlRecord, entityType);
 
-                        EntityType entityType = dlRecord.getEntityType();
-                        ingestDeadLetter(dlRecord, entityType);
-
-                        this.storageTableService.deleteDeadLetter(dlRecord);
-                    }
+                    this.storageTableService.deleteDeadLetter(dlRecord);
                 } catch (Exception e) {
                     handleRetryException(dlRecord, e);
                 }
@@ -54,6 +50,23 @@ public class RetryDeadLetter {
         } else {
             log.info("Retry scheduler is currently PAUSED.");
         }
+    }
+
+    private List<DeadLetterRecord> retrieveAndAcquireLock() {
+        List<DeadLetterRecord> deadLetterRecords = this.storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY);
+
+        List<DeadLetterRecord> processableDeadLetters = new ArrayList<>();
+        for (DeadLetterRecord dlRecord : deadLetterRecords) {
+            try {
+                if (this.storageTableService.acquireLockOptimistic(dlRecord)) {
+                    processableDeadLetters.add(dlRecord);
+                }
+            } catch (Exception e) {
+                handleRetryException(dlRecord, e);
+            }
+        }
+
+        return processableDeadLetters;
     }
 
     private void ingestDeadLetter(DeadLetterRecord dlRecord, EntityType entityType) {
@@ -75,12 +88,12 @@ public class RetryDeadLetter {
 
     private void handleRetryException(DeadLetterRecord dlRecord, Exception e) {
         log.error(e.getMessage());
-        dlRecord.setLockExpiration(null);
+        dlRecord.setLockExpiration(0L);
         dlRecord.setNumOfRetries(dlRecord.getNumOfRetries() != null ? dlRecord.getNumOfRetries() + 1 : 1);
 
         DeadLetterRetryStatus exceptionRetryStatus = getExceptionRetryStatus(e);
 
-        if(exceptionRetryStatus.equals(DeadLetterRetryStatus.TO_RETRY)){
+        if (exceptionRetryStatus.equals(DeadLetterRetryStatus.TO_RETRY)) {
             this.storageTableService.updateDeadLetter(dlRecord);
         } else {
             this.storageTableService.updateDeadLetterPartitionKey(dlRecord, exceptionRetryStatus);
@@ -88,12 +101,12 @@ public class RetryDeadLetter {
     }
 
     private static DeadLetterRetryStatus getExceptionRetryStatus(Exception e) {
-        if(e instanceof AppException appE &&
+        if (e instanceof AppException appE &&
                 (appE.getAppErrorCode().equals(AppError.DEAD_LETTER_NOT_PROCESSABLE) ||
-                    appE.getAppErrorCode().equals(AppError.JSON_NOT_PROCESSABLE) ||
-                    appE.getAppErrorCode().equals(AppError.NULL_MESSAGE))
+                        appE.getAppErrorCode().equals(AppError.JSON_NOT_PROCESSABLE) ||
+                        appE.getAppErrorCode().equals(AppError.NULL_MESSAGE))
         ) {
-                return DeadLetterRetryStatus.RETRY_MALFORMED;
+            return DeadLetterRetryStatus.RETRY_MALFORMED;
         }
 
         return DeadLetterRetryStatus.TO_RETRY;
