@@ -10,7 +10,9 @@ import it.gov.pagopa.gpd.ingestion.manager.model.enumeration.EntityType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
@@ -30,6 +32,8 @@ class StorageTableServiceImplTest {
     @Mock
     private PagedIterable<TableEntity> pagedIterable;
 
+    @Autowired
+    @InjectMocks
     private StorageTableServiceImpl sut;
 
     private DeadLetterRecord deadLetterRecord;
@@ -37,8 +41,6 @@ class StorageTableServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        sut = new StorageTableServiceImpl(tableClient, 100);
-
         deadLetterRecord = DeadLetterRecord.builder()
                 .messageId("msg-abc-123")
                 .retryStatus(DeadLetterRetryStatus.TO_RETRY)
