@@ -8,6 +8,7 @@ import it.gov.pagopa.gpd.ingestion.manager.service.impl.StorageTableServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -72,12 +73,14 @@ class RetryDeadLetterTest {
 
         when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
                 .thenReturn(List.of(baseRecord));
+        when(storageTableService.acquireLockOptimistic(baseRecord))
+                .thenReturn(true);
 
         retryDeadLetter.retryDeadLetter();
 
-        assertEquals(DeadLetterRetryStatus.RETRY_MALFORMED, baseRecord.getRetryStatus());
-        verify(storageTableService, times(1)).updateDeadLetter(baseRecord);
-        verify(storageTableService, never()).deleteDeadLetter(any(), any());
+        ArgumentCaptor<DeadLetterRecord> capturedRecord = ArgumentCaptor.forClass(DeadLetterRecord.class);
+        verify(storageTableService, times(1)).updateDeadLetterPartitionKey(capturedRecord.capture(), eq(DeadLetterRetryStatus.RETRY_MALFORMED));
+        verify(storageTableService, never()).deleteDeadLetter(any());
         verifyNoInteractions(ingestionService);
     }
 
@@ -88,11 +91,12 @@ class RetryDeadLetterTest {
 
         when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
                 .thenReturn(List.of(baseRecord));
+        when(storageTableService.acquireLockOptimistic(baseRecord))
+                .thenReturn(true);
 
         retryDeadLetter.retryDeadLetter();
 
-        assertEquals(DeadLetterRetryStatus.RETRY_MALFORMED, baseRecord.getRetryStatus());
-        verify(storageTableService, times(1)).updateDeadLetter(baseRecord);
+        verify(storageTableService, times(1)).updateDeadLetterPartitionKey(baseRecord, DeadLetterRetryStatus.RETRY_MALFORMED);
         verifyNoInteractions(ingestionService);
     }
 
@@ -103,11 +107,13 @@ class RetryDeadLetterTest {
 
         when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
                 .thenReturn(List.of(baseRecord));
+        when(storageTableService.acquireLockOptimistic(baseRecord))
+                .thenReturn(true);
 
         retryDeadLetter.retryDeadLetter();
 
         verify(ingestionService, times(1)).ingestPaymentPositions(List.of(baseRecord.getOriginalMessage()));
-        verify(storageTableService, times(1)).deleteDeadLetter(baseRecord.getRetryStatus(), baseRecord.getMessageId());
+        verify(storageTableService, times(1)).deleteDeadLetter(baseRecord);
         verify(storageTableService, never()).updateDeadLetter(any());
     }
 
@@ -118,11 +124,13 @@ class RetryDeadLetterTest {
 
         when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
                 .thenReturn(List.of(baseRecord));
+        when(storageTableService.acquireLockOptimistic(baseRecord))
+                .thenReturn(true);
 
         retryDeadLetter.retryDeadLetter();
 
         verify(ingestionService, times(1)).ingestPaymentOptions(List.of(baseRecord.getOriginalMessage()));
-        verify(storageTableService, times(1)).deleteDeadLetter(baseRecord.getRetryStatus(), baseRecord.getMessageId());
+        verify(storageTableService, times(1)).deleteDeadLetter(baseRecord);
     }
 
     @Test
@@ -132,11 +140,13 @@ class RetryDeadLetterTest {
 
         when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
                 .thenReturn(List.of(baseRecord));
+        when(storageTableService.acquireLockOptimistic(baseRecord))
+                .thenReturn(true);
 
         retryDeadLetter.retryDeadLetter();
 
         verify(ingestionService, times(1)).ingestTransfers(List.of(baseRecord.getOriginalMessage()));
-        verify(storageTableService, times(1)).deleteDeadLetter(baseRecord.getRetryStatus(), baseRecord.getMessageId());
+        verify(storageTableService, times(1)).deleteDeadLetter(baseRecord);
     }
 
     @Test
@@ -147,6 +157,8 @@ class RetryDeadLetterTest {
 
         when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
                 .thenReturn(List.of(baseRecord));
+        when(storageTableService.acquireLockOptimistic(baseRecord))
+                .thenReturn(true);
 
         doThrow(new RuntimeException("Kafka or DB connection error"))
                 .when(ingestionService).ingestPaymentPositions(anyList());
@@ -155,6 +167,6 @@ class RetryDeadLetterTest {
 
         assertEquals(initialRetries + 1, baseRecord.getNumOfRetries());
         verify(storageTableService, times(1)).updateDeadLetter(baseRecord);
-        verify(storageTableService, never()).deleteDeadLetter(any(), any());
+        verify(storageTableService, never()).deleteDeadLetter(any());
     }
 }
