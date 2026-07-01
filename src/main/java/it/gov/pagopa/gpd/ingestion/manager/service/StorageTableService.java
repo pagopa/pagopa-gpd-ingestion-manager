@@ -34,9 +34,22 @@ public interface StorageTableService {
     void updateDeadLetter(DeadLetterRecord deadLetterRecord);
 
     /**
-     * Delete a dead letter record
-     * @param retryStatus Record's partitionKey
-     * @param messageId Record's rowKey
+     * Delete and insert the dead letter record to update partitionKey
+     * @param deadLetterRecord the record to be updated
+     * @param newPartitionKey the retry status to update the record with
      */
-    void deleteDeadLetter(DeadLetterRetryStatus retryStatus, String messageId);
+    void updateDeadLetterPartitionKey(DeadLetterRecord deadLetterRecord, DeadLetterRetryStatus  newPartitionKey);
+
+    /**
+     * Delete a dead letter record
+     * @param deadLetterRecord record to be deleted
+     */
+    void deleteDeadLetter(DeadLetterRecord deadLetterRecord);
+
+    /**
+     * Lock a record to prevent double retry
+     * @param record dead letter record
+     * @return true if the lock succeeded
+     */
+    boolean acquireLockOptimistic(DeadLetterRecord record);
 }

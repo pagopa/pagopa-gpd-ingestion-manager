@@ -39,29 +39,20 @@ public class RetryDeadLetter {
             List<DeadLetterRecord> deadLetterRecords = this.storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY);
 
             for (DeadLetterRecord dlRecord : deadLetterRecords) {
-                EntityType entityType = dlRecord.getEntityType();
-
                 try {
-                    ingestDeadLetter(dlRecord, entityType);
+                    if (this.storageTableService.acquireLockOptimistic(dlRecord)) {
 
-                    this.storageTableService.deleteDeadLetter(dlRecord.getRetryStatus(), dlRecord.getMessageId());
-                } catch (AppException e) {
-                    setRetryStatusMalformed(dlRecord, e);
-                    handleRetryException(dlRecord, e);
+                        EntityType entityType = dlRecord.getEntityType();
+                        ingestDeadLetter(dlRecord, entityType);
+
+                        this.storageTableService.deleteDeadLetter(dlRecord);
+                    }
                 } catch (Exception e) {
                     handleRetryException(dlRecord, e);
                 }
             }
         } else {
             log.info("Retry scheduler is currently PAUSED.");
-        }
-    }
-
-    private static void setRetryStatusMalformed(DeadLetterRecord dlRecord, AppException e) {
-        if (e.getAppErrorCode().equals(AppError.DEAD_LETTER_NOT_PROCESSABLE) ||
-                e.getAppErrorCode().equals(AppError.JSON_NOT_PROCESSABLE) ||
-                e.getAppErrorCode().equals(AppError.NULL_MESSAGE)) {
-            dlRecord.setRetryStatus(DeadLetterRetryStatus.RETRY_MALFORMED);
         }
     }
 
@@ -83,8 +74,28 @@ public class RetryDeadLetter {
 
     private void handleRetryException(DeadLetterRecord dlRecord, Exception e) {
         log.error(e.getMessage());
+        dlRecord.setLocked(false);
         dlRecord.setNumOfRetries(dlRecord.getNumOfRetries() + 1);
-        this.storageTableService.updateDeadLetter(dlRecord);
+
+        DeadLetterRetryStatus exceptionRetryStatus = getExceptionRetryStatus(e);
+
+        if(exceptionRetryStatus.equals(DeadLetterRetryStatus.TO_RETRY)){
+            this.storageTableService.updateDeadLetter(dlRecord);
+        } else {
+            this.storageTableService.updateDeadLetterPartitionKey(dlRecord, exceptionRetryStatus);
+        }
+    }
+
+    private static DeadLetterRetryStatus getExceptionRetryStatus(Exception e) {
+        if(e instanceof AppException appE){
+            if (appE.getAppErrorCode().equals(AppError.DEAD_LETTER_NOT_PROCESSABLE) ||
+                    appE.getAppErrorCode().equals(AppError.JSON_NOT_PROCESSABLE) ||
+                    appE.getAppErrorCode().equals(AppError.NULL_MESSAGE)) {
+                return DeadLetterRetryStatus.RETRY_MALFORMED;
+            }
+        }
+
+        return DeadLetterRetryStatus.TO_RETRY;
     }
 
     // Expose endpoints or JMX beans to flip this toggle manually if needed
