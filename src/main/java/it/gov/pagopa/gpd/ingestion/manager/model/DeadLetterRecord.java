@@ -27,7 +27,7 @@ public class DeadLetterRecord {
     private String errorCode;
     private String originalMessage;
     private EntityType entityType;
-    private int numOfRetries;
+    private Integer numOfRetries;
     private Long lockExpiration;
 
     public TableEntity toTableEntity() {
@@ -51,7 +51,7 @@ public class DeadLetterRecord {
                 .cause((String) props.get(TABLE_KEY_CAUSE))
                 .errorCode((String) props.get(TABLE_KEY_ERROR_CODE))
                 .originalMessage((String) props.get(TABLE_KEY_ORIGINAL_MESSAGE))
-                .entityType(EntityType.valueOf((String) props.get(TABLE_KEY_ENTITY_TYPE)))
+                .entityType(props.get(TABLE_KEY_ENTITY_TYPE) != null ? EntityType.valueOf((String) props.get(TABLE_KEY_ENTITY_TYPE)) : EntityType.UNKNOWN)
                 .numOfRetries((Integer) props.get(TABLE_KEY_NUM_OF_RETRIES))
                 .lockExpiration((Long) props.get(TABLE_KEY_LOCK_EXPIRATION))
                 .build();

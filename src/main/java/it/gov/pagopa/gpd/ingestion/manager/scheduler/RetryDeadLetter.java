@@ -57,10 +57,11 @@ public class RetryDeadLetter {
     }
 
     private void ingestDeadLetter(DeadLetterRecord dlRecord, EntityType entityType) {
-        if (entityType == null || entityType.equals(EntityType.UNKNOWN)) {
+        String originalMessageString = dlRecord.getOriginalMessage();
+
+        if (entityType == null || entityType.equals(EntityType.UNKNOWN) || originalMessageString == null) {
             throw new AppException(AppError.DEAD_LETTER_NOT_PROCESSABLE);
         }
-        String originalMessageString = dlRecord.getOriginalMessage();
         if (entityType.equals(EntityType.PAYMENT_POSITION)) {
             ingestionService.ingestPaymentPositions(List.of(originalMessageString));
         }
@@ -75,7 +76,7 @@ public class RetryDeadLetter {
     private void handleRetryException(DeadLetterRecord dlRecord, Exception e) {
         log.error(e.getMessage());
         dlRecord.setLockExpiration(null);
-        dlRecord.setNumOfRetries(dlRecord.getNumOfRetries() + 1);
+        dlRecord.setNumOfRetries(dlRecord.getNumOfRetries() != null ? dlRecord.getNumOfRetries() + 1 : 1);
 
         DeadLetterRetryStatus exceptionRetryStatus = getExceptionRetryStatus(e);
 
