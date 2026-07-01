@@ -40,6 +40,7 @@ class RetryDeadLetterTest {
                 .retryStatus(DeadLetterRetryStatus.TO_RETRY)
                 .originalMessage("{\"key\":\"value\"}")
                 .numOfRetries(0)
+                .lockExpiration(null)
                 .build();
     }
 

@@ -1,5 +1,6 @@
 package it.gov.pagopa.gpd.ingestion.manager.service;
 
+import com.azure.data.tables.models.TableEntity;
 import it.gov.pagopa.gpd.ingestion.manager.model.DeadLetterRecord;
 import it.gov.pagopa.gpd.ingestion.manager.model.enumeration.DeadLetterRetryStatus;
 
@@ -16,9 +17,9 @@ public interface StorageTableService {
      * Retrieve dead letter record
      * @param retryStatus Record's partitionKey
      * @param messageId Record's rowKey
-     * @return found {@link DeadLetterRecord}
+     * @return found {@link TableEntity}
      */
-    DeadLetterRecord getDeadLetter(DeadLetterRetryStatus retryStatus, String messageId);
+    TableEntity getDeadLetter(DeadLetterRetryStatus retryStatus, String messageId);
 
     /**
      * Retrieve all dead letter records by retry status

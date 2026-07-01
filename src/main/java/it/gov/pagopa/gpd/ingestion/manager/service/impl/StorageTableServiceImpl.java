@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import static it.gov.pagopa.gpd.ingestion.manager.model.DeadLetterRecord.TABLE_KEY_LOCK_EXPIRATION;
+
 @Service
 public class StorageTableServiceImpl implements StorageTableService {
     private final TableClient tableClient;
@@ -25,9 +27,8 @@ public class StorageTableServiceImpl implements StorageTableService {
     }
 
     @Override
-    public DeadLetterRecord getDeadLetter(DeadLetterRetryStatus retryStatus, String messageId) {
-        TableEntity entity = this.tableClient.getEntity(retryStatus.name(), messageId);
-        return DeadLetterRecord.fromTableEntity(entity);
+    public TableEntity getDeadLetter(DeadLetterRetryStatus retryStatus, String messageId) {
+        return this.tableClient.getEntity(retryStatus.name(), messageId);
     }
 
     @Override
@@ -66,19 +67,19 @@ public class StorageTableServiceImpl implements StorageTableService {
         try {
             long timestampNow = System.currentTimeMillis();
 
-            DeadLetterRecord entity = this.getDeadLetter(record.getRetryStatus(), record.getMessageId());
+            // Retrieve the table entity and keep it untrasformed to use the same ETag for concurrency
+            TableEntity tableEntity = this.getDeadLetter(record.getRetryStatus(), record.getMessageId());
 
-            if (entity.isLocked() && entity.getLockExpiration() > timestampNow) {
+            DeadLetterRecord tableRecord = DeadLetterRecord.fromTableEntity(tableEntity);
+            if (tableRecord.getLockExpiration() != null && tableRecord.getLockExpiration() > timestampNow) {
                 return false;
             }
 
             //Acquire lock
-            entity.setLocked(true);
-            long lockExpiration = timestampNow + 5L * 60 * 1000; // 5 minutes in milliseconds
-            entity.setLockExpiration(lockExpiration);
-            this.tableClient.updateEntity(entity.toTableEntity(), TableEntityUpdateMode.REPLACE);
+            long lockExpiration = timestampNow + (5L * 60 * 1000); // 5 minutes in milliseconds
+            tableEntity.getProperties().put(TABLE_KEY_LOCK_EXPIRATION, lockExpiration);
+            this.tableClient.updateEntity(tableEntity, TableEntityUpdateMode.MERGE);
 
-            record.setLocked(true);
             record.setLockExpiration(lockExpiration);
 
             return true;

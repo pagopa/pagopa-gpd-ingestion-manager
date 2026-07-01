@@ -74,7 +74,7 @@ public class RetryDeadLetter {
 
     private void handleRetryException(DeadLetterRecord dlRecord, Exception e) {
         log.error(e.getMessage());
-        dlRecord.setLocked(false);
+        dlRecord.setLockExpiration(null);
         dlRecord.setNumOfRetries(dlRecord.getNumOfRetries() + 1);
 
         DeadLetterRetryStatus exceptionRetryStatus = getExceptionRetryStatus(e);

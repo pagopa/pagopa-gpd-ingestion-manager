@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static it.gov.pagopa.gpd.ingestion.manager.model.DeadLetterRecord.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -42,20 +43,22 @@ class StorageTableServiceImplTest {
                 .messageId("msg-abc-123")
                 .retryStatus(DeadLetterRetryStatus.TO_RETRY)
                 .entityType(EntityType.PAYMENT_POSITION)
+                .entityId("entityId")
                 .originalMessage("{\"id\":\"123\"}")
                 .cause("Connection Timeout")
                 .errorCode("500")
                 .numOfRetries(1)
-                .locked(false)
+                .lockExpiration(null)
                 .build();
 
         tableEntity = new TableEntity(DeadLetterRetryStatus.TO_RETRY.name(), "msg-abc-123")
-                .addProperty("entityType", EntityType.PAYMENT_POSITION.name())
-                .addProperty("originalMessage", "{\"id\":\"123\"}")
-                .addProperty("cause", "Connection Timeout")
-                .addProperty("errorCode", "500")
-                .addProperty("locked", false)
-                .addProperty("numOfRetries", 1);
+                .addProperty(TABLE_KEY_ENTITY_ID, "entityId")
+                .addProperty(TABLE_KEY_ORIGINAL_MESSAGE, "{\"id\":\"123\"}")
+                .addProperty(TABLE_KEY_CAUSE, "Connection Timeout")
+                .addProperty(TABLE_KEY_ERROR_CODE, "500")
+                .addProperty(TABLE_KEY_ENTITY_TYPE, EntityType.PAYMENT_POSITION.name())
+                .addProperty(TABLE_KEY_LOCK_EXPIRATION, null)
+                .addProperty(TABLE_KEY_NUM_OF_RETRIES, 1);
     }
 
     @Test
@@ -75,7 +78,8 @@ class StorageTableServiceImplTest {
         when(tableClient.getEntity(DeadLetterRetryStatus.TO_RETRY.name(), deadLetterRecord.getMessageId()))
                 .thenReturn(tableEntity);
 
-        DeadLetterRecord result = storageTableService.getDeadLetter(DeadLetterRetryStatus.TO_RETRY, deadLetterRecord.getMessageId());
+        TableEntity resultEntity = storageTableService.getDeadLetter(DeadLetterRetryStatus.TO_RETRY, deadLetterRecord.getMessageId());
+        DeadLetterRecord result = DeadLetterRecord.fromTableEntity(resultEntity);
 
         assertNotNull(result);
         assertEquals(deadLetterRecord.getMessageId(), result.getMessageId());
@@ -132,18 +136,9 @@ class StorageTableServiceImplTest {
     void updateDeadLetterPartitionKey_OK() {
         storageTableService.updateDeadLetterPartitionKey(deadLetterRecord, DeadLetterRetryStatus.RETRY_MALFORMED);
 
-        ArgumentCaptor<List<TableTransactionAction>> transactionActionsCaptor = ArgumentCaptor.forClass(List.class);
-        verify(tableClient, times(1)).submitTransaction(transactionActionsCaptor.capture());
-
-        List<TableTransactionAction> capturedActions = transactionActionsCaptor.getValue();
-        for(TableTransactionAction action : capturedActions){
-            assertEquals(deadLetterRecord.getMessageId(), action.getEntity().getRowKey());
-            if(action.getActionType().equals(TableTransactionActionType.CREATE)){
-                assertEquals(DeadLetterRetryStatus.RETRY_MALFORMED.name(), action.getEntity().getPartitionKey());
-            } else {
-                assertEquals(DeadLetterRetryStatus.TO_RETRY.name(), action.getEntity().getPartitionKey());
-            }
-        }
+        assertEquals(DeadLetterRetryStatus.RETRY_MALFORMED, deadLetterRecord.getRetryStatus());
+        verify(tableClient, times(1)).upsertEntity(any());
+        verify(tableClient, times(1)).deleteEntity(DeadLetterRetryStatus.TO_RETRY.name(), deadLetterRecord.getMessageId());
     }
 
     @Test
@@ -166,11 +161,12 @@ class StorageTableServiceImplTest {
 
     @Test
     void acquireLockOptimistic_KO_alreadyLocked() {
-        tableEntity.addProperty("locked", true);
+        Long lockExpiration = System.currentTimeMillis() + (5000*50000);
+        tableEntity.addProperty(TABLE_KEY_LOCK_EXPIRATION, lockExpiration);
         when(tableClient.getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getMessageId()))
                 .thenReturn(tableEntity);
 
-        deadLetterRecord.setLocked(false);
+        deadLetterRecord.setLockExpiration(lockExpiration);
         boolean acquired = storageTableService.acquireLockOptimistic(deadLetterRecord);
 
         assertFalse(acquired);
