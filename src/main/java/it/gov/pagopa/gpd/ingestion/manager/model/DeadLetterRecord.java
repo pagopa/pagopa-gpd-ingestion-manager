@@ -18,6 +18,8 @@ public class DeadLetterRecord {
     private static final String TABLE_KEY_ORIGINAL_MESSAGE = "originalMessage";
     private static final String TABLE_KEY_ENTITY_TYPE = "entityType";
     private static final String TABLE_KEY_NUM_OF_RETRIES = "numOfRetries";
+    private static final String TABLE_KEY_LOCKED = "locked";
+    public static final String TABLE_KEY_LOCK_EXPIRATION = "lockTimestamp";
 
     private DeadLetterRetryStatus retryStatus;
     private String messageId;
@@ -27,6 +29,8 @@ public class DeadLetterRecord {
     private String originalMessage;
     private EntityType entityType;
     private int numOfRetries;
+    private boolean locked;
+    private long lockExpiration;
 
     public TableEntity toTableEntity() {
         TableEntity entity = new TableEntity(retryStatus.name(), messageId);
@@ -36,6 +40,8 @@ public class DeadLetterRecord {
         entity.getProperties().put(TABLE_KEY_ORIGINAL_MESSAGE, originalMessage);
         entity.getProperties().put(TABLE_KEY_ENTITY_TYPE, entityType.name());
         entity.getProperties().put(TABLE_KEY_NUM_OF_RETRIES, numOfRetries);
+        entity.getProperties().put(TABLE_KEY_LOCKED, locked);
+        entity.getProperties().put(TABLE_KEY_LOCK_EXPIRATION, lockExpiration);
         return entity;
     }
 
@@ -50,6 +56,8 @@ public class DeadLetterRecord {
                 .originalMessage((String) props.get(TABLE_KEY_ORIGINAL_MESSAGE))
                 .entityType(EntityType.valueOf((String) props.get(TABLE_KEY_ENTITY_TYPE)))
                 .numOfRetries((Integer) props.get(TABLE_KEY_NUM_OF_RETRIES))
+                .locked((Boolean) props.get(TABLE_KEY_LOCKED))
+                .lockExpiration((long) props.get(TABLE_KEY_LOCKED))
                 .build();
     }
 }
