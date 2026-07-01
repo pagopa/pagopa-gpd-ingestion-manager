@@ -48,9 +48,9 @@ public interface StorageTableService {
     void deleteDeadLetter(DeadLetterRecord deadLetterRecord);
 
     /**
-     * Lock a record to prevent double retry
-     * @param record dead letter record
+     * Lock a record for 5 minutes to prevent concurrency
+     * @param deadLetterRecord the record to be locked
      * @return true if the lock succeeded
      */
-    boolean acquireLockOptimistic(DeadLetterRecord record);
+    boolean acquireLockOptimistic(DeadLetterRecord deadLetterRecord);
 }

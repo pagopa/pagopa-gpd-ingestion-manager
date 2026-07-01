@@ -87,12 +87,12 @@ public class RetryDeadLetter {
     }
 
     private static DeadLetterRetryStatus getExceptionRetryStatus(Exception e) {
-        if(e instanceof AppException appE){
-            if (appE.getAppErrorCode().equals(AppError.DEAD_LETTER_NOT_PROCESSABLE) ||
+        if(e instanceof AppException appE &&
+                (appE.getAppErrorCode().equals(AppError.DEAD_LETTER_NOT_PROCESSABLE) ||
                     appE.getAppErrorCode().equals(AppError.JSON_NOT_PROCESSABLE) ||
-                    appE.getAppErrorCode().equals(AppError.NULL_MESSAGE)) {
+                    appE.getAppErrorCode().equals(AppError.NULL_MESSAGE))
+        ) {
                 return DeadLetterRetryStatus.RETRY_MALFORMED;
-            }
         }
 
         return DeadLetterRetryStatus.TO_RETRY;

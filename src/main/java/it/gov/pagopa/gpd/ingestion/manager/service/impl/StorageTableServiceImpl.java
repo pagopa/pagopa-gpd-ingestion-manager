@@ -63,12 +63,12 @@ public class StorageTableServiceImpl implements StorageTableService {
     }
 
     @Override
-    public boolean acquireLockOptimistic(DeadLetterRecord record) {
+    public boolean acquireLockOptimistic(DeadLetterRecord dlRecord) {
         try {
             long timestampNow = System.currentTimeMillis();
 
             // Retrieve the table entity and keep it untrasformed to use the same ETag for concurrency
-            TableEntity tableEntity = this.getDeadLetter(record.getRetryStatus(), record.getMessageId());
+            TableEntity tableEntity = this.getDeadLetter(dlRecord.getRetryStatus(), dlRecord.getMessageId());
 
             DeadLetterRecord tableRecord = DeadLetterRecord.fromTableEntity(tableEntity);
             if (tableRecord.getLockExpiration() != null && tableRecord.getLockExpiration() > timestampNow) {
@@ -80,13 +80,13 @@ public class StorageTableServiceImpl implements StorageTableService {
             tableEntity.getProperties().put(TABLE_KEY_LOCK_EXPIRATION, lockExpiration);
             this.tableClient.updateEntity(tableEntity, TableEntityUpdateMode.MERGE);
 
-            record.setLockExpiration(lockExpiration);
+            dlRecord.setLockExpiration(lockExpiration);
 
             return true;
         } catch (TableServiceException e) {
             if (e.getResponse().getStatusCode() == 412 || e.getResponse().getStatusCode() == 404) {
-                // Error 412: Precondition Failed (the record has been changed by another client)
-                // Error 404: Entity Not Found (the record has been deleted or changed partitionKey)
+                // Error 412: Precondition Failed (the dlRecord has been changed by another client)
+                // Error 404: Entity Not Found (the dlRecord has been deleted or changed partitionKey)
                 return false;
             }
             throw e;
