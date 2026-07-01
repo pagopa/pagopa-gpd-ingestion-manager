@@ -6,6 +6,7 @@ import it.gov.pagopa.gpd.ingestion.manager.model.DeadLetterRecord;
 import it.gov.pagopa.gpd.ingestion.manager.model.enumeration.DeadLetterRetryStatus;
 import it.gov.pagopa.gpd.ingestion.manager.service.StorageTableService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,10 +16,15 @@ import static it.gov.pagopa.gpd.ingestion.manager.model.DeadLetterRecord.TABLE_K
 @Service
 public class StorageTableServiceImpl implements StorageTableService {
     private final TableClient tableClient;
+    private final int maxSizeRetryDeadLetter;
 
     @Autowired
-    public StorageTableServiceImpl(TableClient tableClient) {
+    public StorageTableServiceImpl(
+            TableClient tableClient,
+            @Value("${azure.storage.max-size}") int maxSizeRetryDeadLetter
+    ) {
         this.tableClient = tableClient;
+        this.maxSizeRetryDeadLetter = maxSizeRetryDeadLetter;
     }
 
     @Override
@@ -33,8 +39,10 @@ public class StorageTableServiceImpl implements StorageTableService {
 
     @Override
     public List<DeadLetterRecord> getDeadLetterByRetryStatus(DeadLetterRetryStatus retryStatus) {
+        long now = System.currentTimeMillis();
         ListEntitiesOptions options = new ListEntitiesOptions()
-                .setFilter(String.format("PartitionKey eq '%s'", retryStatus.name()));
+                .setFilter(String.format("PartitionKey eq '%s' and lockExpiration le %d", retryStatus.name(), now))
+                .setTop(maxSizeRetryDeadLetter);
 
         return this.tableClient.listEntities(options, null, null).stream()
                 .map(DeadLetterRecord::fromTableEntity)

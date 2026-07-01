@@ -18,7 +18,7 @@ public class DeadLetterRecord {
     public static final String TABLE_KEY_ORIGINAL_MESSAGE = "originalMessage";
     public static final String TABLE_KEY_ENTITY_TYPE = "entityType";
     public static final String TABLE_KEY_NUM_OF_RETRIES = "numOfRetries";
-    public static final String TABLE_KEY_LOCK_EXPIRATION = "lockTimestamp";
+    public static final String TABLE_KEY_LOCK_EXPIRATION = "lockExpiration";
 
     private DeadLetterRetryStatus retryStatus;
     private String messageId;

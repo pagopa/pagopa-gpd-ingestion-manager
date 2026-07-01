@@ -9,11 +9,10 @@ import it.gov.pagopa.gpd.ingestion.manager.model.enumeration.DeadLetterRetryStat
 import it.gov.pagopa.gpd.ingestion.manager.model.enumeration.EntityType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -22,23 +21,24 @@ import static it.gov.pagopa.gpd.ingestion.manager.model.DeadLetterRecord.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest(classes = {StorageTableServiceImpl.class})
 class StorageTableServiceImplTest {
 
-    @Mock
+    @MockBean
     private TableClient tableClient;
 
     @Mock
     private PagedIterable<TableEntity> pagedIterable;
 
-    @InjectMocks
-    private StorageTableServiceImpl storageTableService;
+    private StorageTableServiceImpl sut;
 
     private DeadLetterRecord deadLetterRecord;
     private TableEntity tableEntity;
 
     @BeforeEach
     void setUp() {
+        sut = new StorageTableServiceImpl(tableClient, 100);
+
         deadLetterRecord = DeadLetterRecord.builder()
                 .messageId("msg-abc-123")
                 .retryStatus(DeadLetterRetryStatus.TO_RETRY)
@@ -63,7 +63,7 @@ class StorageTableServiceImplTest {
 
     @Test
     void saveDeadLetter_OK() {
-        storageTableService.saveDeadLetter(deadLetterRecord);
+        sut.saveDeadLetter(deadLetterRecord);
 
         ArgumentCaptor<TableEntity> entityCaptor = ArgumentCaptor.forClass(TableEntity.class);
         verify(tableClient, times(1)).upsertEntity(entityCaptor.capture());
@@ -78,7 +78,7 @@ class StorageTableServiceImplTest {
         when(tableClient.getEntity(DeadLetterRetryStatus.TO_RETRY.name(), deadLetterRecord.getMessageId()))
                 .thenReturn(tableEntity);
 
-        TableEntity resultEntity = storageTableService.getDeadLetter(DeadLetterRetryStatus.TO_RETRY, deadLetterRecord.getMessageId());
+        TableEntity resultEntity = sut.getDeadLetter(DeadLetterRetryStatus.TO_RETRY, deadLetterRecord.getMessageId());
         DeadLetterRecord result = DeadLetterRecord.fromTableEntity(resultEntity);
 
         assertNotNull(result);
@@ -96,7 +96,7 @@ class StorageTableServiceImplTest {
         when(tableClient.listEntities(any(ListEntitiesOptions.class), any(), any()))
                 .thenReturn(pagedIterable);
 
-        List<DeadLetterRecord> result = storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY);
+        List<DeadLetterRecord> result = sut.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY);
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -106,7 +106,7 @@ class StorageTableServiceImplTest {
         verify(tableClient, times(1)).listEntities(optionsCaptor.capture(), any(), any());
 
         ListEntitiesOptions capturedOptions = optionsCaptor.getValue();
-        assertEquals("PartitionKey eq 'TO_RETRY'", capturedOptions.getFilter());
+        assertTrue(capturedOptions.getFilter().contains("PartitionKey eq 'TO_RETRY' and lockExpiration le"));
     }
 
     @Test
@@ -115,7 +115,7 @@ class StorageTableServiceImplTest {
         when(tableClient.listEntities(any(ListEntitiesOptions.class), any(), any()))
                 .thenReturn(pagedIterable);
 
-        List<DeadLetterRecord> result = storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY);
+        List<DeadLetterRecord> result = sut.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY);
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
@@ -123,7 +123,7 @@ class StorageTableServiceImplTest {
 
     @Test
     void updateDeadLetter_OK() {
-        storageTableService.updateDeadLetter(deadLetterRecord);
+        sut.updateDeadLetter(deadLetterRecord);
 
         ArgumentCaptor<TableEntity> entityCaptor = ArgumentCaptor.forClass(TableEntity.class);
         verify(tableClient, times(1)).updateEntity(entityCaptor.capture(), eq(TableEntityUpdateMode.REPLACE));
@@ -134,7 +134,7 @@ class StorageTableServiceImplTest {
 
     @Test
     void updateDeadLetterPartitionKey_OK() {
-        storageTableService.updateDeadLetterPartitionKey(deadLetterRecord, DeadLetterRetryStatus.RETRY_MALFORMED);
+        sut.updateDeadLetterPartitionKey(deadLetterRecord, DeadLetterRetryStatus.RETRY_MALFORMED);
 
         assertEquals(DeadLetterRetryStatus.RETRY_MALFORMED, deadLetterRecord.getRetryStatus());
         verify(tableClient, times(1)).upsertEntity(any());
@@ -143,7 +143,7 @@ class StorageTableServiceImplTest {
 
     @Test
     void deleteDeadLetter_OK() {
-        storageTableService.deleteDeadLetter(deadLetterRecord);
+        sut.deleteDeadLetter(deadLetterRecord);
 
         verify(tableClient, times(1)).deleteEntity(any());
     }
@@ -152,7 +152,7 @@ class StorageTableServiceImplTest {
     void acquireLockOptimistic_OK() {
         when(tableClient.getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getMessageId()))
                 .thenReturn(tableEntity);
-        boolean acquired = storageTableService.acquireLockOptimistic(deadLetterRecord);
+        boolean acquired = sut.acquireLockOptimistic(deadLetterRecord);
 
         assertTrue(acquired);
         verify(tableClient, times(1)).getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getMessageId());
@@ -167,7 +167,7 @@ class StorageTableServiceImplTest {
                 .thenReturn(tableEntity);
 
         deadLetterRecord.setLockExpiration(lockExpiration);
-        boolean acquired = storageTableService.acquireLockOptimistic(deadLetterRecord);
+        boolean acquired = sut.acquireLockOptimistic(deadLetterRecord);
 
         assertFalse(acquired);
         verify(tableClient, times(1)).getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getMessageId());
@@ -182,7 +182,7 @@ class StorageTableServiceImplTest {
         HttpResponse mockHttpResponse = mock(HttpResponse.class);
         when(mockHttpResponse.getStatusCode()).thenReturn(412);
         doThrow(new TableServiceException("error", mockHttpResponse)).when(tableClient).updateEntity(any(), any());
-        boolean acquired = storageTableService.acquireLockOptimistic(deadLetterRecord);
+        boolean acquired = sut.acquireLockOptimistic(deadLetterRecord);
 
         assertFalse(acquired);
         verify(tableClient, times(1)).getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getMessageId());
@@ -197,7 +197,7 @@ class StorageTableServiceImplTest {
         HttpResponse mockHttpResponse = mock(HttpResponse.class);
         when(mockHttpResponse.getStatusCode()).thenReturn(404);
         doThrow(new TableServiceException("error", mockHttpResponse)).when(tableClient).updateEntity(any(), any());
-        boolean acquired = storageTableService.acquireLockOptimistic(deadLetterRecord);
+        boolean acquired = sut.acquireLockOptimistic(deadLetterRecord);
 
         assertFalse(acquired);
         verify(tableClient, times(1)).getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getMessageId());
@@ -212,7 +212,7 @@ class StorageTableServiceImplTest {
         HttpResponse mockHttpResponse = mock(HttpResponse.class);
         when(mockHttpResponse.getStatusCode()).thenReturn(500);
         doThrow(new TableServiceException("error", mockHttpResponse)).when(tableClient).updateEntity(any(), any());
-        assertThrows(TableServiceException.class, () -> storageTableService.acquireLockOptimistic(deadLetterRecord));
+        assertThrows(TableServiceException.class, () -> sut.acquireLockOptimistic(deadLetterRecord));
 
         verify(tableClient, times(1)).getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getMessageId());
         verify(tableClient, times(1)).updateEntity(any(), any());
