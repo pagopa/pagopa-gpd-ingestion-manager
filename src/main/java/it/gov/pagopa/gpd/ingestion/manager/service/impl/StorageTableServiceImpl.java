@@ -6,6 +6,7 @@ import it.gov.pagopa.gpd.ingestion.manager.model.DeadLetterRecord;
 import it.gov.pagopa.gpd.ingestion.manager.model.enumeration.DeadLetterRetryStatus;
 import it.gov.pagopa.gpd.ingestion.manager.service.StorageTableService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,10 +16,18 @@ import static it.gov.pagopa.gpd.ingestion.manager.model.DeadLetterRecord.TABLE_K
 @Service
 public class StorageTableServiceImpl implements StorageTableService {
     private final TableClient tableClient;
+    private final int recordLimit;
+    private final long lockDurationInSeconds;
 
     @Autowired
-    public StorageTableServiceImpl(TableClient tableClient) {
+    public StorageTableServiceImpl(
+            TableClient tableClient,
+            @Value("${azure.storage.record.limit}") int recordLimit,
+            @Value("${azure.storage.record.lock.duration}") long lockDurationInSeconds
+    ) {
         this.tableClient = tableClient;
+        this.recordLimit = recordLimit;
+        this.lockDurationInSeconds = lockDurationInSeconds;
     }
 
     @Override
@@ -37,7 +46,7 @@ public class StorageTableServiceImpl implements StorageTableService {
         ListEntitiesOptions options = new ListEntitiesOptions()
                 .setFilter(String.format("PartitionKey eq '%s' and lockExpiration le '%d'", retryStatus.name(), now));
 
-        return this.tableClient.listEntities(options, null, null).stream()
+        return this.tableClient.listEntities(options, null, null).stream().limit(recordLimit)
                 .map(DeadLetterRecord::fromTableEntity)
                 .toList();
     }
@@ -77,7 +86,7 @@ public class StorageTableServiceImpl implements StorageTableService {
             }
 
             //Acquire lock
-            long lockExpiration = timestampNow + (5L * 60 * 1000); // 5 minutes in milliseconds
+            long lockExpiration = timestampNow + (lockDurationInSeconds * 1000); // lock duration in milliseconds
             tableEntity.getProperties().put(TABLE_KEY_LOCK_EXPIRATION, lockExpiration);
             this.tableClient.updateEntity(tableEntity, TableEntityUpdateMode.MERGE);
 

@@ -38,7 +38,7 @@ public class RetryDeadLetter {
     }
 
     // Runs every 5 minutes
-    @Scheduled(cron = "*/5 * * * *")
+    @Scheduled(cron = "${retry.dead.letter.cron}")
     public void retryDeadLetter() {
         if (isRetryEnabled.get()) {
             for (DeadLetterRecord dlRecord : retrieveAndAcquireLock()) {
@@ -57,7 +57,9 @@ public class RetryDeadLetter {
     }
 
     private List<DeadLetterRecord> retrieveAndAcquireLock() {
+        log.info("TIME 1 {}", System.currentTimeMillis());
         List<DeadLetterRecord> deadLetterRecords = this.storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY);
+        log.info("TIME 2 {}", System.currentTimeMillis());
 
         List<DeadLetterRecord> processableDeadLetters = new ArrayList<>();
         for (DeadLetterRecord dlRecord : deadLetterRecords) {
@@ -69,6 +71,9 @@ public class RetryDeadLetter {
                 handleRetryException(dlRecord, e);
             }
         }
+        log.info("TIME 3 {}", System.currentTimeMillis());
+
+        log.info("TOTAL {} LOCKED {}", deadLetterRecords.size(), processableDeadLetters.size());
 
         return processableDeadLetters;
     }
