@@ -27,6 +27,7 @@ public class RetryDeadLetter {
 
     public static final String KAFKA_HEADER_ID = "id";
     private final boolean isRetryEnabled;
+    private final long retryBackoffInterval;
 
     private final StorageTableService storageTableService;
     private final IngestionService ingestionService;
@@ -35,11 +36,14 @@ public class RetryDeadLetter {
     RetryDeadLetter(
             StorageTableServiceImpl storageTableService,
             IngestionServiceImpl ingestionService,
-            @Value("${retry.dead.letter.enabled}") boolean isRetryEnabled
+            @Value("${retry.dead.letter.enabled}") boolean isRetryEnabled,
+            @Value("${retry.dead.letter.retry.backoff.interval}") long retryBackoffInterval
+
     ) {
         this.storageTableService = storageTableService;
         this.ingestionService = ingestionService;
         this.isRetryEnabled = isRetryEnabled;
+        this.retryBackoffInterval = retryBackoffInterval;
     }
 
     // Runs every 5 minutes
@@ -107,7 +111,11 @@ public class RetryDeadLetter {
 
     private void handleRetryException(DeadLetterRecord dlRecord, Exception e) {
         log.error(e.getMessage());
-        dlRecord.setLockExpiration(0L);
+        dlRecord.setLockExpiration(
+                dlRecord.getNumOfRetries() > 0 ?
+                        System.currentTimeMillis() + (retryBackoffInterval * dlRecord.getNumOfRetries() * 1000)
+                        : 0
+        );
         dlRecord.setNumOfRetries(dlRecord.getNumOfRetries() != null ? dlRecord.getNumOfRetries() + 1 : 1);
 
         DeadLetterRetryStatus exceptionRetryStatus = getExceptionRetryStatus(e);
