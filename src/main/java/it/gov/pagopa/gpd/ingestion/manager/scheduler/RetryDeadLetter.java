@@ -11,6 +11,7 @@ import it.gov.pagopa.gpd.ingestion.manager.service.impl.IngestionServiceImpl;
 import it.gov.pagopa.gpd.ingestion.manager.service.impl.StorageTableServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -19,28 +20,32 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component
 @Slf4j
 public class RetryDeadLetter {
 
     public static final String KAFKA_HEADER_ID = "id";
-    private final AtomicBoolean isRetryEnabled = new AtomicBoolean(true);
+    private final boolean isRetryEnabled;
 
     private final StorageTableService storageTableService;
     private final IngestionService ingestionService;
 
     @Autowired
-    RetryDeadLetter(StorageTableServiceImpl storageTableService, IngestionServiceImpl ingestionService) {
+    RetryDeadLetter(
+            StorageTableServiceImpl storageTableService,
+            IngestionServiceImpl ingestionService,
+            @Value("${retry.dead.letter.enabled}") boolean isRetryEnabled
+    ) {
         this.storageTableService = storageTableService;
         this.ingestionService = ingestionService;
+        this.isRetryEnabled = isRetryEnabled;
     }
 
     // Runs every 5 minutes
     @Scheduled(cron = "${retry.dead.letter.cron}")
     public void retryDeadLetter() {
-        if (isRetryEnabled.get()) {
+        if (isRetryEnabled) {
             for (DeadLetterRecord dlRecord : retrieveAndAcquireLock()) {
                 try {
                     EntityType entityType = dlRecord.getEntityType();
@@ -124,10 +129,5 @@ public class RetryDeadLetter {
         }
 
         return DeadLetterRetryStatus.TO_RETRY;
-    }
-
-    // Expose endpoints or JMX beans to flip this toggle manually if needed
-    public void setRetryEnabled(boolean enabled) {
-        this.isRetryEnabled.set(enabled);
     }
 }

@@ -9,13 +9,13 @@ import it.gov.pagopa.gpd.ingestion.manager.service.impl.IngestionServiceImpl;
 import it.gov.pagopa.gpd.ingestion.manager.service.impl.StorageTableServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.GenericMessage;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -24,18 +24,18 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest(classes = {RetryDeadLetter.class})
 class RetryDeadLetterTest {
 
-    @Mock
+    @MockBean
     private StorageTableServiceImpl storageTableService;
 
-    @Mock
+    @MockBean
     private IngestionServiceImpl ingestionService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @InjectMocks
+    @Autowired
     private RetryDeadLetter retryDeadLetter;
 
     private DeadLetterRecord baseRecord;
@@ -53,17 +53,17 @@ class RetryDeadLetterTest {
 
     @Test
     void retryDeadLetter_disabled_shouldDoNothing() {
-        retryDeadLetter.setRetryEnabled(false);
+        ReflectionTestUtils.setField(retryDeadLetter, "isRetryEnabled", false);
 
         retryDeadLetter.retryDeadLetter();
 
         verifyNoInteractions(storageTableService);
         verifyNoInteractions(ingestionService);
+        ReflectionTestUtils.setField(retryDeadLetter, "isRetryEnabled", true);
     }
 
     @Test
     void retryDeadLetter_noRecords() {
-        retryDeadLetter.setRetryEnabled(true);
         when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
                 .thenReturn(Collections.emptyList());
 
@@ -76,7 +76,6 @@ class RetryDeadLetterTest {
 
     @Test
     void retryDeadLetter_nullEntityType_OK_MALFORMED() {
-        retryDeadLetter.setRetryEnabled(true);
         baseRecord.setEntityType(null);
 
         when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
@@ -94,7 +93,6 @@ class RetryDeadLetterTest {
 
     @Test
     void retryDeadLetter_unknownEntityType_OK_MALFORMED() {
-        retryDeadLetter.setRetryEnabled(true);
         baseRecord.setEntityType(EntityType.UNKNOWN);
 
         when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
@@ -110,7 +108,6 @@ class RetryDeadLetterTest {
 
     @Test
     void retryDeadLetter_withPaymentPosition_OK() {
-        retryDeadLetter.setRetryEnabled(true);
         baseRecord.setEntityType(EntityType.PAYMENT_POSITION);
 
         when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
@@ -127,7 +124,6 @@ class RetryDeadLetterTest {
 
     @Test
     void retryDeadLetter_withPaymentOption_OK() {
-        retryDeadLetter.setRetryEnabled(true);
         baseRecord.setEntityType(EntityType.PAYMENT_OPTION);
 
         when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
@@ -137,13 +133,12 @@ class RetryDeadLetterTest {
 
         retryDeadLetter.retryDeadLetter();
 
-        verify(ingestionService, times(1)).ingestPaymentOption(any(Message.class));
+        verify(ingestionService, times(1)).ingestPaymentOption(any());
         verify(storageTableService, times(1)).deleteDeadLetter(baseRecord);
     }
 
     @Test
     void retryDeadLetter_withTransfer_OK() {
-        retryDeadLetter.setRetryEnabled(true);
         baseRecord.setEntityType(EntityType.TRANSFER);
 
         when(storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY))
@@ -159,7 +154,6 @@ class RetryDeadLetterTest {
 
     @Test
     void retryDeadLetter_KO_updateNumRetry() {
-        retryDeadLetter.setRetryEnabled(true);
         baseRecord.setEntityType(EntityType.PAYMENT_POSITION);
         int initialRetries = baseRecord.getNumOfRetries(); // 0
 

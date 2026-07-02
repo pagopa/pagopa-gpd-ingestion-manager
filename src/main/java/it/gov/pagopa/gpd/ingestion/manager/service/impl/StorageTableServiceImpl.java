@@ -18,16 +18,22 @@ public class StorageTableServiceImpl implements StorageTableService {
     private final TableClient tableClient;
     private final int recordLimit;
     private final long lockDurationInSeconds;
+    private final int retryMax;
+    private final long retryBackoffInterval;
 
     @Autowired
     public StorageTableServiceImpl(
             TableClient tableClient,
             @Value("${azure.storage.record.limit}") int recordLimit,
-            @Value("${azure.storage.record.lock.duration}") long lockDurationInSeconds
+            @Value("${azure.storage.record.lock.duration}") long lockDurationInSeconds,
+            @Value("${azure.storage.record.retry.max}") int retryMax,
+            @Value("${azure.storage.record.retry.backoff.interval}") long retryBackoffInterval
     ) {
         this.tableClient = tableClient;
         this.recordLimit = recordLimit;
         this.lockDurationInSeconds = lockDurationInSeconds;
+        this.retryMax = retryMax;
+        this.retryBackoffInterval = retryBackoffInterval;
     }
 
     @Override
@@ -81,12 +87,12 @@ public class StorageTableServiceImpl implements StorageTableService {
             TableEntity tableEntity = this.getDeadLetter(dlRecord.getRetryStatus(), dlRecord.getMessageId());
 
             DeadLetterRecord tableRecord = DeadLetterRecord.fromTableEntity(tableEntity);
-            if (tableRecord.getLockExpiration() != null && tableRecord.getLockExpiration() > timestampNow) {
+            if (tableRecord.getLockExpiration() != null && tableRecord.getLockExpiration() > timestampNow && dlRecord.getNumOfRetries() < retryMax) {
                 return false;
             }
 
             //Acquire lock
-            long lockExpiration = timestampNow + (lockDurationInSeconds * 1000); // lock duration in milliseconds
+            long lockExpiration = timestampNow + (lockDurationInSeconds * 1000) + (retryBackoffInterval * dlRecord.getNumOfRetries() * 1000); // lock duration in milliseconds
             tableEntity.getProperties().put(TABLE_KEY_LOCK_EXPIRATION, lockExpiration);
             this.tableClient.updateEntity(tableEntity, TableEntityUpdateMode.MERGE);
 
