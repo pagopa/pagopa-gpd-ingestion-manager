@@ -84,43 +84,43 @@ public class IngestionServiceImpl implements IngestionService {
         logIngestionInit(EntityType.PAYMENT_POSITION.name());
 
         // persist the item
-            try {
-                initMDC(EntityType.PAYMENT_POSITION.name());
+        try {
+            initMDC(EntityType.PAYMENT_POSITION.name());
 
-                DataCaptureMessage<PaymentPosition> paymentPosition =
-                        mapMessageToObject(message, new TypeReference<DataCaptureMessage<PaymentPosition>>() {
-                        });
+            DataCaptureMessage<PaymentPosition> paymentPosition =
+                    mapMessageToObject(message, new TypeReference<DataCaptureMessage<PaymentPosition>>() {
+                    });
 
-                if (paymentPosition == null) {
-                    setMDCId("null");
-                    return;
-                }
-                PaymentPosition valuesBefore = paymentPosition.getBefore();
-                PaymentPosition valuesAfter = paymentPosition.getAfter();
-                int id = (valuesAfter != null ? valuesAfter : valuesBefore).getId();
-                log.debug("PaymentPosition ingestion called at {} with payment position id {}", getDateNow(), id);
-                setMDCId(String.valueOf(id));
-
-                paymentPosition.setBefore(tokenizePaymentPositionFiscalCode(valuesBefore));
-                paymentPosition.setAfter(tokenizePaymentPositionFiscalCode(valuesAfter));
-
-                paymentPositionProducer.sendIngestedPaymentPosition(paymentPosition);
-                setMDCSendResult("OK");
-            } catch (JsonProcessingException e) {
-                handleException(e, EntityType.PAYMENT_POSITION.name());
-                throw new AppException(AppError.JSON_NOT_PROCESSABLE, e);
-            } catch (AppException e) {
-                handleException(e, EntityType.PAYMENT_POSITION.name());
-                throw e;
-            } catch (PDVTokenizerException | PDVTokenizerUnexpectedException e){
-                handleException(e, EntityType.PAYMENT_POSITION.name());
-                throw new AppException(AppError.ERROR_TOKENIZING_FISCAL_CODE, e);
-            } catch (Exception e) {
-                handleException(e, EntityType.PAYMENT_POSITION.name());
-                throw new AppException(AppError.INTERNAL_SERVER_ERROR, e);
-            } finally {
-                clearMDC();
+            if (paymentPosition == null) {
+                setMDCId("null");
+                return;
             }
+            PaymentPosition valuesBefore = paymentPosition.getBefore();
+            PaymentPosition valuesAfter = paymentPosition.getAfter();
+            int id = (valuesAfter != null ? valuesAfter : valuesBefore).getId();
+            log.debug("PaymentPosition ingestion called at {} with payment position id {}", getDateNow(), id);
+            setMDCId(String.valueOf(id));
+
+            paymentPosition.setBefore(tokenizePaymentPositionFiscalCode(valuesBefore));
+            paymentPosition.setAfter(tokenizePaymentPositionFiscalCode(valuesAfter));
+
+            paymentPositionProducer.sendIngestedPaymentPosition(paymentPosition);
+            setMDCSendResult("OK");
+        } catch (JsonProcessingException e) {
+            handleException(e, EntityType.PAYMENT_POSITION.name());
+            throw new AppException(AppError.JSON_NOT_PROCESSABLE, e);
+        } catch (AppException e) {
+            handleException(e, EntityType.PAYMENT_POSITION.name());
+            throw e;
+        } catch (PDVTokenizerException | PDVTokenizerUnexpectedException e) {
+            handleException(e, EntityType.PAYMENT_POSITION.name());
+            throw new AppException(AppError.ERROR_TOKENIZING_FISCAL_CODE, e);
+        } catch (Exception e) {
+            handleException(e, EntityType.PAYMENT_POSITION.name());
+            throw new AppException(AppError.INTERNAL_SERVER_ERROR, e);
+        } finally {
+            clearMDC();
+        }
     }
 
     /* TO BE REMOVED after data contract update PIDM-1917 */
@@ -147,47 +147,47 @@ public class IngestionServiceImpl implements IngestionService {
         logIngestionInit(EntityType.PAYMENT_OPTION.name());
 
         // persist the item
-            try {
-                initMDC(EntityType.PAYMENT_OPTION.name());
+        try {
+            initMDC(EntityType.PAYMENT_OPTION.name());
 
-                DataCaptureMessage<PaymentOption> paymentOption =
-                        mapMessageToObject(message, new TypeReference<DataCaptureMessage<PaymentOption>>() {
-                        });
+            DataCaptureMessage<PaymentOption> paymentOption =
+                    mapMessageToObject(message, new TypeReference<DataCaptureMessage<PaymentOption>>() {
+                    });
 
-                if (paymentOption == null) {
-                    setMDCId("null");
-                    return;
-                }
-                PaymentOption valuesBefore = paymentOption.getBefore();
-                PaymentOption valuesAfter = paymentOption.getAfter();
-                int id = (valuesAfter != null ? valuesAfter : valuesBefore).getId();
-
-                log.debug(
-                        "PaymentOption ingestion called at {} with payment position id {}",
-                        getDateNow(),
-                        id);
-                setMDCId(String.valueOf(id));
-
-                paymentOption.setBefore(tokenizeFiscalCode(valuesBefore));
-                paymentOption.setAfter(tokenizeFiscalCode(valuesAfter));
-
-                paymentOptionProducer.sendIngestedPaymentOption(paymentOption);
-                setMDCSendResult("OK");
-            } catch (JsonProcessingException e) {
-                handleException(e, EntityType.PAYMENT_OPTION.name());
-                throw new AppException(AppError.JSON_NOT_PROCESSABLE, e);
-            } catch (AppException e) {
-                handleException(e, EntityType.PAYMENT_OPTION.name());
-                throw e;
-            } catch (PDVTokenizerException | PDVTokenizerUnexpectedException e){
-                handleException(e, EntityType.PAYMENT_OPTION.name());
-                throw new AppException(AppError.ERROR_TOKENIZING_FISCAL_CODE, e);
-            } catch (Exception e) {
-                handleException(e, EntityType.PAYMENT_OPTION.name());
-                throw new AppException(AppError.INTERNAL_SERVER_ERROR, e);
-            } finally {
-                clearMDC();
+            if (paymentOption == null) {
+                setMDCId("null");
+                return;
             }
+            PaymentOption valuesBefore = paymentOption.getBefore();
+            PaymentOption valuesAfter = paymentOption.getAfter();
+            int id = (valuesAfter != null ? valuesAfter : valuesBefore).getId();
+
+            log.debug(
+                    "PaymentOption ingestion called at {} with payment position id {}",
+                    getDateNow(),
+                    id);
+            setMDCId(String.valueOf(id));
+
+            paymentOption.setBefore(tokenizeFiscalCode(valuesBefore));
+            paymentOption.setAfter(tokenizeFiscalCode(valuesAfter));
+
+            paymentOptionProducer.sendIngestedPaymentOption(paymentOption);
+            setMDCSendResult("OK");
+        } catch (JsonProcessingException e) {
+            handleException(e, EntityType.PAYMENT_OPTION.name());
+            throw new AppException(AppError.JSON_NOT_PROCESSABLE, e);
+        } catch (AppException e) {
+            handleException(e, EntityType.PAYMENT_OPTION.name());
+            throw e;
+        } catch (PDVTokenizerException | PDVTokenizerUnexpectedException e) {
+            handleException(e, EntityType.PAYMENT_OPTION.name());
+            throw new AppException(AppError.ERROR_TOKENIZING_FISCAL_CODE, e);
+        } catch (Exception e) {
+            handleException(e, EntityType.PAYMENT_OPTION.name());
+            throw new AppException(AppError.INTERNAL_SERVER_ERROR, e);
+        } finally {
+            clearMDC();
+        }
     }
 
     private PaymentOption tokenizeFiscalCode(PaymentOption values) throws PDVTokenizerException, JsonProcessingException {
@@ -213,49 +213,50 @@ public class IngestionServiceImpl implements IngestionService {
         logIngestionInit(EntityType.TRANSFER.name());
 
         // persist the item
-            try {
-                initMDC(EntityType.TRANSFER.name());
+        try {
+            initMDC(EntityType.TRANSFER.name());
 
-                DataCaptureMessage<Transfer> transfer =
-                        mapMessageToObject(message, new TypeReference<DataCaptureMessage<Transfer>>() {
-                        });
+            DataCaptureMessage<Transfer> transfer =
+                    mapMessageToObject(message, new TypeReference<DataCaptureMessage<Transfer>>() {
+                    });
 
-                if (transfer == null) {
-                    setMDCId("null");
-                    return;
-                }
-
-                Transfer valuesBefore = transfer.getBefore();
-                Transfer valuesAfter = transfer.getAfter();
-                int id = (valuesAfter != null ? valuesAfter : valuesBefore).getId();
-
-                log.debug(
-                        "Transfer ingestion called at {} with payment position id {}",
-                        getDateNow(),
-                        id);
-                setMDCId(String.valueOf(id));
-
-                transferProducer.sendIngestedTransfer(transfer);
-                setMDCSendResult("OK");
-            } catch (JsonProcessingException e) {
-                handleException(e, EntityType.TRANSFER.name());
-                throw new AppException(AppError.JSON_NOT_PROCESSABLE, e);
-            } catch (AppException e) {
-                handleException(e, EntityType.TRANSFER.name());
-                throw e;
-            } catch (Exception e) {
-                handleException(e, EntityType.TRANSFER.name());
-                throw new AppException(AppError.INTERNAL_SERVER_ERROR, e);
-            } finally {
-                clearMDC();
+            if (transfer == null) {
+                setMDCId("null");
+                return;
             }
+
+            Transfer valuesBefore = transfer.getBefore();
+            Transfer valuesAfter = transfer.getAfter();
+            int id = (valuesAfter != null ? valuesAfter : valuesBefore).getId();
+
+            log.debug(
+                    "Transfer ingestion called at {} with payment position id {}",
+                    getDateNow(),
+                    id);
+            setMDCId(String.valueOf(id));
+
+            transferProducer.sendIngestedTransfer(transfer);
+            setMDCSendResult("OK");
+        } catch (JsonProcessingException e) {
+            handleException(e, EntityType.TRANSFER.name());
+            throw new AppException(AppError.JSON_NOT_PROCESSABLE, e);
+        } catch (AppException e) {
+            handleException(e, EntityType.TRANSFER.name());
+            throw e;
+        } catch (Exception e) {
+            handleException(e, EntityType.TRANSFER.name());
+            throw new AppException(AppError.INTERNAL_SERVER_ERROR, e);
+        } finally {
+            clearMDC();
+        }
     }
 
     private <T> DataCaptureMessage<T> mapMessageToObject(Message<?> message, TypeReference<DataCaptureMessage<T>> typeReference) throws JsonProcessingException {
         // Discard null messages
         if (message.getHeaders().getId() == null
-                || message.getPayload() == null
-                || !(message.getPayload() instanceof String msg)) {
+                || !(message.getPayload() instanceof String msg)
+                || msg.isBlank()
+        ) {
             log.debug("NULL message ignored at {}", LocalDateTime.now());
             return null;
         }
