@@ -80,21 +80,20 @@ public class IngestionServiceImpl implements IngestionService {
         return false;
     }
 
-    public void ingestPaymentPositions(List<String> messages) {
-        logIngestionInit(messages, EntityType.PAYMENT_POSITION.name());
+    public void ingestPaymentPosition(String message) {
+        logIngestionInit(EntityType.PAYMENT_POSITION.name());
 
         // persist the item
-        for (String msg : messages) {
             try {
                 initMDC(EntityType.PAYMENT_POSITION.name());
 
                 DataCaptureMessage<PaymentPosition> paymentPosition =
-                        mapMessageToObject(msg, new TypeReference<DataCaptureMessage<PaymentPosition>>() {
+                        mapMessageToObject(message, new TypeReference<DataCaptureMessage<PaymentPosition>>() {
                         });
 
                 if (paymentPosition == null) {
                     setMDCId("null");
-                    continue;
+                    return;
                 }
                 PaymentPosition valuesBefore = paymentPosition.getBefore();
                 PaymentPosition valuesAfter = paymentPosition.getAfter();
@@ -122,7 +121,6 @@ public class IngestionServiceImpl implements IngestionService {
             } finally {
                 clearMDC();
             }
-        }
     }
 
     /* TO BE REMOVED after data contract update PIDM-1917 */
@@ -145,21 +143,20 @@ public class IngestionServiceImpl implements IngestionService {
         return values;
     }
 
-    public void ingestPaymentOptions(List<String> messages) {
-        logIngestionInit(messages, EntityType.PAYMENT_OPTION.name());
+    public void ingestPaymentOption(String message) {
+        logIngestionInit(EntityType.PAYMENT_OPTION.name());
 
         // persist the item
-        for (String msg : messages) {
             try {
                 initMDC(EntityType.PAYMENT_OPTION.name());
 
                 DataCaptureMessage<PaymentOption> paymentOption =
-                        mapMessageToObject(msg, new TypeReference<DataCaptureMessage<PaymentOption>>() {
+                        mapMessageToObject(message, new TypeReference<DataCaptureMessage<PaymentOption>>() {
                         });
 
                 if (paymentOption == null) {
                     setMDCId("null");
-                    continue;
+                    return;
                 }
                 PaymentOption valuesBefore = paymentOption.getBefore();
                 PaymentOption valuesAfter = paymentOption.getAfter();
@@ -191,7 +188,6 @@ public class IngestionServiceImpl implements IngestionService {
             } finally {
                 clearMDC();
             }
-        }
     }
 
     private PaymentOption tokenizeFiscalCode(PaymentOption values) throws PDVTokenizerException, JsonProcessingException {
@@ -213,21 +209,20 @@ public class IngestionServiceImpl implements IngestionService {
         return values;
     }
 
-    public void ingestTransfers(List<String> messages) {
-        logIngestionInit(messages, EntityType.TRANSFER.name());
+    public void ingestTransfer(String message) {
+        logIngestionInit(EntityType.TRANSFER.name());
 
         // persist the item
-        for (String msg : messages) {
             try {
                 initMDC(EntityType.TRANSFER.name());
 
                 DataCaptureMessage<Transfer> transfer =
-                        mapMessageToObject(msg, new TypeReference<DataCaptureMessage<Transfer>>() {
+                        mapMessageToObject(message, new TypeReference<DataCaptureMessage<Transfer>>() {
                         });
 
                 if (transfer == null) {
                     setMDCId("null");
-                    continue;
+                    return;
                 }
 
                 Transfer valuesBefore = transfer.getBefore();
@@ -254,7 +249,6 @@ public class IngestionServiceImpl implements IngestionService {
             } finally {
                 clearMDC();
             }
-        }
     }
 
     private static LocalDateTime getDateNow() {
@@ -268,12 +262,11 @@ public class IngestionServiceImpl implements IngestionService {
         return this.objectMapper.readValue(msg, typeReference);
     }
 
-    private static void logIngestionInit(List<String> messages, String entityName) {
+    private static void logIngestionInit(String entityName) {
         log.debug(
-                "{} ingestion called at {} with events list size {}",
+                "{} ingestion called at {}",
                 entityName,
-                getDateNow(),
-                messages.size());
+                getDateNow());
     }
 
     /**

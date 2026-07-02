@@ -15,8 +15,8 @@ import java.util.function.Consumer;
 public class TransferConsumerConfig {
 
     @Bean
-    public Consumer<List<String>> ingestTransfer(IngestionService ingestionService) {
-        return ingestionService::ingestTransfers;
+    public Consumer<String> ingestTransfer(IngestionService ingestionService) {
+        return ingestionService::ingestTransfer;
     }
 
     @Bean

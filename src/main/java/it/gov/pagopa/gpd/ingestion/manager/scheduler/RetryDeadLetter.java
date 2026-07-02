@@ -76,13 +76,13 @@ public class RetryDeadLetter {
             throw new AppException(AppError.DEAD_LETTER_NOT_PROCESSABLE);
         }
         if (entityType.equals(EntityType.PAYMENT_POSITION)) {
-            ingestionService.ingestPaymentPositions(List.of(originalMessageString));
+            ingestionService.ingestPaymentPosition(originalMessageString);
         }
         if (entityType.equals(EntityType.PAYMENT_OPTION)) {
-            ingestionService.ingestPaymentOptions(List.of(originalMessageString));
+            ingestionService.ingestPaymentOption(originalMessageString);
         }
         if (entityType.equals(EntityType.TRANSFER)) {
-            ingestionService.ingestTransfers(List.of(originalMessageString));
+            ingestionService.ingestTransfer(originalMessageString);
         }
     }
 

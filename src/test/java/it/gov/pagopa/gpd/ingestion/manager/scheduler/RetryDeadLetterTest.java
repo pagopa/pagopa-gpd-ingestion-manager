@@ -113,7 +113,7 @@ class RetryDeadLetterTest {
 
         retryDeadLetter.retryDeadLetter();
 
-        verify(ingestionService, times(1)).ingestPaymentPositions(List.of(baseRecord.getOriginalMessage()));
+        verify(ingestionService, times(1)).ingestPaymentPosition(baseRecord.getOriginalMessage());
         verify(storageTableService, times(1)).deleteDeadLetter(baseRecord);
         verify(storageTableService, never()).updateDeadLetter(any());
     }
@@ -130,7 +130,7 @@ class RetryDeadLetterTest {
 
         retryDeadLetter.retryDeadLetter();
 
-        verify(ingestionService, times(1)).ingestPaymentOptions(List.of(baseRecord.getOriginalMessage()));
+        verify(ingestionService, times(1)).ingestPaymentOption(baseRecord.getOriginalMessage());
         verify(storageTableService, times(1)).deleteDeadLetter(baseRecord);
     }
 
@@ -146,7 +146,7 @@ class RetryDeadLetterTest {
 
         retryDeadLetter.retryDeadLetter();
 
-        verify(ingestionService, times(1)).ingestTransfers(List.of(baseRecord.getOriginalMessage()));
+        verify(ingestionService, times(1)).ingestTransfer(baseRecord.getOriginalMessage());
         verify(storageTableService, times(1)).deleteDeadLetter(baseRecord);
     }
 
@@ -162,7 +162,7 @@ class RetryDeadLetterTest {
                 .thenReturn(true);
 
         doThrow(new RuntimeException("Kafka or DB connection error"))
-                .when(ingestionService).ingestPaymentPositions(anyList());
+                .when(ingestionService).ingestPaymentPosition(any());
 
         retryDeadLetter.retryDeadLetter();
 

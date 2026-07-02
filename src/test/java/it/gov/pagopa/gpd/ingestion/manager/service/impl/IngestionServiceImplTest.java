@@ -67,8 +67,7 @@ class IngestionServiceImplTest {
                 .thenReturn(TOKENIZED_FISCAL_CODE);
 
         DataCaptureMessage<PaymentPosition> ppList = generateValidPaymentPosition(FISCAL_CODE, false);
-        List<String> paymentPositionsItems =
-                Collections.singletonList(objectMapper.writeValueAsString(ppList));
+        String paymentPositionsItem = objectMapper.writeValueAsString(ppList);
 
         sut =
                 new IngestionServiceImpl(
@@ -80,7 +79,7 @@ class IngestionServiceImplTest {
                         false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentPositions(paymentPositionsItems));
+        assertDoesNotThrow(() -> sut.ingestPaymentPosition(paymentPositionsItem));
 
         verify(paymentPositionProducer).sendIngestedPaymentPosition(paymentPositionCaptor.capture());
         DataCaptureMessage<PaymentPosition> captured = paymentPositionCaptor.getValue();
@@ -95,8 +94,7 @@ class IngestionServiceImplTest {
                 .thenReturn(TOKENIZED_FISCAL_CODE);
 
         DataCaptureMessage<PaymentPosition> ppList = generateValidPaymentPosition(FISCAL_CODE, true);
-        List<String> paymentPositionsItems =
-                Collections.singletonList(objectMapper.writeValueAsString(ppList));
+        String paymentPositionsItem = objectMapper.writeValueAsString(ppList);
 
         sut =
                 new IngestionServiceImpl(
@@ -108,7 +106,7 @@ class IngestionServiceImplTest {
                         false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentPositions(paymentPositionsItems));
+        assertDoesNotThrow(() -> sut.ingestPaymentPosition(paymentPositionsItem));
 
         verify(paymentPositionProducer).sendIngestedPaymentPosition(paymentPositionCaptor.capture());
         DataCaptureMessage<PaymentPosition> captured = paymentPositionCaptor.getValue();
@@ -121,8 +119,7 @@ class IngestionServiceImplTest {
             throws PDVTokenizerException, JsonProcessingException {
         DataCaptureMessage<PaymentPosition> ppList =
                 generateValidPaymentPosition(INVALID_FISCAL_CODE, false);
-        List<String> paymentPositionsItems =
-                Collections.singletonList(objectMapper.writeValueAsString(ppList));
+        String paymentPositionsItem = objectMapper.writeValueAsString(ppList);
 
         sut =
                 new IngestionServiceImpl(
@@ -133,7 +130,7 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentPositions(paymentPositionsItems));
+        assertDoesNotThrow(() -> sut.ingestPaymentPosition(paymentPositionsItem));
 
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
         verify(paymentPositionProducer).sendIngestedPaymentPosition(paymentPositionCaptor.capture());
@@ -147,8 +144,7 @@ class IngestionServiceImplTest {
             throws PDVTokenizerException, JsonProcessingException {
         DataCaptureMessage<PaymentPosition> ppList =
                 generateValidPaymentPosition(INVALID_FISCAL_CODE, true);
-        List<String> paymentPositionsItems =
-                Collections.singletonList(objectMapper.writeValueAsString(ppList));
+        String paymentPositionsItem = objectMapper.writeValueAsString(ppList);
 
         sut =
                 new IngestionServiceImpl(
@@ -159,7 +155,7 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentPositions(paymentPositionsItems));
+        assertDoesNotThrow(() -> sut.ingestPaymentPosition(paymentPositionsItem));
 
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
         verify(paymentPositionProducer).sendIngestedPaymentPosition(paymentPositionCaptor.capture());
@@ -172,8 +168,7 @@ class IngestionServiceImplTest {
     void ingestPaymentPositionRunNullFiscalCode()
             throws PDVTokenizerException, JsonProcessingException {
         DataCaptureMessage<PaymentPosition> ppList = generateValidPaymentPosition(null, false);
-        List<String> paymentPositionsItems =
-                Collections.singletonList(objectMapper.writeValueAsString(ppList));
+        String paymentPositionsItem = objectMapper.writeValueAsString(ppList);
 
         sut =
                 new IngestionServiceImpl(
@@ -184,7 +179,7 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentPositions(paymentPositionsItems));
+        assertDoesNotThrow(() -> sut.ingestPaymentPosition(paymentPositionsItem));
 
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
         verify(paymentPositionProducer).sendIngestedPaymentPosition(paymentPositionCaptor.capture());
@@ -210,10 +205,9 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         DataCaptureMessage<PaymentPosition> ppList = generateValidPaymentPosition(FISCAL_CODE, false);
-        List<String> paymentPositionsItems =
-                Collections.singletonList(objectMapper.writeValueAsString(ppList));
+        String paymentPositionsItem = objectMapper.writeValueAsString(ppList);
 
-        assertThrows(AppException.class, () -> sut.ingestPaymentPositions(paymentPositionsItems));
+        assertThrows(AppException.class, () -> sut.ingestPaymentPosition(paymentPositionsItem));
 
         verify(paymentPositionProducer, never()).sendIngestedPaymentPosition(any());
     }
@@ -225,8 +219,7 @@ class IngestionServiceImplTest {
                 .thenThrow(new PDVTokenizerException("test", 500));
 
         DataCaptureMessage<PaymentPosition> ppList = generateValidPaymentPosition(FISCAL_CODE, true);
-        List<String> paymentPositionsItems =
-                Collections.singletonList(objectMapper.writeValueAsString(ppList));
+        String paymentPositionsItem = objectMapper.writeValueAsString(ppList);
 
         sut =
                 new IngestionServiceImpl(
@@ -238,7 +231,7 @@ class IngestionServiceImplTest {
                         true);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentPositions(paymentPositionsItems));
+        assertDoesNotThrow(() -> sut.ingestPaymentPosition(paymentPositionsItem));
 
         verify(paymentPositionProducer).sendIngestedPaymentPosition(paymentPositionCaptor.capture());
         DataCaptureMessage<PaymentPosition> captured = paymentPositionCaptor.getValue();
@@ -248,7 +241,7 @@ class IngestionServiceImplTest {
 
     @Test
     void ingestPaymentPositionRunNullMessage() throws PDVTokenizerException, JsonProcessingException {
-        List<String> paymentPositionsItems = Collections.singletonList("");
+        String paymentPositionsItem = "";
 
         sut =
                 new IngestionServiceImpl(
@@ -259,7 +252,7 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentPositions(paymentPositionsItems));
+        assertDoesNotThrow(() -> sut.ingestPaymentPosition(paymentPositionsItem));
 
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
         verify(paymentPositionProducer, never()).sendIngestedPaymentPosition(any());
@@ -306,8 +299,7 @@ class IngestionServiceImplTest {
                 .thenReturn(TOKENIZED_FISCAL_CODE);
 
         DataCaptureMessage<PaymentOption> poList = generateValidPaymentOption(FISCAL_CODE, false);
-        List<String> paymentPositionsItems =
-                Collections.singletonList(objectMapper.writeValueAsString(poList));
+        String paymentPositionsItem = objectMapper.writeValueAsString(poList);
 
         sut =
                 new IngestionServiceImpl(
@@ -319,7 +311,7 @@ class IngestionServiceImplTest {
                         false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentOptions(paymentPositionsItems));
+        assertDoesNotThrow(() -> sut.ingestPaymentOption(paymentPositionsItem));
 
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
         DataCaptureMessage<PaymentOption> captured = paymentOptionCaptor.getValue();
@@ -334,8 +326,7 @@ class IngestionServiceImplTest {
                 .thenReturn(TOKENIZED_FISCAL_CODE);
 
         DataCaptureMessage<PaymentOption> poList = generateValidPaymentOption(FISCAL_CODE, true);
-        List<String> paymentPositionsItems =
-                Collections.singletonList(objectMapper.writeValueAsString(poList));
+        String paymentPositionsItem = objectMapper.writeValueAsString(poList);
 
         sut =
                 new IngestionServiceImpl(
@@ -347,7 +338,7 @@ class IngestionServiceImplTest {
                         false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentOptions(paymentPositionsItems));
+        assertDoesNotThrow(() -> sut.ingestPaymentOption(paymentPositionsItem));
 
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
         DataCaptureMessage<PaymentOption> captured = paymentOptionCaptor.getValue();
@@ -363,8 +354,7 @@ class IngestionServiceImplTest {
 
         DataCaptureMessage<PaymentOption> poList =
                 generateValidPaymentOption(FISCAL_CODE.toLowerCase(), false);
-        List<String> paymentPositionsItems =
-                Collections.singletonList(objectMapper.writeValueAsString(poList));
+        String paymentPositionsItem = objectMapper.writeValueAsString(poList);
 
         sut =
                 new IngestionServiceImpl(
@@ -375,7 +365,7 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentOptions(paymentPositionsItems));
+        assertDoesNotThrow(() -> sut.ingestPaymentOption(paymentPositionsItem));
 
         verify(pdvTokenizerServiceMock, times(1)).generateTokenForFiscalCodeWithRetry(FISCAL_CODE.toLowerCase());
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
@@ -389,8 +379,7 @@ class IngestionServiceImplTest {
             throws PDVTokenizerException, JsonProcessingException {
         DataCaptureMessage<PaymentOption> poList =
                 generateValidPaymentOption(INVALID_FISCAL_CODE, false);
-        List<String> paymentPositionsItems =
-                Collections.singletonList(objectMapper.writeValueAsString(poList));
+        String paymentPositionsItem = objectMapper.writeValueAsString(poList);
 
         sut =
                 new IngestionServiceImpl(
@@ -401,7 +390,7 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentOptions(paymentPositionsItems));
+        assertDoesNotThrow(() -> sut.ingestPaymentOption(paymentPositionsItem));
 
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
@@ -415,8 +404,7 @@ class IngestionServiceImplTest {
             throws PDVTokenizerException, JsonProcessingException {
         DataCaptureMessage<PaymentOption> poList =
                 generateValidPaymentOption(INVALID_FISCAL_CODE, true);
-        List<String> paymentPositionsItems =
-                Collections.singletonList(objectMapper.writeValueAsString(poList));
+        String paymentPositionsItem = objectMapper.writeValueAsString(poList);
 
         sut =
                 new IngestionServiceImpl(
@@ -427,7 +415,7 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentOptions(paymentPositionsItems));
+        assertDoesNotThrow(() -> sut.ingestPaymentOption(paymentPositionsItem));
 
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
@@ -440,8 +428,7 @@ class IngestionServiceImplTest {
     void ingestPaymentOptionRunNullFiscalCode()
             throws PDVTokenizerException, JsonProcessingException {
         DataCaptureMessage<PaymentOption> poList = generateValidPaymentOption(null, false);
-        List<String> paymentPositionsItems =
-                Collections.singletonList(objectMapper.writeValueAsString(poList));
+        String paymentPositionsItem = objectMapper.writeValueAsString(poList);
 
         sut =
                 new IngestionServiceImpl(
@@ -452,7 +439,7 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentOptions(paymentPositionsItems));
+        assertDoesNotThrow(() -> sut.ingestPaymentOption(paymentPositionsItem));
 
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
@@ -478,10 +465,9 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         DataCaptureMessage<PaymentOption> poList = generateValidPaymentOption(FISCAL_CODE, false);
-        List<String> paymentOptionsItems =
-                Collections.singletonList(objectMapper.writeValueAsString(poList));
+        String paymentOptionsItem = objectMapper.writeValueAsString(poList);
 
-        assertThrows(AppException.class, () -> sut.ingestPaymentOptions(paymentOptionsItems));
+        assertThrows(AppException.class, () -> sut.ingestPaymentOption(paymentOptionsItem));
 
         verify(paymentOptionProducer, never()).sendIngestedPaymentOption(any());
     }
@@ -493,8 +479,7 @@ class IngestionServiceImplTest {
                 .thenThrow(new PDVTokenizerException("test", 500));
 
         DataCaptureMessage<PaymentOption> poList = generateValidPaymentOption(FISCAL_CODE, true);
-        List<String> paymentOptionsItems =
-                Collections.singletonList(objectMapper.writeValueAsString(poList));
+        String paymentOptionsItem = objectMapper.writeValueAsString(poList);
 
         sut =
                 new IngestionServiceImpl(
@@ -506,7 +491,7 @@ class IngestionServiceImplTest {
                         true);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentOptions(paymentOptionsItems));
+        assertDoesNotThrow(() -> sut.ingestPaymentOption(paymentOptionsItem));
 
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
         DataCaptureMessage<PaymentOption> captured = paymentOptionCaptor.getValue();
@@ -517,7 +502,7 @@ class IngestionServiceImplTest {
 
     @Test
     void ingestPaymentOptionRunNullMessage() {
-        List<String> paymentOptionsItems = Collections.singletonList("");
+        String paymentOptionsItem = "";
 
         sut =
                 new IngestionServiceImpl(
@@ -528,7 +513,7 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentOptions(paymentOptionsItems));
+        assertDoesNotThrow(() -> sut.ingestPaymentOption(paymentOptionsItem));
 
         verify(paymentOptionProducer, never()).sendIngestedPaymentOption(any());
     }
@@ -578,7 +563,7 @@ class IngestionServiceImplTest {
     @Test
     void ingestTransferRunOk() throws JsonProcessingException {
         DataCaptureMessage<Transfer> tr = generateValidTransfer();
-        List<String> transferItems = Collections.singletonList(objectMapper.writeValueAsString(tr));
+        String transferItem = objectMapper.writeValueAsString(tr);
 
         sut =
                 new IngestionServiceImpl(
@@ -589,7 +574,7 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestTransfers(transferItems));
+        assertDoesNotThrow(() -> sut.ingestTransfer(transferItem));
 
         verify(transferProducer).sendIngestedTransfer(transferCaptor.capture());
         DataCaptureMessage<Transfer> captured = transferCaptor.getValue();
@@ -599,7 +584,7 @@ class IngestionServiceImplTest {
 
     @Test
     void ingestTransferRunNullMessage() {
-        List<String> transferItems = Collections.singletonList("");
+        String transferItem = "";
 
         sut =
                 new IngestionServiceImpl(
@@ -610,7 +595,7 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestTransfers(transferItems));
+        assertDoesNotThrow(() -> sut.ingestTransfer(transferItem));
 
         verify(transferProducer, never()).sendIngestedTransfer(any());
     }
