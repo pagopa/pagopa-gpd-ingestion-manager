@@ -33,7 +33,6 @@ class StorageTableServiceImplTest {
     private PagedIterable<TableEntity> pagedIterable;
 
     @Autowired
-    @InjectMocks
     private StorageTableServiceImpl sut;
 
     private DeadLetterRecord deadLetterRecord;

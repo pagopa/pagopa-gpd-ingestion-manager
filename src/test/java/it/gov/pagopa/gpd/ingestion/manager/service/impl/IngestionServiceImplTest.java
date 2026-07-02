@@ -202,7 +202,8 @@ class IngestionServiceImplTest {
 
         DataCaptureMessage<PaymentPosition> pp = generateValidPaymentPosition(FISCAL_CODE, false);
 
-        assertThrows(AppException.class, () -> sut.ingestPaymentPosition(getMessage(objectMapper.writeValueAsString(pp))));
+        Message<String> message = getMessage(objectMapper.writeValueAsString(pp));
+        assertThrows(AppException.class, () -> sut.ingestPaymentPosition(message));
 
         verify(paymentPositionProducer, never()).sendIngestedPaymentPosition(any());
     }
@@ -452,7 +453,8 @@ class IngestionServiceImplTest {
 
         DataCaptureMessage<PaymentOption> po = generateValidPaymentOption(FISCAL_CODE, false);
 
-        assertThrows(AppException.class, () -> sut.ingestPaymentOption(getMessage(objectMapper.writeValueAsString(po))));
+        Message<String> message = getMessage(objectMapper.writeValueAsString(po));
+        assertThrows(AppException.class, () -> sut.ingestPaymentOption(message));
 
         verify(paymentOptionProducer, never()).sendIngestedPaymentOption(any());
     }
@@ -543,7 +545,7 @@ class IngestionServiceImplTest {
 
     // Test Ingestion Transfer
     @Test
-    void ingestTransferRunOk() throws JsonProcessingException {
+    void ingestTransferRunOk() {
         DataCaptureMessage<Transfer> tr = generateValidTransfer();
 
         sut =

@@ -257,7 +257,7 @@ public class IngestionServiceImpl implements IngestionService {
                 || !(message.getPayload() instanceof String msg)
                 || msg.isBlank()
         ) {
-            log.debug("NULL message ignored at {}", LocalDateTime.now());
+            log.debug("NULL message ignored at {}", getDateNow());
             return null;
         }
 
