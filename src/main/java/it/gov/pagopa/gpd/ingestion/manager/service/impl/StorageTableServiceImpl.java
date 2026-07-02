@@ -6,7 +6,6 @@ import it.gov.pagopa.gpd.ingestion.manager.model.DeadLetterRecord;
 import it.gov.pagopa.gpd.ingestion.manager.model.enumeration.DeadLetterRetryStatus;
 import it.gov.pagopa.gpd.ingestion.manager.service.StorageTableService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

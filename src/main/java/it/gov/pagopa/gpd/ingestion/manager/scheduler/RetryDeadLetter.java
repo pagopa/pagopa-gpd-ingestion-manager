@@ -11,17 +11,21 @@ import it.gov.pagopa.gpd.ingestion.manager.service.impl.IngestionServiceImpl;
 import it.gov.pagopa.gpd.ingestion.manager.service.impl.StorageTableServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.GenericMessage;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component
 @Slf4j
 public class RetryDeadLetter {
 
+    public static final String KAFKA_HEADER_ID = "id";
     private final AtomicBoolean isRetryEnabled = new AtomicBoolean(true);
 
     private final StorageTableService storageTableService;
@@ -34,7 +38,7 @@ public class RetryDeadLetter {
     }
 
     // Runs every 5 minutes
-    @Scheduled(cron = "* */5 * * * *")
+    @Scheduled(cron = "*/10 * * * * *")
     public void retryDeadLetter() {
         if (isRetryEnabled.get()) {
             for (DeadLetterRecord dlRecord : retrieveAndAcquireLock()) {
@@ -70,20 +74,25 @@ public class RetryDeadLetter {
     }
 
     private void ingestDeadLetter(DeadLetterRecord dlRecord, EntityType entityType) {
-        String originalMessageString = dlRecord.getOriginalMessage();
+        Message<String> originalMessage = getKafkaMessage(dlRecord);
 
-        if (entityType == null || entityType.equals(EntityType.UNKNOWN) || originalMessageString == null) {
+        if (entityType == null || entityType.equals(EntityType.UNKNOWN)) {
             throw new AppException(AppError.DEAD_LETTER_NOT_PROCESSABLE);
         }
         if (entityType.equals(EntityType.PAYMENT_POSITION)) {
-            ingestionService.ingestPaymentPosition(originalMessageString);
+            ingestionService.ingestPaymentPosition(originalMessage);
         }
         if (entityType.equals(EntityType.PAYMENT_OPTION)) {
-            ingestionService.ingestPaymentOption(originalMessageString);
+            ingestionService.ingestPaymentOption(originalMessage);
         }
         if (entityType.equals(EntityType.TRANSFER)) {
-            ingestionService.ingestTransfer(originalMessageString);
+            ingestionService.ingestTransfer(originalMessage);
         }
+    }
+
+    private static Message<String> getKafkaMessage(DeadLetterRecord dlRecord) {
+        Map<String, Object> headers = Map.of(KAFKA_HEADER_ID, dlRecord.getMessageId());
+        return new GenericMessage<>(dlRecord.getOriginalMessage(), headers);
     }
 
     private void handleRetryException(DeadLetterRecord dlRecord, Exception e) {

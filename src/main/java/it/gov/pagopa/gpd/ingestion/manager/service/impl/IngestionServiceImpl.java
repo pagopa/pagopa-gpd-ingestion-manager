@@ -20,12 +20,12 @@ import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerServiceRetryWrapp
 
 import java.time.Clock;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
 import static it.gov.pagopa.gpd.ingestion.manager.util.MDCUtility.*;
@@ -80,7 +80,7 @@ public class IngestionServiceImpl implements IngestionService {
         return false;
     }
 
-    public void ingestPaymentPosition(String message) {
+    public void ingestPaymentPosition(Message<String> message) {
         logIngestionInit(EntityType.PAYMENT_POSITION.name());
 
         // persist the item
@@ -143,7 +143,7 @@ public class IngestionServiceImpl implements IngestionService {
         return values;
     }
 
-    public void ingestPaymentOption(String message) {
+    public void ingestPaymentOption(Message<String> message) {
         logIngestionInit(EntityType.PAYMENT_OPTION.name());
 
         // persist the item
@@ -209,7 +209,7 @@ public class IngestionServiceImpl implements IngestionService {
         return values;
     }
 
-    public void ingestTransfer(String message) {
+    public void ingestTransfer(Message<String> message) {
         logIngestionInit(EntityType.TRANSFER.name());
 
         // persist the item
@@ -251,15 +251,20 @@ public class IngestionServiceImpl implements IngestionService {
             }
     }
 
-    private static LocalDateTime getDateNow() {
-        return LocalDateTime.now(Clock.systemDefaultZone());
-    }
-
-    private <T> DataCaptureMessage<T> mapMessageToObject(String msg, TypeReference<DataCaptureMessage<T>> typeReference) throws JsonProcessingException {
-        if (msg == null || msg.isBlank()) {
+    private <T> DataCaptureMessage<T> mapMessageToObject(Message<?> message, TypeReference<DataCaptureMessage<T>> typeReference) throws JsonProcessingException {
+        // Discard null messages
+        if (message.getHeaders().getId() == null
+                || message.getPayload() == null
+                || !(message.getPayload() instanceof String msg)) {
+            log.debug("NULL message ignored at {}", LocalDateTime.now());
             return null;
         }
+
         return this.objectMapper.readValue(msg, typeReference);
+    }
+
+    private static LocalDateTime getDateNow() {
+        return LocalDateTime.now(Clock.systemDefaultZone());
     }
 
     private static void logIngestionInit(String entityName) {
