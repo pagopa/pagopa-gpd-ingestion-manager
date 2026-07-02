@@ -38,7 +38,7 @@ public class RetryDeadLetter {
     }
 
     // Runs every 5 minutes
-    @Scheduled(cron = "*/10 * * * * *")
+    @Scheduled(cron = "*/5 * * * *")
     public void retryDeadLetter() {
         if (isRetryEnabled.get()) {
             for (DeadLetterRecord dlRecord : retrieveAndAcquireLock()) {
