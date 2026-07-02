@@ -1,5 +1,7 @@
 package it.gov.pagopa.gpd.ingestion.manager.scheduler;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.gpd.ingestion.manager.model.DeadLetterRecord;
 import it.gov.pagopa.gpd.ingestion.manager.model.enumeration.DeadLetterRetryStatus;
 import it.gov.pagopa.gpd.ingestion.manager.model.enumeration.EntityType;
@@ -12,9 +14,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.GenericMessage;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
@@ -28,17 +33,19 @@ class RetryDeadLetterTest {
     @Mock
     private IngestionServiceImpl ingestionService;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @InjectMocks
     private RetryDeadLetter retryDeadLetter;
 
     private DeadLetterRecord baseRecord;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws JsonProcessingException {
         baseRecord = DeadLetterRecord.builder()
                 .messageId("msg-123")
                 .retryStatus(DeadLetterRetryStatus.TO_RETRY)
-                .originalMessage("{\"key\":\"value\"}")
+                .originalMessage(this.objectMapper.writeValueAsString(getMessage("{\"key\":\"value\"}")))
                 .numOfRetries(0)
                 .lockExpiration(null)
                 .build();
@@ -113,7 +120,7 @@ class RetryDeadLetterTest {
 
         retryDeadLetter.retryDeadLetter();
 
-        verify(ingestionService, times(1)).ingestPaymentPosition(baseRecord.getOriginalMessage());
+        verify(ingestionService, times(1)).ingestPaymentPosition(any(Message.class));
         verify(storageTableService, times(1)).deleteDeadLetter(baseRecord);
         verify(storageTableService, never()).updateDeadLetter(any());
     }
@@ -130,7 +137,7 @@ class RetryDeadLetterTest {
 
         retryDeadLetter.retryDeadLetter();
 
-        verify(ingestionService, times(1)).ingestPaymentOption(baseRecord.getOriginalMessage());
+        verify(ingestionService, times(1)).ingestPaymentOption(any(Message.class));
         verify(storageTableService, times(1)).deleteDeadLetter(baseRecord);
     }
 
@@ -146,7 +153,7 @@ class RetryDeadLetterTest {
 
         retryDeadLetter.retryDeadLetter();
 
-        verify(ingestionService, times(1)).ingestTransfer(baseRecord.getOriginalMessage());
+        verify(ingestionService, times(1)).ingestTransfer(any(Message.class));
         verify(storageTableService, times(1)).deleteDeadLetter(baseRecord);
     }
 
@@ -169,5 +176,10 @@ class RetryDeadLetterTest {
         assertEquals(initialRetries + 1, baseRecord.getNumOfRetries());
         verify(storageTableService, times(1)).updateDeadLetter(baseRecord);
         verify(storageTableService, never()).deleteDeadLetter(any());
+    }
+
+    private Message<String> getMessage(String entity) {
+        Map<String, Object> headers = Map.of("id", "id");
+        return new GenericMessage<>(entity, headers);
     }
 }
