@@ -12,7 +12,7 @@
 
     <groupId>it.gov.pagopa.gps</groupId>
     <artifactId>gpd-ingestion-manager</artifactId>
-    <version>0.5.7-4-PIDM-2052-retry-dead-letter</version>
+    <version>0.5.7-5-PIDM-2052-retry-dead-letter</version>
     <name>pagopa-gpd-ingestion-manager</name>
     <description>PagoPA GPD ingestion manager</description>
 
