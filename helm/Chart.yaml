@@ -2,8 +2,8 @@ apiVersion: v2
 name: pagopagpdingestionmanager
 description: Microservice to tokenize eventhub msg
 type: application
-version: 0.44.0
-appVersion: 0.5.7-5-PIDM-2052-retry-dead-letter
+version: 0.45.0
+appVersion: 0.5.7-6-PIDM-2052-retry-dead-letter
 dependencies:
   - name: microservice-chart
     version: 8.0.2
