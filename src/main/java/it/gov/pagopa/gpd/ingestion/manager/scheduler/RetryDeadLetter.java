@@ -66,9 +66,9 @@ public class RetryDeadLetter {
     }
 
     private List<DeadLetterRecord> retrieveAndAcquireLock() {
-        log.info("TIME 1 {}", System.currentTimeMillis());
+        log.debug("Start retry {}", System.currentTimeMillis());
         List<DeadLetterRecord> deadLetterRecords = this.storageTableService.getDeadLetterByRetryStatus(DeadLetterRetryStatus.TO_RETRY);
-        log.info("TIME 2 {}", System.currentTimeMillis());
+        log.debug("Retrieved dead letters {}", System.currentTimeMillis());
 
         List<DeadLetterRecord> processableDeadLetters = new ArrayList<>();
         for (DeadLetterRecord dlRecord : deadLetterRecords) {
@@ -80,9 +80,9 @@ public class RetryDeadLetter {
                 handleRetryException(dlRecord, e);
             }
         }
-        log.info("TIME 3 {}", System.currentTimeMillis());
+        log.debug("Locked dead letters {}", System.currentTimeMillis());
 
-        log.info("TOTAL {} LOCKED {}", deadLetterRecords.size(), processableDeadLetters.size());
+        log.debug("TOTAL {} LOCKED {}", deadLetterRecords.size(), processableDeadLetters.size());
 
         return processableDeadLetters;
     }
