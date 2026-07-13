@@ -175,7 +175,7 @@ class StorageTableServiceImplTest {
     }
 
     @Test
-    void acquireLockOptimistic_KO_error422() {
+    void acquireLockOptimistic_KO_error412() {
         when(tableClient.getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getMessageId()))
                 .thenReturn(tableEntity);
 
