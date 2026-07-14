@@ -116,7 +116,7 @@ public class RetryDeadLetter {
                         System.currentTimeMillis() + (retryBackoffInterval * dlRecord.getNumOfRetries() * 1000)
                         : 0
         );
-        dlRecord.setNumOfRetries(dlRecord.getNumOfRetries() != null ? dlRecord.getNumOfRetries() + 1 : 1);
+        dlRecord.setNumOfRetries(dlRecord.getNumOfRetries() + 1);
 
         DeadLetterRetryStatus exceptionRetryStatus = getExceptionRetryStatus(e);
 
