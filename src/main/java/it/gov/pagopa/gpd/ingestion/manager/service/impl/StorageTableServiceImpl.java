@@ -1,5 +1,6 @@
 package it.gov.pagopa.gpd.ingestion.manager.service.impl;
 
+import com.azure.core.util.Context;
 import com.azure.data.tables.TableClient;
 import com.azure.data.tables.models.*;
 import it.gov.pagopa.gpd.ingestion.manager.model.DeadLetterRecord;
@@ -91,7 +92,7 @@ public class StorageTableServiceImpl implements StorageTableService {
             //Acquire lock
             long lockExpiration = timestampNow + (lockDurationInSeconds * 1000); // lock duration in milliseconds
             tableEntity.getProperties().put(TABLE_KEY_LOCK_EXPIRATION, lockExpiration);
-            this.tableClient.updateEntity(tableEntity, TableEntityUpdateMode.MERGE);
+            this.tableClient.updateEntityWithResponse(tableEntity, TableEntityUpdateMode.MERGE, true, null, Context.NONE);
 
             dlRecord.setLockExpiration(lockExpiration);
 
