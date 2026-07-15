@@ -156,7 +156,7 @@ class StorageTableServiceImplTest {
 
         assertTrue(acquired);
         verify(tableClient, times(1)).getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getMessageId());
-        verify(tableClient, times(1)).updateEntity(any(), any());
+        verify(tableClient, times(1)).updateEntityWithResponse(any(), any(), anyBoolean(), any(), any());
     }
 
     @Test
@@ -181,12 +181,12 @@ class StorageTableServiceImplTest {
 
         HttpResponse mockHttpResponse = mock(HttpResponse.class);
         when(mockHttpResponse.getStatusCode()).thenReturn(412);
-        doThrow(new TableServiceException("error", mockHttpResponse)).when(tableClient).updateEntity(any(), any());
+        doThrow(new TableServiceException("error", mockHttpResponse)).when(tableClient).updateEntityWithResponse(any(), any(), anyBoolean(), any(), any());
         boolean acquired = sut.acquireLockOptimistic(deadLetterRecord);
 
         assertFalse(acquired);
         verify(tableClient, times(1)).getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getMessageId());
-        verify(tableClient, times(1)).updateEntity(any(), any());
+        verify(tableClient, times(1)).updateEntityWithResponse(any(), any(), anyBoolean(), any(), any());
     }
 
     @Test
@@ -196,12 +196,12 @@ class StorageTableServiceImplTest {
 
         HttpResponse mockHttpResponse = mock(HttpResponse.class);
         when(mockHttpResponse.getStatusCode()).thenReturn(404);
-        doThrow(new TableServiceException("error", mockHttpResponse)).when(tableClient).updateEntity(any(), any());
+        doThrow(new TableServiceException("error", mockHttpResponse)).when(tableClient).updateEntityWithResponse(any(), any(), anyBoolean(), any(), any());
         boolean acquired = sut.acquireLockOptimistic(deadLetterRecord);
 
         assertFalse(acquired);
         verify(tableClient, times(1)).getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getMessageId());
-        verify(tableClient, times(1)).updateEntity(any(), any());
+        verify(tableClient, times(1)).updateEntityWithResponse(any(), any(), anyBoolean(), any(), any());
     }
 
     @Test
@@ -211,10 +211,10 @@ class StorageTableServiceImplTest {
 
         HttpResponse mockHttpResponse = mock(HttpResponse.class);
         when(mockHttpResponse.getStatusCode()).thenReturn(500);
-        doThrow(new TableServiceException("error", mockHttpResponse)).when(tableClient).updateEntity(any(), any());
+        doThrow(new TableServiceException("error", mockHttpResponse)).when(tableClient).updateEntityWithResponse(any(), any(), anyBoolean(), any(), any());
         assertThrows(TableServiceException.class, () -> sut.acquireLockOptimistic(deadLetterRecord));
 
         verify(tableClient, times(1)).getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getMessageId());
-        verify(tableClient, times(1)).updateEntity(any(), any());
+        verify(tableClient, times(1)).updateEntityWithResponse(any(), any(), anyBoolean(), any(), any());
     }
 }
