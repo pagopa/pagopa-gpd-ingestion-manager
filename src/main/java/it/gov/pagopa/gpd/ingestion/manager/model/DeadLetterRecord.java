@@ -52,7 +52,7 @@ public class DeadLetterRecord {
                 .errorCode((String) props.get(TABLE_KEY_ERROR_CODE))
                 .originalMessage((String) props.get(TABLE_KEY_ORIGINAL_MESSAGE))
                 .entityType(props.get(TABLE_KEY_ENTITY_TYPE) != null ? EntityType.valueOf((String) props.get(TABLE_KEY_ENTITY_TYPE)) : EntityType.UNKNOWN)
-                .numOfRetries((int) props.get(TABLE_KEY_NUM_OF_RETRIES))
+                .numOfRetries(props.get(TABLE_KEY_NUM_OF_RETRIES) != null ? (int) props.get(TABLE_KEY_NUM_OF_RETRIES) : 0)
                 .lockExpiration((Long) props.get(TABLE_KEY_LOCK_EXPIRATION))
                 .build();
     }
