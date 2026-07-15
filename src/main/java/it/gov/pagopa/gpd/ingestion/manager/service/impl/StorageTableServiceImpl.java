@@ -48,7 +48,7 @@ public class StorageTableServiceImpl implements StorageTableService {
     public List<DeadLetterRecord> getDeadLetterByRetryStatus(DeadLetterRetryStatus retryStatus) {
         long now = System.currentTimeMillis();
         ListEntitiesOptions options = new ListEntitiesOptions()
-                .setFilter(String.format("PartitionKey eq '%s' and lockExpiration le %dL and numOfRetries le %d", retryStatus.name(), now, retryMax));
+                .setFilter(String.format("PartitionKey eq '%s' and lockExpiration le %dL and numOfRetries lt %d", retryStatus.name(), now, retryMax));
 
         return this.tableClient.listEntities(options, null, null).stream().limit(recordLimit)
                 .map(DeadLetterRecord::fromTableEntity)
