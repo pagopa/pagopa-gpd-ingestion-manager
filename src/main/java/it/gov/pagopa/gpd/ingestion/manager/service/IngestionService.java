@@ -1,6 +1,6 @@
 package it.gov.pagopa.gpd.ingestion.manager.service;
 
-import java.util.List;
+import org.springframework.messaging.Message;
 
 public interface IngestionService {
 
@@ -8,23 +8,23 @@ public interface IngestionService {
      * Ingest a {@link it.gov.pagopa.gpd.ingestion.manager.events.model.entity.PaymentPosition} message
      * from GPD eventhub and tokenizes the tax codes
      *
-     * @param messages PaymentPosition messages
+     * @param message PaymentPosition message
      */
-    void ingestPaymentPositions(List<String> messages);
+    void ingestPaymentPosition(Message<String> message);
 
     /**
      * Ingest a {@link it.gov.pagopa.gpd.ingestion.manager.events.model.entity.PaymentOption} message
      * from GPD eventhub
      *
-     * @param messages PaymentOption messages
+     * @param message PaymentOption message
      */
-    void ingestPaymentOptions(List<String> messages);
+    void ingestPaymentOption(Message<String> message);
 
     /**
      * Ingest a {@link it.gov.pagopa.gpd.ingestion.manager.events.model.entity.Transfer} message
      * from GPD eventhub
      *
-     * @param messages Transfer messages
+     * @param message Transfer message
      */
-    void ingestTransfers(List<String> messages);
+    void ingestTransfer(Message<String> message);
 }

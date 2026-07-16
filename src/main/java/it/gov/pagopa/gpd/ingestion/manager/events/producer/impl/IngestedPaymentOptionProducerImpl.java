@@ -4,8 +4,10 @@ import it.gov.pagopa.gpd.ingestion.manager.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.PaymentOption;
 import it.gov.pagopa.gpd.ingestion.manager.events.producer.IngestedPaymentOptionProducer;
 import java.util.function.Supplier;
+
+import it.gov.pagopa.gpd.ingestion.manager.exception.AppError;
+import it.gov.pagopa.gpd.ingestion.manager.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Bean;
@@ -32,17 +34,13 @@ public class IngestedPaymentOptionProducerImpl implements IngestedPaymentOptionP
   }
 
   @Override
-  public boolean sendIngestedPaymentOption(
+  public void sendIngestedPaymentOption(
       DataCaptureMessage<PaymentOption> ingestedPaymentOption) {
     var res = streamBridge.send("ingestPaymentOption-out-0", buildMessage(ingestedPaymentOption));
 
-    MDC.put("topic", "payment option");
-    MDC.put("action", "sent");
-    log.debug("Payment Option Retry Sent");
-    MDC.remove("topic");
-    MDC.remove("action");
-
-    return res;
+    if(!res){
+      throw new AppException(AppError.MESSAGE_NOT_SENT);
+    }
   }
 
   /** Declared just to let know Spring to connect the producer at startup */
