@@ -46,7 +46,6 @@ public class RetryDeadLetter {
         this.retryBackoffInterval = retryBackoffInterval;
     }
 
-    // Runs every 5 minutes
     @Scheduled(cron = "${retry.dead.letter.cron}")
     public void retryDeadLetter() {
         if (isRetryEnabled) {

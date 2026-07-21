@@ -99,7 +99,7 @@ microservice-chart:
     AZURE_STORAGE_TABLE_RECORD_LIMIT: "500"
     AZURE_STORAGE_TABLE_RECORD_LOCK_DURATION: "300" # in seconds, 5 minutes
     RETRY_DEAD_LETTER_ENABLED: "true"
-    RETRY_DEAD_LETTER_CRON: "0 * * * * *"
+    RETRY_DEAD_LETTER_CRON: "0 */30 * * * *"
     RETRY_DEAD_LETTER_RETRY_MAX: "10"
     RETRY_DEAD_LETTER_RETRY_BACKOFF_INTERVAL: "180" # in seconds, 3 minutes
   envFieldRef:

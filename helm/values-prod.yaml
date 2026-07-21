@@ -99,7 +99,7 @@ microservice-chart:
     AZURE_STORAGE_TABLE_RECORD_LIMIT: "500"
     AZURE_STORAGE_TABLE_RECORD_LOCK_DURATION: "420" # in seconds, 7 minutes
     RETRY_DEAD_LETTER_ENABLED: "true"
-    RETRY_DEAD_LETTER_CRON: "0 */5 * * * *"
+    RETRY_DEAD_LETTER_CRON: "0 */10 * * * *"
     RETRY_DEAD_LETTER_RETRY_MAX: "10"
     RETRY_DEAD_LETTER_RETRY_BACKOFF_INTERVAL: "180" # in seconds, 3 minutes
   envFieldRef:
@@ -115,6 +115,7 @@ microservice-chart:
     TRANSFER_OUTPUT_EVENTHUB_CONN_STRING: "transfer-topic-output-conn-string"
     PDV_TOKENIZER_SUBSCRIPTION_KEY: "tokenizer-api-key"
     AZURE_STORAGE_TABLE_CONN_STRING: "gpd-ingestion-sa-conn-string"
+    KAFKA_CONSUMER_CONCURRENCY: "8"
   keyvault:
     name: "pagopa-p-gps-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
