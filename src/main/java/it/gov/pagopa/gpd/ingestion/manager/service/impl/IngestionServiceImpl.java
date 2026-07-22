@@ -10,11 +10,9 @@ import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.Transfer;
 import it.gov.pagopa.gpd.ingestion.manager.events.producer.IngestedPaymentOptionProducer;
 import it.gov.pagopa.gpd.ingestion.manager.events.producer.IngestedPaymentPositionProducer;
 import it.gov.pagopa.gpd.ingestion.manager.events.producer.IngestedTransferProducer;
-import it.gov.pagopa.gpd.ingestion.manager.exception.AppError;
-import it.gov.pagopa.gpd.ingestion.manager.exception.AppException;
-import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerException;
-import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerUnexpectedException;
+import it.gov.pagopa.gpd.ingestion.manager.exception.*;
 import it.gov.pagopa.gpd.ingestion.manager.model.enumeration.EntityType;
+import it.gov.pagopa.gpd.ingestion.manager.service.AnonymizerServiceRetryWrapper;
 import it.gov.pagopa.gpd.ingestion.manager.service.IngestionService;
 import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerServiceRetryWrapper;
 
@@ -38,6 +36,10 @@ public class IngestionServiceImpl implements IngestionService {
             "PaymentOption ingestion error PDVTokenizerException at {}";
     private static final String PDV_CF_TOKENIZER = "PDV_CF_TOKENIZER";
 
+    private static final String ANONYMIZER_EXCEPTION_MESSAGE =
+            "Transfer ingestion error AnonymizerException at {}";
+    private static final String ANONYMIZE_PLACEHOLDER = "Anonymized";
+
     private static final Pattern PATTERN_CF = Pattern.compile(
             "^[A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]$"
     );
@@ -46,6 +48,7 @@ public class IngestionServiceImpl implements IngestionService {
     private final ObjectMapper objectMapper;
 
     private final PDVTokenizerServiceRetryWrapper pdvTokenizerService;
+    private final AnonymizerServiceRetryWrapper anonymizerService;
 
     private final IngestedPaymentPositionProducer paymentPositionProducer;
     private final IngestedPaymentOptionProducer paymentOptionProducer;
@@ -53,15 +56,18 @@ public class IngestionServiceImpl implements IngestionService {
     private final IngestedTransferProducer transferProducer;
 
     private final Boolean placeholderOnPdvKO;
+    private final Boolean placeholderOnAnonymizerKO;
 
     @Autowired
     public IngestionServiceImpl(
             ObjectMapper objectMapper,
             PDVTokenizerServiceRetryWrapper pdvTokenizerService,
+            AnonymizerServiceRetryWrapper anonymizerService,
             IngestedPaymentPositionProducer paymentPositionProducer,
             IngestedPaymentOptionProducer paymentOptionProducer,
             IngestedTransferProducer transferProducer,
-            @Value("${pdv.tokenizer.placeholderOnPdvKO}") Boolean placeholderOnPdvKO
+            @Value("${pdv.tokenizer.placeholderOnPdvKO}") Boolean placeholderOnPdvKO,
+            @Value("${anonymizer.placeholderOnAnonymizerKO}") Boolean placeholderOnAnonymizerKO
     ) {
         this.objectMapper = objectMapper;
         this.pdvTokenizerService = pdvTokenizerService;
@@ -69,6 +75,8 @@ public class IngestionServiceImpl implements IngestionService {
         this.paymentOptionProducer = paymentOptionProducer;
         this.transferProducer = transferProducer;
         this.placeholderOnPdvKO = placeholderOnPdvKO;
+        this.anonymizerService = anonymizerService;
+        this.placeholderOnAnonymizerKO = placeholderOnAnonymizerKO;
     }
 
     private static boolean isValidFiscalCode(String fiscalCode) {
@@ -101,9 +109,6 @@ public class IngestionServiceImpl implements IngestionService {
             log.debug("PaymentPosition ingestion called at {} with payment position id {}", getDateNow(), id);
             setMDCId(String.valueOf(id));
 
-            paymentPosition.setBefore(tokenizePaymentPositionFiscalCode(valuesBefore));
-            paymentPosition.setAfter(tokenizePaymentPositionFiscalCode(valuesAfter));
-
             paymentPositionProducer.sendIngestedPaymentPosition(paymentPosition);
             setMDCSendResult("OK");
         } catch (JsonProcessingException e) {
@@ -112,35 +117,12 @@ public class IngestionServiceImpl implements IngestionService {
         } catch (AppException e) {
             handleException(e, EntityType.PAYMENT_POSITION.name());
             throw e;
-        } catch (PDVTokenizerException | PDVTokenizerUnexpectedException e) {
-            handleException(e, EntityType.PAYMENT_POSITION.name());
-            throw new AppException(AppError.ERROR_TOKENIZING_FISCAL_CODE, e);
         } catch (Exception e) {
             handleException(e, EntityType.PAYMENT_POSITION.name());
             throw new AppException(AppError.INTERNAL_SERVER_ERROR, e);
         } finally {
             clearMDC();
         }
-    }
-
-    /* TO BE REMOVED after data contract update PIDM-1917 */
-    private PaymentPosition tokenizePaymentPositionFiscalCode(PaymentPosition values) throws PDVTokenizerException, JsonProcessingException {
-        if (values != null && isValidFiscalCode(values.getFiscalCode())) {
-            try {
-                values.setFiscalCode(
-                        pdvTokenizerService.generateTokenForFiscalCodeWithRetry(
-                                values.getFiscalCode()));
-            } catch (Exception e) {
-                if (Boolean.FALSE.equals(placeholderOnPdvKO)) {
-                    throw e;
-                } else {
-                    log.error(PDV_TOKENIZER_EXCEPTION_MESSAGE, getDateNow(), e);
-                    values.setFiscalCode(PDV_CF_TOKENIZER);
-                }
-            }
-        }
-
-        return values;
     }
 
     public void ingestPaymentOption(Message<String> message) {
@@ -235,6 +217,9 @@ public class IngestionServiceImpl implements IngestionService {
                     id);
             setMDCId(String.valueOf(id));
 
+            transfer.setBefore(anonymizeRemittanceInformation(valuesBefore));
+            transfer.setAfter(anonymizeRemittanceInformation(valuesAfter));
+
             transferProducer.sendIngestedTransfer(transfer);
             setMDCSendResult("OK");
         } catch (JsonProcessingException e) {
@@ -243,12 +228,33 @@ public class IngestionServiceImpl implements IngestionService {
         } catch (AppException e) {
             handleException(e, EntityType.TRANSFER.name());
             throw e;
+        } catch (AnonymizerException | AnonymizerUnexpectedException e) {
+            handleException(e, EntityType.TRANSFER.name());
+            throw new AppException(AppError.ERROR_ANONYMIZING_REMITTANCE_INFORMATION, e);
         } catch (Exception e) {
             handleException(e, EntityType.TRANSFER.name());
             throw new AppException(AppError.INTERNAL_SERVER_ERROR, e);
         } finally {
             clearMDC();
         }
+    }
+
+    private Transfer anonymizeRemittanceInformation(Transfer values) throws AnonymizerException, JsonProcessingException {
+        if (values != null && values.getRemittanceInformation() != null && !values.getRemittanceInformation().isBlank()) {
+            try {
+                values.setRemittanceInformation(
+                        anonymizerService.anonymizeWithRetry(
+                                values.getRemittanceInformation()));
+            } catch (Exception e) {
+                if (Boolean.FALSE.equals(placeholderOnAnonymizerKO)) {
+                    throw e;
+                } else {
+                    log.error(ANONYMIZER_EXCEPTION_MESSAGE, getDateNow(), e);
+                    values.setRemittanceInformation(ANONYMIZE_PLACEHOLDER);
+                }
+            }
+        }
+        return values;
     }
 
     private <T> DataCaptureMessage<T> mapMessageToObject(Message<?> message, TypeReference<DataCaptureMessage<T>> typeReference) throws JsonProcessingException {
