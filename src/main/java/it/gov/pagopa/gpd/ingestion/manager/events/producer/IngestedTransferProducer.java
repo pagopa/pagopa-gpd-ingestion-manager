@@ -15,8 +15,7 @@ public interface IngestedTransferProducer {
      * Send an ingested {@link Transfer} to GPD eventhub
      *
      * @param ingestedTransfer data to send
-     * @return boolean referring if the insertion on the sending channel was successfully
      */
-    boolean sendIngestedTransfer(DataCaptureMessage<Transfer> ingestedTransfer);
+    void sendIngestedTransfer(DataCaptureMessage<Transfer> ingestedTransfer);
 
 }
