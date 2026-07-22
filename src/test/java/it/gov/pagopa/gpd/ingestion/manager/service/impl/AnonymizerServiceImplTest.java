@@ -36,15 +36,14 @@ class AnonymizerServiceImplTest {
     private HttpResponse<String> httpResponseMock;
     @MockBean
     private AnonymizerClientImpl anonymizerClientMock;
-    @Autowired
-    @InjectMocks
+
     private AnonymizerServiceImpl sut;
 
     @BeforeEach
     void setUp() {
         httpResponseMock = mock(HttpResponse.class);
         anonymizerClientMock = mock(AnonymizerClientImpl.class);
-        sut = Mockito.spy(new AnonymizerServiceImpl(anonymizerClientMock, objectMapper));
+        sut = new AnonymizerServiceImpl(anonymizerClientMock, objectMapper);
     }
 
     @Test

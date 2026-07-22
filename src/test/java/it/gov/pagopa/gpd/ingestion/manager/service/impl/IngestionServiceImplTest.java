@@ -530,8 +530,9 @@ class IngestionServiceImplTest {
                 false, false);
 
         DataCaptureMessage<Transfer> tr = generateValidTransfer(false);
+        Message<String> msg = getMessage(objectMapper.writeValueAsString(tr));
 
-        assertThrows(AppException.class, () -> sut.ingestTransfer(getMessage(objectMapper.writeValueAsString(tr))));
+        assertThrows(AppException.class, () -> sut.ingestTransfer(msg));
 
         verify(anonimizerServiceMock, times(1)).anonymizeWithRetry(REMITTANCE_INFORMATION);
         verify(transferProducer, never()).sendIngestedTransfer(any());
