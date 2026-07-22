@@ -105,7 +105,7 @@ public class IngestionServiceImpl implements IngestionService {
             }
             PaymentPosition valuesBefore = paymentPosition.getBefore();
             PaymentPosition valuesAfter = paymentPosition.getAfter();
-            int id = (valuesAfter != null ? valuesAfter : valuesBefore).getId();
+            long id = (valuesAfter != null ? valuesAfter : valuesBefore).getId();
             log.debug("PaymentPosition ingestion called at {} with payment position id {}", getDateNow(), id);
             setMDCId(String.valueOf(id));
 
@@ -142,7 +142,7 @@ public class IngestionServiceImpl implements IngestionService {
             }
             PaymentOption valuesBefore = paymentOption.getBefore();
             PaymentOption valuesAfter = paymentOption.getAfter();
-            int id = (valuesAfter != null ? valuesAfter : valuesBefore).getId();
+            long id = (valuesAfter != null ? valuesAfter : valuesBefore).getId();
 
             log.debug(
                     "PaymentOption ingestion called at {} with payment position id {}",
@@ -209,7 +209,7 @@ public class IngestionServiceImpl implements IngestionService {
 
             Transfer valuesBefore = transfer.getBefore();
             Transfer valuesAfter = transfer.getAfter();
-            int id = (valuesAfter != null ? valuesAfter : valuesBefore).getId();
+            long id = (valuesAfter != null ? valuesAfter : valuesBefore).getId();
 
             log.debug(
                     "Transfer ingestion called at {} with payment position id {}",

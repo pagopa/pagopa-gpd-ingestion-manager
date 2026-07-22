@@ -12,12 +12,12 @@ import lombok.*;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Transfer {
 
-    private int id;
+    private long id;
 
     @JsonProperty("payment_option_id")
-    private int paymentOptionId;
+    private long paymentOptionId;
 
-    private int amount;
+    private long amount;
 
     private String category;
 

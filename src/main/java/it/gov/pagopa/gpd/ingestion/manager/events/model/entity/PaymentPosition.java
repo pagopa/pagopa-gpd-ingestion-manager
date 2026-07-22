@@ -11,7 +11,7 @@ import lombok.*;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PaymentPosition {
-    private int id;
+    private long id;
 
     private String iupd;
 

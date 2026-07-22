@@ -11,18 +11,18 @@ import lombok.*;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PaymentOption {
-    private int id;
+    private long id;
 
     @JsonProperty("payment_position_id")
-    private int paymentPositionId;
+    private long paymentPositionId;
 
-    private int amount;
+    private long amount;
     private String description;
 
     @JsonProperty("due_date")
     private Long dueDate;
 
-    private int fee;
+    private long fee;
 
     @JsonProperty("flow_reporting_id")
     private String flowReportingId;
@@ -48,7 +48,7 @@ public class PaymentOption {
     private Long retentionDate;
 
     @JsonProperty("notification_fee")
-    private int notificationFee;
+    private long notificationFee;
 
     @JsonProperty("last_updated_date_notification_fee")
     private Long lastUpdatedDateNotificationFee;
