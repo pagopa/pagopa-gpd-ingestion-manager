@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: "pagopa-gpd-ingestion-manager"
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-ingestion-manager
-    tag: "0.6.1-3-PIDM-2272-reimplement-batch"
+    tag: "0.6.1-4-PIDM-2272-reimplement-batch"
     pullPolicy: Always
   livenessProbe:
     handlerType: httpGet
