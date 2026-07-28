@@ -25,7 +25,6 @@ import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
 import static it.gov.pagopa.gpd.ingestion.manager.util.MDCUtility.*;
@@ -80,7 +79,7 @@ public class IngestionServiceImpl implements IngestionService {
         return false;
     }
 
-    public void ingestPaymentPosition(Message<String> message) {
+    public void ingestPaymentPosition(String message) {
         logIngestionInit(EntityType.PAYMENT_POSITION.name());
 
         // persist the item
@@ -143,7 +142,7 @@ public class IngestionServiceImpl implements IngestionService {
         return values;
     }
 
-    public void ingestPaymentOption(Message<String> message) {
+    public void ingestPaymentOption(String message) {
         logIngestionInit(EntityType.PAYMENT_OPTION.name());
 
         // persist the item
@@ -209,7 +208,7 @@ public class IngestionServiceImpl implements IngestionService {
         return values;
     }
 
-    public void ingestTransfer(Message<String> message) {
+    public void ingestTransfer(String message) {
         logIngestionInit(EntityType.TRANSFER.name());
 
         // persist the item
@@ -251,17 +250,14 @@ public class IngestionServiceImpl implements IngestionService {
         }
     }
 
-    private <T> DataCaptureMessage<T> mapMessageToObject(Message<?> message, TypeReference<DataCaptureMessage<T>> typeReference) throws JsonProcessingException {
+    private <T> DataCaptureMessage<T> mapMessageToObject(String message, TypeReference<DataCaptureMessage<T>> typeReference) throws JsonProcessingException {
         // Discard null messages
-        if (message.getHeaders().getId() == null
-                || !(message.getPayload() instanceof String msg)
-                || msg.isBlank()
-        ) {
+        if (message == null || message.isBlank()) {
             log.debug("NULL message ignored at {}", getDateNow());
             return null;
         }
 
-        return this.objectMapper.readValue(msg, typeReference);
+        return this.objectMapper.readValue(message, typeReference);
     }
 
     private static LocalDateTime getDateNow() {

@@ -1,5 +1,6 @@
 package it.gov.pagopa.gpd.ingestion.manager.events.consumer;
 
+import it.gov.pagopa.gpd.ingestion.manager.model.enumeration.EntityType;
 import it.gov.pagopa.gpd.ingestion.manager.service.DeadLetterService;
 import it.gov.pagopa.gpd.ingestion.manager.service.IngestionService;
 import lombok.extern.slf4j.Slf4j;
@@ -16,14 +17,13 @@ import java.util.function.Consumer;
 public class PaymentPositionConsumerConfig {
 
     @Bean
-    public Consumer<List<Message<String>>> ingestPaymentPosition(IngestionService ingestionService, DeadLetterService deadLetterService) {
+    public Consumer<List<String>> ingestPaymentPosition(IngestionService ingestionService, DeadLetterService deadLetterService) {
         return messages -> {
-            for (Message<String> msg : messages) {
+            for (String msg : messages) {
                 try {
                     ingestionService.ingestPaymentPosition(msg);
                 } catch (Exception e) {
-                    ErrorMessage error = new ErrorMessage(e, msg.getHeaders(), msg);
-                    deadLetterService.sendToDeadLetter(error);
+                    deadLetterService.sendToDeadLetter(msg, EntityType.PAYMENT_POSITION, e);
                 }
             }
         };

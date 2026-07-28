@@ -10,7 +10,7 @@ public interface IngestionService {
      *
      * @param message PaymentPosition message
      */
-    void ingestPaymentPosition(Message<String> message);
+    void ingestPaymentPosition(String message);
 
     /**
      * Ingest a {@link it.gov.pagopa.gpd.ingestion.manager.events.model.entity.PaymentOption} message
@@ -18,7 +18,7 @@ public interface IngestionService {
      *
      * @param message PaymentOption message
      */
-    void ingestPaymentOption(Message<String> message);
+    void ingestPaymentOption(String message);
 
     /**
      * Ingest a {@link it.gov.pagopa.gpd.ingestion.manager.events.model.entity.Transfer} message
@@ -26,5 +26,5 @@ public interface IngestionService {
      *
      * @param message Transfer message
      */
-    void ingestTransfer(Message<String> message);
+    void ingestTransfer(String message);
 }

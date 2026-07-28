@@ -46,119 +46,36 @@ public class DeadLetterServiceImpl implements DeadLetterService {
     }
 
     @Override
-    public void sendToDeadLetter(ErrorMessage errorMessage) {
+    public void sendToDeadLetter(String failedMessage, EntityType entityType, Exception exception) {
         String cause;
         String errorCode = AppError.INTERNAL_SERVER_ERROR.name();
-        if (errorMessage.getPayload().getCause() instanceof AppException appException) {
+        if (exception instanceof AppException appException) {
             cause = appException.getMessage();
             errorCode = appException.getAppErrorCode().name();
         } else {
-            cause = errorMessage.getPayload().getMessage();
+            cause = exception.getMessage();
         }
 
-        UUID errorMessageId = (UUID) errorMessage.getHeaders().get("id");
+        UUID errorMessageId = UUID.nameUUIDFromBytes(failedMessage.getBytes(StandardCharsets.UTF_8));
+        JSONObject jsonMessage;
+        try{
+            jsonMessage = new JSONObject(failedMessage);
+        } catch(Exception ignored){
+            log.warn("Failed to parse message as JSON, skipping dead letter creation. Message: {}", failedMessage);
+            return;
+        }
         DeadLetterRecord deadLetterRecord = DeadLetterRecord.builder()
                 .retryStatus(DeadLetterRetryStatus.TO_RETRY)
-                .messageId(errorMessageId != null ? errorMessageId.toString() : UUID.randomUUID().toString())
-                .entityId(getEntityId(errorMessage))
+                .messageId(errorMessageId.toString())
+                .entityId(jsonMessage.getString("id"))
                 .cause(cause)
                 .errorCode(errorCode)
-                .originalMessage(getOriginalMessagePayload(errorMessage))
-                .entityType(getEntityType(errorMessage))
+                .originalMessage(failedMessage)
+                .entityType(entityType)
                 .lockExpiration(0L)
                 .numOfRetries(0)
                 .build();
 
         storageTableService.saveDeadLetter(deadLetterRecord);
-    }
-
-    private String getOriginalMessagePayload(ErrorMessage errorMessage) {
-        String originalMessagePayload = "[ERROR] Retrieving original message payload";
-        Message<?> originalMessage = errorMessage.getOriginalMessage();
-        if (originalMessage != null) {
-            try {
-                originalMessagePayload = messageToString(originalMessage.getPayload());
-            } catch (Exception e) {
-                log.warn("Unable to retrieve original message payload", e);
-            }
-        }
-        return originalMessagePayload;
-    }
-
-    private String getEntityId(ErrorMessage errorMessage) {
-        String messageId = String.valueOf(errorMessage.getHeaders().getId());
-        Message<?> originalMessage = errorMessage.getOriginalMessage();
-
-        if (originalMessage != null) {
-            Object cdcMessageKey = originalMessage.getHeaders().get(KafkaHeaders.RECEIVED_KEY);
-            if (cdcMessageKey != null) {
-                try {
-                    String keyString = messageToString(cdcMessageKey);
-
-                    if (keyString.trim().startsWith("{")) {
-                        messageId = new JSONObject(keyString).get("id").toString();
-                    } else {
-                        messageId = keyString;
-                    }
-                } catch (Exception e) {
-                    log.warn("Unable to parse Kafka RECEIVED_KEY to JSON object for id extraction", e);
-                }
-            }
-        }
-        return messageId;
-    }
-
-    private EntityType getEntityType(ErrorMessage errorMessage) {
-        Message<?> originalMessage = errorMessage.getOriginalMessage();
-
-        if (originalMessage != null) {
-            Object topicHeader = originalMessage.getHeaders().get(KafkaHeaders.RECEIVED_TOPIC);
-            String receivedTopic = getReceivedTopic(topicHeader);
-
-            if (receivedTopic != null) {
-                if (receivedTopic.equals(paymentPositionTopic)) {
-                    return EntityType.PAYMENT_POSITION;
-                }
-                if (receivedTopic.equals(paymentOptionTopic)) {
-                    return EntityType.PAYMENT_OPTION;
-                }
-                if (receivedTopic.equals(transferTopic)) {
-                    return EntityType.TRANSFER;
-                }
-            }
-        }
-
-        return EntityType.UNKNOWN;
-    }
-
-    @Nullable
-    private static String getReceivedTopic(Object topicHeader) {
-        String receivedTopic = null;
-
-        if (topicHeader instanceof List<?> list && !list.isEmpty()) {
-            receivedTopic = String.valueOf(list.get(0));
-        } else if (topicHeader != null) {
-            receivedTopic = String.valueOf(topicHeader);
-        }
-        return receivedTopic;
-    }
-
-    public static String messageToString(Object message) {
-        if (message == null) {
-            return "message is null";
-        }
-
-        if (message instanceof byte[] byteArray) {
-            return new String(byteArray, StandardCharsets.UTF_8);
-        }
-
-        if (message instanceof List<?> list && !list.isEmpty()) {
-            Object firstElement = list.get(0);
-            if (firstElement instanceof byte[] byteArray) {
-                return new String(byteArray, StandardCharsets.UTF_8);
-            }
-        }
-
-        return String.valueOf(message);
     }
 }
