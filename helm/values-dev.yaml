@@ -103,7 +103,10 @@ microservice-chart:
     RETRY_DEAD_LETTER_RETRY_MAX: "10"
     RETRY_DEAD_LETTER_RETRY_BACKOFF_INTERVAL: "180" # in seconds, 3 minutes
     EVENTHUB_COMPLETE_GROUP_ID: "gpd-ingestion-manager"
-    KAFKA_CONSUMER_START_OFFSET: "earliest"
+    KAFKA_CONSUMER_CONCURRENCY: "1"
+    KAFKA_MAX_POLL_INTERVAL_MS: "900000"
+    KAFKA_MAX_POLL_RECORDS: "500"
+    KAFKA_CONSUMER_START_OFFSET: "latest"
   envFieldRef:
     APP_NAME: "metadata.labels['app.kubernetes.io/instance']"
     APP_VERSION: "metadata.labels['app.kubernetes.io/version']"
