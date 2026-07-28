@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.ErrorMessage;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 @Configuration
@@ -15,12 +16,16 @@ import java.util.function.Consumer;
 public class PaymentOptionConsumerConfig {
 
     @Bean
-    public Consumer<Message<String>> ingestPaymentOption(IngestionService ingestionService) {
-        return ingestionService::ingestPaymentOption;
-    }
-
-    @Bean
-    public Consumer<ErrorMessage> deadLetterPaymentOptionErrorHandler(DeadLetterService deadLetterService) {
-        return deadLetterService::sendToDeadLetter;
+    public Consumer<List<Message<String>>> ingestPaymentOption(IngestionService ingestionService, DeadLetterService deadLetterService) {
+        return messages -> {
+            for (Message<String> msg : messages) {
+                try {
+                    ingestionService.ingestPaymentOption(msg);
+                } catch (Exception e) {
+                    ErrorMessage error = new ErrorMessage(e, msg.getHeaders(), msg);
+                    deadLetterService.sendToDeadLetter(error);
+                }
+            }
+        };
     }
 }

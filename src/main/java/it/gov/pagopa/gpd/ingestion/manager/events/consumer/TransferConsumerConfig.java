@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.ErrorMessage;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 @Configuration
@@ -15,12 +16,16 @@ import java.util.function.Consumer;
 public class TransferConsumerConfig {
 
     @Bean
-    public Consumer<Message<String>> ingestTransfer(IngestionService ingestionService) {
-        return ingestionService::ingestTransfer;
-    }
-
-    @Bean
-    public Consumer<ErrorMessage> deadLetterTransferErrorHandler(DeadLetterService deadLetterService) {
-        return deadLetterService::sendToDeadLetter;
+    public Consumer<List<Message<String>>> ingestTransfer(IngestionService ingestionService, DeadLetterService deadLetterService) {
+        return messages -> {
+            for (Message<String> msg : messages) {
+                try {
+                    ingestionService.ingestTransfer(msg);
+                } catch (Exception e) {
+                    ErrorMessage error = new ErrorMessage(e, msg.getHeaders(), msg);
+                    deadLetterService.sendToDeadLetter(error);
+                }
+            }
+        };
     }
 }
