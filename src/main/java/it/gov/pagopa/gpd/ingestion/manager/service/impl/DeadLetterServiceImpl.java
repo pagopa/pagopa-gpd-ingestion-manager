@@ -9,23 +9,19 @@ import it.gov.pagopa.gpd.ingestion.manager.service.DeadLetterService;
 import it.gov.pagopa.gpd.ingestion.manager.service.StorageTableService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.support.KafkaHeaders;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.UUID;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class DeadLetterServiceImpl implements DeadLetterService {
+    public static final String ENTITY_ID_UNKNOWN = "unknown";
     private final String paymentPositionTopic;
     private final String paymentOptionTopic;
     private final String transferTopic;
@@ -46,25 +42,34 @@ public class DeadLetterServiceImpl implements DeadLetterService {
     }
 
     @Override
-    public void sendToDeadLetter(ErrorMessage errorMessage) {
+    public void sendToDeadLetter(String failedMessage, EntityType entityType, Exception exception) {
         String cause;
         String errorCode = AppError.INTERNAL_SERVER_ERROR.name();
-        if (errorMessage.getPayload().getCause() instanceof AppException appException) {
+        if (exception instanceof AppException appException) {
             cause = appException.getMessage();
             errorCode = appException.getAppErrorCode().name();
         } else {
-            cause = errorMessage.getPayload().getMessage();
+            cause = exception.getMessage();
         }
 
-        UUID errorMessageId = (UUID) errorMessage.getHeaders().get("id");
+        UUID errorMessageId = UUID.nameUUIDFromBytes(failedMessage.getBytes(StandardCharsets.UTF_8));
+        JSONObject jsonMessage;
+        try{
+            jsonMessage = new JSONObject(failedMessage);
+        } catch(Exception ignored){
+            log.warn("Failed to parse message as JSON, skipping dead letter creation. Message: {}", failedMessage);
+            jsonMessage = new JSONObject();
+        }
+
+        String entityId = getEntityId(jsonMessage);
         DeadLetterRecord deadLetterRecord = DeadLetterRecord.builder()
-                .retryStatus(DeadLetterRetryStatus.TO_RETRY)
-                .messageId(errorMessageId != null ? errorMessageId.toString() : UUID.randomUUID().toString())
-                .entityId(getEntityId(errorMessage))
+                .retryStatus(ENTITY_ID_UNKNOWN.equals(entityId) ? DeadLetterRetryStatus.RETRY_MALFORMED : DeadLetterRetryStatus.TO_RETRY)
+                .rowKey(errorMessageId.toString())
+                .entityId(entityId)
                 .cause(cause)
                 .errorCode(errorCode)
-                .originalMessage(getOriginalMessagePayload(errorMessage))
-                .entityType(getEntityType(errorMessage))
+                .originalMessage(failedMessage)
+                .entityType(entityType)
                 .lockExpiration(0L)
                 .numOfRetries(0)
                 .build();
@@ -72,93 +77,20 @@ public class DeadLetterServiceImpl implements DeadLetterService {
         storageTableService.saveDeadLetter(deadLetterRecord);
     }
 
-    private String getOriginalMessagePayload(ErrorMessage errorMessage) {
-        String originalMessagePayload = "[ERROR] Retrieving original message payload";
-        Message<?> originalMessage = errorMessage.getOriginalMessage();
-        if (originalMessage != null) {
-            try {
-                originalMessagePayload = messageToString(originalMessage.getPayload());
-            } catch (Exception e) {
-                log.warn("Unable to retrieve original message payload", e);
+    private static String getEntityId(JSONObject jsonMessage) {
+        if(jsonMessage != null){
+            String before = jsonMessage.optString("before", null);
+            if(before != null){
+                JSONObject beforeJson = new JSONObject(before);
+                return beforeJson.optString("id", jsonMessage.optString("id", ENTITY_ID_UNKNOWN));
+            }
+
+            String after = jsonMessage.optString("after", null);
+            if(after != null){
+                JSONObject afterJson = new JSONObject(after);
+                return afterJson.optString("id", jsonMessage.optString("id", ENTITY_ID_UNKNOWN));
             }
         }
-        return originalMessagePayload;
-    }
-
-    private String getEntityId(ErrorMessage errorMessage) {
-        String messageId = String.valueOf(errorMessage.getHeaders().getId());
-        Message<?> originalMessage = errorMessage.getOriginalMessage();
-
-        if (originalMessage != null) {
-            Object cdcMessageKey = originalMessage.getHeaders().get(KafkaHeaders.RECEIVED_KEY);
-            if (cdcMessageKey != null) {
-                try {
-                    String keyString = messageToString(cdcMessageKey);
-
-                    if (keyString.trim().startsWith("{")) {
-                        messageId = new JSONObject(keyString).get("id").toString();
-                    } else {
-                        messageId = keyString;
-                    }
-                } catch (Exception e) {
-                    log.warn("Unable to parse Kafka RECEIVED_KEY to JSON object for id extraction", e);
-                }
-            }
-        }
-        return messageId;
-    }
-
-    private EntityType getEntityType(ErrorMessage errorMessage) {
-        Message<?> originalMessage = errorMessage.getOriginalMessage();
-
-        if (originalMessage != null) {
-            Object topicHeader = originalMessage.getHeaders().get(KafkaHeaders.RECEIVED_TOPIC);
-            String receivedTopic = getReceivedTopic(topicHeader);
-
-            if (receivedTopic != null) {
-                if (receivedTopic.equals(paymentPositionTopic)) {
-                    return EntityType.PAYMENT_POSITION;
-                }
-                if (receivedTopic.equals(paymentOptionTopic)) {
-                    return EntityType.PAYMENT_OPTION;
-                }
-                if (receivedTopic.equals(transferTopic)) {
-                    return EntityType.TRANSFER;
-                }
-            }
-        }
-
-        return EntityType.UNKNOWN;
-    }
-
-    @Nullable
-    private static String getReceivedTopic(Object topicHeader) {
-        String receivedTopic = null;
-
-        if (topicHeader instanceof List<?> list && !list.isEmpty()) {
-            receivedTopic = String.valueOf(list.get(0));
-        } else if (topicHeader != null) {
-            receivedTopic = String.valueOf(topicHeader);
-        }
-        return receivedTopic;
-    }
-
-    public static String messageToString(Object message) {
-        if (message == null) {
-            return "message is null";
-        }
-
-        if (message instanceof byte[] byteArray) {
-            return new String(byteArray, StandardCharsets.UTF_8);
-        }
-
-        if (message instanceof List<?> list && !list.isEmpty()) {
-            Object firstElement = list.get(0);
-            if (firstElement instanceof byte[] byteArray) {
-                return new String(byteArray, StandardCharsets.UTF_8);
-            }
-        }
-
-        return String.valueOf(message);
+        return ENTITY_ID_UNKNOWN;
     }
 }

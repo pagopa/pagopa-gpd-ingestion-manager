@@ -21,7 +21,7 @@ public class DeadLetterRecord {
     public static final String TABLE_KEY_LOCK_EXPIRATION = "lockExpiration";
 
     private DeadLetterRetryStatus retryStatus;
-    private String messageId;
+    private String rowKey;
     private String entityId;
     private String cause;
     private String errorCode;
@@ -31,7 +31,7 @@ public class DeadLetterRecord {
     private Long lockExpiration;
 
     public TableEntity toTableEntity() {
-        TableEntity entity = new TableEntity(retryStatus.name(), messageId);
+        TableEntity entity = new TableEntity(retryStatus.name(), rowKey);
         entity.getProperties().put(TABLE_KEY_ENTITY_ID, entityId);
         entity.getProperties().put(TABLE_KEY_CAUSE, cause);
         entity.getProperties().put(TABLE_KEY_ERROR_CODE, errorCode);
@@ -46,7 +46,7 @@ public class DeadLetterRecord {
         Map<String, Object> props = entity.getProperties();
         return DeadLetterRecord.builder()
                 .retryStatus(DeadLetterRetryStatus.valueOf(entity.getPartitionKey()))
-                .messageId(entity.getRowKey())
+                .rowKey(entity.getRowKey())
                 .entityId((String) props.get(TABLE_KEY_ENTITY_ID))
                 .cause((String) props.get(TABLE_KEY_CAUSE))
                 .errorCode((String) props.get(TABLE_KEY_ERROR_CODE))

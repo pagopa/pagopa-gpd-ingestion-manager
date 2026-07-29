@@ -1,7 +1,7 @@
 package it.gov.pagopa.gpd.ingestion.manager.service;
 
-import org.springframework.messaging.support.ErrorMessage;
+import it.gov.pagopa.gpd.ingestion.manager.model.enumeration.EntityType;
 
 public interface DeadLetterService {
-    void sendToDeadLetter(ErrorMessage message);
+    void sendToDeadLetter(String failedMessage, EntityType entityType, Exception exception);
 }
