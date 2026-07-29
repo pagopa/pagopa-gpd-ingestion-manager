@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import static it.gov.pagopa.gpd.ingestion.manager.util.MDCUtility.*;
+import static it.gov.pagopa.gpd.ingestion.manager.util.Utility.getDateNow;
 
 @Service
 @Slf4j
@@ -33,11 +34,11 @@ public class IngestionServiceImpl implements IngestionService {
 
     private static final String PDV_TOKENIZER_EXCEPTION_MESSAGE =
             "PaymentOption ingestion error PDVTokenizerException at {}";
-    private static final String PDV_CF_TOKENIZER = "PDV_CF_TOKENIZER";
+    public static final String PDV_CF_TOKENIZER = "PDV_CF_TOKENIZER";
 
     private static final String ANONYMIZER_EXCEPTION_MESSAGE =
             "Transfer ingestion error AnonymizerException at {}";
-    private static final String ANONYMIZE_PLACEHOLDER = "Anonymized";
+    public static final String ANONYMIZE_PLACEHOLDER = "Anonymized";
 
     private static final Pattern PATTERN_CF = Pattern.compile(
             "^[A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]$"
@@ -149,6 +150,9 @@ public class IngestionServiceImpl implements IngestionService {
                     id);
             setMDCId(String.valueOf(id));
 
+            paymentOption.setBefore(anonymizeDescription(valuesBefore));
+            paymentOption.setAfter(anonymizeDescription(valuesAfter));
+
             paymentOption.setBefore(tokenizeFiscalCode(valuesBefore));
             paymentOption.setAfter(tokenizeFiscalCode(valuesAfter));
 
@@ -187,6 +191,13 @@ public class IngestionServiceImpl implements IngestionService {
             }
         }
 
+        return values;
+    }
+
+    private PaymentOption anonymizeDescription(PaymentOption values) throws AnonymizerException, JsonProcessingException {
+        if (values != null) {
+            values.setDescription(anonymizeText(values.getDescription()));
+        }
         return values;
     }
 
@@ -239,21 +250,26 @@ public class IngestionServiceImpl implements IngestionService {
     }
 
     private Transfer anonymizeRemittanceInformation(Transfer values) throws AnonymizerException, JsonProcessingException {
-        if (values != null && values.getRemittanceInformation() != null && !values.getRemittanceInformation().isBlank()) {
+        if (values != null) {
+            values.setRemittanceInformation(anonymizeText(values.getRemittanceInformation()));
+        }
+        return values;
+    }
+
+    private String anonymizeText(String text) throws AnonymizerException, JsonProcessingException {
+        if (text != null && !text.isBlank()) {
             try {
-                values.setRemittanceInformation(
-                        anonymizerService.anonymizeWithRetry(
-                                values.getRemittanceInformation()));
+                return anonymizerService.anonymizeWithRetry(text);
             } catch (Exception e) {
                 if (Boolean.FALSE.equals(placeholderOnAnonymizerKO)) {
                     throw e;
                 } else {
                     log.error(ANONYMIZER_EXCEPTION_MESSAGE, getDateNow(), e);
-                    values.setRemittanceInformation(ANONYMIZE_PLACEHOLDER);
+                    return ANONYMIZE_PLACEHOLDER;
                 }
             }
         }
-        return values;
+        return text;
     }
 
     private <T> DataCaptureMessage<T> mapMessageToObject(String message, TypeReference<DataCaptureMessage<T>> typeReference) throws JsonProcessingException {
@@ -264,10 +280,6 @@ public class IngestionServiceImpl implements IngestionService {
         }
 
         return this.objectMapper.readValue(message, typeReference);
-    }
-
-    private static LocalDateTime getDateNow() {
-        return LocalDateTime.now(Clock.systemDefaultZone());
     }
 
     private static void logIngestionInit(String entityName) {
@@ -281,6 +293,8 @@ public class IngestionServiceImpl implements IngestionService {
      * Custom exceptions are
      * {@link PDVTokenizerException}
      * {@link PDVTokenizerUnexpectedException}
+     * {@link AnonymizerException}
+     * {@link AnonymizerUnexpectedException}
      */
     private static void handleException(Exception e, String entityName) {
         Throwable cause = e.getCause() != null ? e.getCause() : e;
