@@ -9,23 +9,19 @@ import it.gov.pagopa.gpd.ingestion.manager.service.DeadLetterService;
 import it.gov.pagopa.gpd.ingestion.manager.service.StorageTableService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.support.KafkaHeaders;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.UUID;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class DeadLetterServiceImpl implements DeadLetterService {
+    public static final String ENTITY_ID_UNKNOWN = "unknown";
     private final String paymentPositionTopic;
     private final String paymentOptionTopic;
     private final String transferTopic;
@@ -62,12 +58,14 @@ public class DeadLetterServiceImpl implements DeadLetterService {
             jsonMessage = new JSONObject(failedMessage);
         } catch(Exception ignored){
             log.warn("Failed to parse message as JSON, skipping dead letter creation. Message: {}", failedMessage);
-            return;
+            jsonMessage = new JSONObject();
         }
+
+        String entityId = getEntityId(jsonMessage);
         DeadLetterRecord deadLetterRecord = DeadLetterRecord.builder()
-                .retryStatus(DeadLetterRetryStatus.TO_RETRY)
-                .messageId(errorMessageId.toString())
-                .entityId(jsonMessage.getString("id"))
+                .retryStatus(ENTITY_ID_UNKNOWN.equals(entityId) ? DeadLetterRetryStatus.RETRY_MALFORMED : DeadLetterRetryStatus.TO_RETRY)
+                .rowKey(errorMessageId.toString())
+                .entityId(entityId)
                 .cause(cause)
                 .errorCode(errorCode)
                 .originalMessage(failedMessage)
@@ -77,5 +75,22 @@ public class DeadLetterServiceImpl implements DeadLetterService {
                 .build();
 
         storageTableService.saveDeadLetter(deadLetterRecord);
+    }
+
+    private static String getEntityId(JSONObject jsonMessage) {
+        if(jsonMessage != null){
+            String before = jsonMessage.optString("before", null);
+            if(before != null){
+                JSONObject beforeJson = new JSONObject(before);
+                return beforeJson.optString("id", jsonMessage.optString("id", ENTITY_ID_UNKNOWN));
+            }
+
+            String after = jsonMessage.optString("after", null);
+            if(after != null){
+                JSONObject afterJson = new JSONObject(after);
+                return afterJson.optString("id", jsonMessage.optString("id", ENTITY_ID_UNKNOWN));
+            }
+        }
+        return ENTITY_ID_UNKNOWN;
     }
 }
