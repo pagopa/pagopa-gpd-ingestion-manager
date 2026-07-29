@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @Builder
@@ -16,9 +18,9 @@ public class PaymentPosition {
     private String iupd;
 
     @JsonProperty("max_due_date")
-    private Long maxDueDate;
+    private LocalDateTime maxDueDate;
     @JsonProperty("min_due_date")
-    private Long minDueDate;
+    private LocalDateTime minDueDate;
 
     @JsonProperty("organization_fiscal_code")
     private String organizationFiscalCode;
@@ -26,17 +28,17 @@ public class PaymentPosition {
     private String companyName;
 
     @JsonProperty("publish_date")
-    private Long publishDate;
+    private LocalDateTime publishDate;
 
     private String status;
 
     @JsonProperty("payment_date")
-    private Long paymentDate;
+    private LocalDateTime paymentDate;
 
     @JsonProperty("last_updated_date")
-    private Long lastUpdatedDate;
+    private LocalDateTime lastUpdatedDate;
     @JsonProperty("inserted_date")
-    private Long insertedDate;
+    private LocalDateTime insertedDate;
 
     private boolean pull;
     @JsonProperty("pay_stand_in")

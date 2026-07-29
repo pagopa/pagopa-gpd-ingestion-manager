@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @Builder
@@ -20,7 +22,7 @@ public class PaymentOption {
     private String description;
 
     @JsonProperty("due_date")
-    private Long dueDate;
+    private LocalDateTime dueDate;
 
     private long fee;
 
@@ -28,7 +30,7 @@ public class PaymentOption {
     private String flowReportingId;
 
     @JsonProperty("inserted_date")
-    private Long insertedDate;
+    private LocalDateTime insertedDate;
 
     @JsonProperty("is_partial_payment")
     private boolean isPartialPayment;
@@ -37,7 +39,7 @@ public class PaymentOption {
     private String nav;
 
     @JsonProperty("last_update_date")
-    private Long lastUpdateDate;
+    private LocalDateTime lastUpdateDate;
 
     @JsonProperty("organization_fiscal_code")
     private String organizationFiscalCode;
@@ -45,13 +47,13 @@ public class PaymentOption {
     private String status;
 
     @JsonProperty("retention_date")
-    private Long retentionDate;
+    private LocalDateTime retentionDate;
 
     @JsonProperty("notification_fee")
     private long notificationFee;
 
     @JsonProperty("last_updated_date_notification_fee")
-    private Long lastUpdatedDateNotificationFee;
+    private LocalDateTime lastUpdatedDateNotificationFee;
 
     // Debtor info
     @JsonProperty("fiscal_code")
@@ -71,7 +73,7 @@ public class PaymentOption {
     private boolean switchToExpired;
 
     @JsonProperty("validity_date")
-    private Long validityDate;
+    private LocalDateTime validityDate;
 
     @JsonProperty("payment_plan_id")
     private String paymentPlanId;

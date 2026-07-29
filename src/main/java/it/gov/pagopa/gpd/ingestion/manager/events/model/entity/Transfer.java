@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -25,12 +27,12 @@ public class Transfer {
     private String transferId;
 
     @JsonProperty("inserted_date")
-    private Long insertedDate;
+    private LocalDateTime insertedDate;
 
     private String iuv;
 
     @JsonProperty("last_update_date")
-    private Long lastUpdateDate;
+    private LocalDateTime lastUpdateDate;
 
     @JsonProperty("organization_fiscal_code")
     private String organizationFiscalCode;
