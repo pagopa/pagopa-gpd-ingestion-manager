@@ -40,7 +40,7 @@ class StorageTableServiceImplTest {
     @BeforeEach
     void setUp() {
         deadLetterRecord = DeadLetterRecord.builder()
-                .messageId("msg-abc-123")
+                .rowKey("msg-abc-123")
                 .retryStatus(DeadLetterRetryStatus.TO_RETRY)
                 .entityType(EntityType.PAYMENT_POSITION)
                 .entityId("entityId")
@@ -70,23 +70,23 @@ class StorageTableServiceImplTest {
 
         TableEntity capturedEntity = entityCaptor.getValue();
         assertEquals(DeadLetterRetryStatus.TO_RETRY.name(), capturedEntity.getPartitionKey());
-        assertEquals(deadLetterRecord.getMessageId(), capturedEntity.getRowKey());
+        assertEquals(deadLetterRecord.getRowKey(), capturedEntity.getRowKey());
     }
 
     @Test
     void getDeadLetter_OK() {
-        when(tableClient.getEntity(DeadLetterRetryStatus.TO_RETRY.name(), deadLetterRecord.getMessageId()))
+        when(tableClient.getEntity(DeadLetterRetryStatus.TO_RETRY.name(), deadLetterRecord.getRowKey()))
                 .thenReturn(tableEntity);
 
-        TableEntity resultEntity = sut.getDeadLetter(DeadLetterRetryStatus.TO_RETRY, deadLetterRecord.getMessageId());
+        TableEntity resultEntity = sut.getDeadLetter(DeadLetterRetryStatus.TO_RETRY, deadLetterRecord.getRowKey());
         DeadLetterRecord result = DeadLetterRecord.fromTableEntity(resultEntity);
 
         assertNotNull(result);
-        assertEquals(deadLetterRecord.getMessageId(), result.getMessageId());
+        assertEquals(deadLetterRecord.getRowKey(), result.getRowKey());
         assertEquals(DeadLetterRetryStatus.TO_RETRY, result.getRetryStatus());
         assertEquals(EntityType.PAYMENT_POSITION, result.getEntityType());
         assertEquals("Connection Timeout", result.getCause());
-        verify(tableClient, times(1)).getEntity(DeadLetterRetryStatus.TO_RETRY.name(), deadLetterRecord.getMessageId());
+        verify(tableClient, times(1)).getEntity(DeadLetterRetryStatus.TO_RETRY.name(), deadLetterRecord.getRowKey());
     }
 
     @Test
@@ -100,7 +100,7 @@ class StorageTableServiceImplTest {
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(deadLetterRecord.getMessageId(), result.get(0).getMessageId());
+        assertEquals(deadLetterRecord.getRowKey(), result.get(0).getRowKey());
 
         ArgumentCaptor<ListEntitiesOptions> optionsCaptor = ArgumentCaptor.forClass(ListEntitiesOptions.class);
         verify(tableClient, times(1)).listEntities(optionsCaptor.capture(), any(), any());
@@ -129,7 +129,7 @@ class StorageTableServiceImplTest {
         verify(tableClient, times(1)).updateEntity(entityCaptor.capture(), eq(TableEntityUpdateMode.REPLACE));
 
         TableEntity capturedEntity = entityCaptor.getValue();
-        assertEquals(deadLetterRecord.getMessageId(), capturedEntity.getRowKey());
+        assertEquals(deadLetterRecord.getRowKey(), capturedEntity.getRowKey());
     }
 
     @Test
@@ -138,7 +138,7 @@ class StorageTableServiceImplTest {
 
         assertEquals(DeadLetterRetryStatus.RETRY_MALFORMED, deadLetterRecord.getRetryStatus());
         verify(tableClient, times(1)).upsertEntity(any());
-        verify(tableClient, times(1)).deleteEntity(DeadLetterRetryStatus.TO_RETRY.name(), deadLetterRecord.getMessageId());
+        verify(tableClient, times(1)).deleteEntity(DeadLetterRetryStatus.TO_RETRY.name(), deadLetterRecord.getRowKey());
     }
 
     @Test
@@ -150,12 +150,12 @@ class StorageTableServiceImplTest {
 
     @Test
     void acquireLockOptimistic_OK() {
-        when(tableClient.getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getMessageId()))
+        when(tableClient.getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getRowKey()))
                 .thenReturn(tableEntity);
         boolean acquired = sut.acquireLockOptimistic(deadLetterRecord);
 
         assertTrue(acquired);
-        verify(tableClient, times(1)).getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getMessageId());
+        verify(tableClient, times(1)).getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getRowKey());
         verify(tableClient, times(1)).updateEntityWithResponse(any(), any(), anyBoolean(), any(), any());
     }
 
@@ -163,20 +163,20 @@ class StorageTableServiceImplTest {
     void acquireLockOptimistic_KO_alreadyLocked() {
         Long lockExpiration = System.currentTimeMillis() + (5000*50000);
         tableEntity.addProperty(TABLE_KEY_LOCK_EXPIRATION, lockExpiration);
-        when(tableClient.getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getMessageId()))
+        when(tableClient.getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getRowKey()))
                 .thenReturn(tableEntity);
 
         deadLetterRecord.setLockExpiration(lockExpiration);
         boolean acquired = sut.acquireLockOptimistic(deadLetterRecord);
 
         assertFalse(acquired);
-        verify(tableClient, times(1)).getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getMessageId());
+        verify(tableClient, times(1)).getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getRowKey());
         verify(tableClient, never()).updateEntity(any());
     }
 
     @Test
     void acquireLockOptimistic_KO_error412() {
-        when(tableClient.getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getMessageId()))
+        when(tableClient.getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getRowKey()))
                 .thenReturn(tableEntity);
 
         HttpResponse mockHttpResponse = mock(HttpResponse.class);
@@ -185,13 +185,13 @@ class StorageTableServiceImplTest {
         boolean acquired = sut.acquireLockOptimistic(deadLetterRecord);
 
         assertFalse(acquired);
-        verify(tableClient, times(1)).getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getMessageId());
+        verify(tableClient, times(1)).getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getRowKey());
         verify(tableClient, times(1)).updateEntityWithResponse(any(), any(), anyBoolean(), any(), any());
     }
 
     @Test
     void acquireLockOptimistic_KO_error404() {
-        when(tableClient.getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getMessageId()))
+        when(tableClient.getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getRowKey()))
                 .thenReturn(tableEntity);
 
         HttpResponse mockHttpResponse = mock(HttpResponse.class);
@@ -200,13 +200,13 @@ class StorageTableServiceImplTest {
         boolean acquired = sut.acquireLockOptimistic(deadLetterRecord);
 
         assertFalse(acquired);
-        verify(tableClient, times(1)).getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getMessageId());
+        verify(tableClient, times(1)).getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getRowKey());
         verify(tableClient, times(1)).updateEntityWithResponse(any(), any(), anyBoolean(), any(), any());
     }
 
     @Test
     void acquireLockOptimistic_KO_genericError() {
-        when(tableClient.getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getMessageId()))
+        when(tableClient.getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getRowKey()))
                 .thenReturn(tableEntity);
 
         HttpResponse mockHttpResponse = mock(HttpResponse.class);
@@ -214,7 +214,7 @@ class StorageTableServiceImplTest {
         doThrow(new TableServiceException("error", mockHttpResponse)).when(tableClient).updateEntityWithResponse(any(), any(), anyBoolean(), any(), any());
         assertThrows(TableServiceException.class, () -> sut.acquireLockOptimistic(deadLetterRecord));
 
-        verify(tableClient, times(1)).getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getMessageId());
+        verify(tableClient, times(1)).getEntity(deadLetterRecord.getRetryStatus().name(), deadLetterRecord.getRowKey());
         verify(tableClient, times(1)).updateEntityWithResponse(any(), any(), anyBoolean(), any(), any());
     }
 }

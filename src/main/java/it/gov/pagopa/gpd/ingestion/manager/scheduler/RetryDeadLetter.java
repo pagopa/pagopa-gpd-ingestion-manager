@@ -12,20 +12,16 @@ import it.gov.pagopa.gpd.ingestion.manager.service.impl.StorageTableServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.support.GenericMessage;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Component
 @Slf4j
 public class RetryDeadLetter {
 
-    public static final String KAFKA_HEADER_ID = "id";
     private final boolean isRetryEnabled;
     private final long retryBackoffInterval;
 
@@ -87,7 +83,7 @@ public class RetryDeadLetter {
     }
 
     private void ingestDeadLetter(DeadLetterRecord dlRecord, EntityType entityType) {
-        Message<String> originalMessage = getKafkaMessage(dlRecord);
+        String originalMessage = dlRecord.getOriginalMessage();
 
         if (entityType == null || entityType.equals(EntityType.UNKNOWN)) {
             throw new AppException(AppError.DEAD_LETTER_NOT_PROCESSABLE);
@@ -101,11 +97,6 @@ public class RetryDeadLetter {
         if (entityType.equals(EntityType.TRANSFER)) {
             ingestionService.ingestTransfer(originalMessage);
         }
-    }
-
-    private static Message<String> getKafkaMessage(DeadLetterRecord dlRecord) {
-        Map<String, Object> headers = Map.of(KAFKA_HEADER_ID, dlRecord.getMessageId());
-        return new GenericMessage<>(dlRecord.getOriginalMessage(), headers);
     }
 
     private void handleRetryException(DeadLetterRecord dlRecord, Exception e) {

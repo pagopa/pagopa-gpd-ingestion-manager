@@ -82,7 +82,7 @@ public class StorageTableServiceImpl implements StorageTableService {
             long timestampNow = System.currentTimeMillis();
 
             // Retrieve the table entity and keep it untrasformed to use the same ETag for concurrency
-            TableEntity tableEntity = this.getDeadLetter(dlRecord.getRetryStatus(), dlRecord.getMessageId());
+            TableEntity tableEntity = this.getDeadLetter(dlRecord.getRetryStatus(), dlRecord.getRowKey());
 
             DeadLetterRecord tableRecord = DeadLetterRecord.fromTableEntity(tableEntity);
             if (tableRecord.getLockExpiration() != null && tableRecord.getLockExpiration() > timestampNow && dlRecord.getNumOfRetries() < retryMax) {

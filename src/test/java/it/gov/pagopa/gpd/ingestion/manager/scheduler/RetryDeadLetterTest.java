@@ -43,7 +43,7 @@ class RetryDeadLetterTest {
     @BeforeEach
     void setUp() throws JsonProcessingException {
         baseRecord = DeadLetterRecord.builder()
-                .messageId("msg-123")
+                .rowKey("msg-123")
                 .retryStatus(DeadLetterRetryStatus.TO_RETRY)
                 .originalMessage(this.objectMapper.writeValueAsString(getMessage("{\"key\":\"value\"}")))
                 .numOfRetries(0)
@@ -117,7 +117,7 @@ class RetryDeadLetterTest {
 
         retryDeadLetter.retryDeadLetter();
 
-        verify(ingestionService, times(1)).ingestPaymentPosition(any(Message.class));
+        verify(ingestionService, times(1)).ingestPaymentPosition(anyString());
         verify(storageTableService, times(1)).deleteDeadLetter(baseRecord);
         verify(storageTableService, never()).updateDeadLetter(any());
     }
@@ -148,7 +148,7 @@ class RetryDeadLetterTest {
 
         retryDeadLetter.retryDeadLetter();
 
-        verify(ingestionService, times(1)).ingestTransfer(any(Message.class));
+        verify(ingestionService, times(1)).ingestTransfer(anyString());
         verify(storageTableService, times(1)).deleteDeadLetter(baseRecord);
     }
 
