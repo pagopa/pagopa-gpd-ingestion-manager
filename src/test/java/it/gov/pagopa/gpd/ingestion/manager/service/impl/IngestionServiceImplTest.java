@@ -151,7 +151,6 @@ class IngestionServiceImplTest {
                         paymentOptionProducer,
                         transferProducer, false);
 
-        // test execution
         assertDoesNotThrow(() -> sut.ingestPaymentPosition(objectMapper.writeValueAsString(pp)));
 
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
@@ -174,7 +173,6 @@ class IngestionServiceImplTest {
                         paymentOptionProducer,
                         transferProducer, false);
 
-        // test execution
         assertDoesNotThrow(() -> sut.ingestPaymentPosition(objectMapper.writeValueAsString(pp)));
 
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
@@ -202,7 +200,8 @@ class IngestionServiceImplTest {
 
         DataCaptureMessage<PaymentPosition> pp = generateValidPaymentPosition(FISCAL_CODE, false);
 
-        assertThrows(AppException.class, () -> sut.ingestPaymentPosition(objectMapper.writeValueAsString(pp)));
+        String ppString = objectMapper.writeValueAsString(pp);
+        assertThrows(AppException.class, () -> sut.ingestPaymentPosition(ppString));
 
         verify(paymentPositionProducer, never()).sendIngestedPaymentPosition(any());
     }
@@ -224,7 +223,6 @@ class IngestionServiceImplTest {
                         transferProducer,
                         true);
 
-        // test execution
         assertDoesNotThrow(() -> sut.ingestPaymentPosition(objectMapper.writeValueAsString(pp)));
 
         verify(paymentPositionProducer).sendIngestedPaymentPosition(paymentPositionCaptor.capture());
@@ -243,7 +241,6 @@ class IngestionServiceImplTest {
                         paymentOptionProducer,
                         transferProducer, false);
 
-        // test execution
         assertDoesNotThrow(() -> sut.ingestPaymentPosition(""));
 
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
@@ -301,7 +298,6 @@ class IngestionServiceImplTest {
                         transferProducer,
                         false);
 
-        // test execution
         assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
 
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
@@ -327,7 +323,6 @@ class IngestionServiceImplTest {
                         transferProducer,
                         false);
 
-        // test execution
         assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
 
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
@@ -353,7 +348,6 @@ class IngestionServiceImplTest {
                         paymentOptionProducer,
                         transferProducer, false);
 
-        // test execution
         assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
 
         verify(pdvTokenizerServiceMock, times(1)).generateTokenForFiscalCodeWithRetry(FISCAL_CODE.toLowerCase());
@@ -377,7 +371,6 @@ class IngestionServiceImplTest {
                         paymentOptionProducer,
                         transferProducer, false);
 
-        // test execution
         assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
 
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
@@ -401,7 +394,6 @@ class IngestionServiceImplTest {
                         paymentOptionProducer,
                         transferProducer, false);
 
-        // test execution
         assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
 
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
@@ -424,7 +416,6 @@ class IngestionServiceImplTest {
                         paymentOptionProducer,
                         transferProducer, false);
 
-        // test execution
         assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
 
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
@@ -451,8 +442,9 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         DataCaptureMessage<PaymentOption> po = generateValidPaymentOption(FISCAL_CODE, false);
+        String poString = objectMapper.writeValueAsString(po);
 
-        assertThrows(AppException.class, () -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
+        assertThrows(AppException.class, () -> sut.ingestPaymentOption(poString));
 
         verify(paymentOptionProducer, never()).sendIngestedPaymentOption(any());
     }
@@ -474,7 +466,6 @@ class IngestionServiceImplTest {
                         transferProducer,
                         true);
 
-        // test execution
         assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
 
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
@@ -494,7 +485,6 @@ class IngestionServiceImplTest {
                         paymentOptionProducer,
                         transferProducer, false);
 
-        // test execution
         assertDoesNotThrow(() -> sut.ingestPaymentOption(""));
 
         verify(paymentOptionProducer, never()).sendIngestedPaymentOption(any());
@@ -554,7 +544,6 @@ class IngestionServiceImplTest {
                         paymentOptionProducer,
                         transferProducer, false);
 
-        // test execution
         assertDoesNotThrow(() -> sut.ingestTransfer(objectMapper.writeValueAsString(tr)));
 
         verify(transferProducer).sendIngestedTransfer(transferCaptor.capture());
@@ -573,7 +562,6 @@ class IngestionServiceImplTest {
                         paymentOptionProducer,
                         transferProducer, false);
 
-        // test execution
         assertDoesNotThrow(() -> sut.ingestTransfer(""));
 
         verify(transferProducer, never()).sendIngestedTransfer(any());
@@ -602,10 +590,5 @@ class IngestionServiceImplTest {
                 .tsNs(0L)
                 .tsUs(0L)
                 .build();
-    }
-
-    private Message<String> getMessage(String entity) {
-        Map<String, Object> headers = Map.of("id", "id");
-        return new GenericMessage<>(entity, headers);
     }
 }

@@ -1,7 +1,5 @@
 package it.gov.pagopa.gpd.ingestion.manager.service;
 
-import org.springframework.messaging.Message;
-
 public interface IngestionService {
 
     /**
