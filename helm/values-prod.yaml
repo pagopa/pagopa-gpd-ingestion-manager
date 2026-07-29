@@ -108,7 +108,7 @@ microservice-chart:
     RETRY_DEAD_LETTER_CRON: "0 */10 * * * *"
     RETRY_DEAD_LETTER_RETRY_MAX: "10"
     RETRY_DEAD_LETTER_RETRY_BACKOFF_INTERVAL: "180" # in seconds, 3 minutes
-    KAFKA_CONSUMER_CONCURRENCY: "10"
+    KAFKA_CONSUMER_CONCURRENCY: "8"
     KAFKA_MAX_POLL_INTERVAL_MS: "900000"
     KAFKA_MAX_POLL_RECORDS: "500"
   envFieldRef:
@@ -122,7 +122,7 @@ microservice-chart:
     PAYMENT_OPTION_OUTPUT_EVENTHUB_CONN_STRING: "payment-option-topic-output-conn-string"
     TRANSFER_INPUT_EVENTHUB_CONN_STRING: "transfer-topic-input-conn-string"
     TRANSFER_OUTPUT_EVENTHUB_CONN_STRING: "transfer-topic-output-conn-string"
-    PDV_TOKENIZER_SUBSCRIPTION_KEY: "tokenizer-api-key"
+    PDV_TOKENIZER_SUBSCRIPTION_KEY: "tokenizer-api-key-gpd"
     ANONYMIZER_SUBSCRIPTION_KEY: "anonymizer-api-key"
     AZURE_STORAGE_TABLE_CONN_STRING: "gpd-ingestion-sa-conn-string"
   keyvault:
