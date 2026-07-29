@@ -200,9 +200,10 @@ Then('the operations have the fiscal code tokenized', function () {
   assert.notStrictEqual(this.paymentOptionUpdateOp.after.fiscal_code, this.paymentOptionFiscalCode);
 });
 
-Then('the payment option update operation has the description updated', function () {
+Then('the payment option update operation has the description updated and anonymized', function () {
+  assert.notStrictEqual(this.paymentOptionUpdateOp.after.description, undefined);
   assert.notStrictEqual(this.paymentOptionUpdateOp.after.description, this.paymentOptionDescription);
-  assert.strictEqual(this.paymentOptionUpdateOp.after.description, this.paymentOptionUpdatedDescription);
+  assert.notStrictEqual(this.paymentOptionUpdateOp.after.description, this.paymentOptionUpdatedDescription);
 });
 
 ////////////////////
