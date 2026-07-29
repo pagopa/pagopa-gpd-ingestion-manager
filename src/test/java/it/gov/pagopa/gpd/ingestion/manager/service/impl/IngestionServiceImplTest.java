@@ -79,7 +79,7 @@ class IngestionServiceImplTest {
                         false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentPosition(getMessage(objectMapper.writeValueAsString(pp))));
+        assertDoesNotThrow(() -> sut.ingestPaymentPosition(objectMapper.writeValueAsString(pp)));
 
         verify(paymentPositionProducer).sendIngestedPaymentPosition(paymentPositionCaptor.capture());
         DataCaptureMessage<PaymentPosition> captured = paymentPositionCaptor.getValue();
@@ -105,7 +105,7 @@ class IngestionServiceImplTest {
                         false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentPosition(getMessage(objectMapper.writeValueAsString(pp))));
+        assertDoesNotThrow(() -> sut.ingestPaymentPosition(objectMapper.writeValueAsString(pp)));
 
         verify(paymentPositionProducer).sendIngestedPaymentPosition(paymentPositionCaptor.capture());
         DataCaptureMessage<PaymentPosition> captured = paymentPositionCaptor.getValue();
@@ -128,7 +128,7 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentPosition(getMessage(objectMapper.writeValueAsString(pp))));
+        assertDoesNotThrow(() -> sut.ingestPaymentPosition(objectMapper.writeValueAsString(pp)));
 
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
         verify(paymentPositionProducer).sendIngestedPaymentPosition(paymentPositionCaptor.capture());
@@ -152,7 +152,7 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentPosition(getMessage(objectMapper.writeValueAsString(pp))));
+        assertDoesNotThrow(() -> sut.ingestPaymentPosition(objectMapper.writeValueAsString(pp)));
 
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
         verify(paymentPositionProducer).sendIngestedPaymentPosition(paymentPositionCaptor.capture());
@@ -175,7 +175,7 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentPosition(getMessage(objectMapper.writeValueAsString(pp))));
+        assertDoesNotThrow(() -> sut.ingestPaymentPosition(objectMapper.writeValueAsString(pp)));
 
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
         verify(paymentPositionProducer).sendIngestedPaymentPosition(paymentPositionCaptor.capture());
@@ -202,8 +202,7 @@ class IngestionServiceImplTest {
 
         DataCaptureMessage<PaymentPosition> pp = generateValidPaymentPosition(FISCAL_CODE, false);
 
-        Message<String> message = getMessage(objectMapper.writeValueAsString(pp));
-        assertThrows(AppException.class, () -> sut.ingestPaymentPosition(message));
+        assertThrows(AppException.class, () -> sut.ingestPaymentPosition(objectMapper.writeValueAsString(pp)));
 
         verify(paymentPositionProducer, never()).sendIngestedPaymentPosition(any());
     }
@@ -226,7 +225,7 @@ class IngestionServiceImplTest {
                         true);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentPosition(getMessage(objectMapper.writeValueAsString(pp))));
+        assertDoesNotThrow(() -> sut.ingestPaymentPosition(objectMapper.writeValueAsString(pp)));
 
         verify(paymentPositionProducer).sendIngestedPaymentPosition(paymentPositionCaptor.capture());
         DataCaptureMessage<PaymentPosition> captured = paymentPositionCaptor.getValue();
@@ -245,7 +244,7 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentPosition(getMessage("")));
+        assertDoesNotThrow(() -> sut.ingestPaymentPosition(""));
 
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
         verify(paymentPositionProducer, never()).sendIngestedPaymentPosition(any());
@@ -303,7 +302,7 @@ class IngestionServiceImplTest {
                         false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentOption(getMessage(objectMapper.writeValueAsString(po))));
+        assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
 
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
         DataCaptureMessage<PaymentOption> captured = paymentOptionCaptor.getValue();
@@ -329,7 +328,7 @@ class IngestionServiceImplTest {
                         false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentOption(getMessage(objectMapper.writeValueAsString(po))));
+        assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
 
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
         DataCaptureMessage<PaymentOption> captured = paymentOptionCaptor.getValue();
@@ -355,7 +354,7 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentOption(getMessage(objectMapper.writeValueAsString(po))));
+        assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
 
         verify(pdvTokenizerServiceMock, times(1)).generateTokenForFiscalCodeWithRetry(FISCAL_CODE.toLowerCase());
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
@@ -379,7 +378,7 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentOption(getMessage(objectMapper.writeValueAsString(po))));
+        assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
 
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
@@ -403,7 +402,7 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentOption(getMessage(objectMapper.writeValueAsString(po))));
+        assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
 
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
@@ -426,7 +425,7 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentOption(getMessage(objectMapper.writeValueAsString(po))));
+        assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
 
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
@@ -453,8 +452,7 @@ class IngestionServiceImplTest {
 
         DataCaptureMessage<PaymentOption> po = generateValidPaymentOption(FISCAL_CODE, false);
 
-        Message<String> message = getMessage(objectMapper.writeValueAsString(po));
-        assertThrows(AppException.class, () -> sut.ingestPaymentOption(message));
+        assertThrows(AppException.class, () -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
 
         verify(paymentOptionProducer, never()).sendIngestedPaymentOption(any());
     }
@@ -477,7 +475,7 @@ class IngestionServiceImplTest {
                         true);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentOption(getMessage(objectMapper.writeValueAsString(po))));
+        assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
 
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
         DataCaptureMessage<PaymentOption> captured = paymentOptionCaptor.getValue();
@@ -497,7 +495,7 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentOption(getMessage("")));
+        assertDoesNotThrow(() -> sut.ingestPaymentOption(""));
 
         verify(paymentOptionProducer, never()).sendIngestedPaymentOption(any());
     }
@@ -557,7 +555,7 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestTransfer(getMessage(objectMapper.writeValueAsString(tr))));
+        assertDoesNotThrow(() -> sut.ingestTransfer(objectMapper.writeValueAsString(tr)));
 
         verify(transferProducer).sendIngestedTransfer(transferCaptor.capture());
         DataCaptureMessage<Transfer> captured = transferCaptor.getValue();
@@ -576,7 +574,7 @@ class IngestionServiceImplTest {
                         transferProducer, false);
 
         // test execution
-        assertDoesNotThrow(() -> sut.ingestTransfer(getMessage("")));
+        assertDoesNotThrow(() -> sut.ingestTransfer(""));
 
         verify(transferProducer, never()).sendIngestedTransfer(any());
     }
