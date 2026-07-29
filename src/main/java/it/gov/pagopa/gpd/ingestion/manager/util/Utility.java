@@ -4,6 +4,9 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 
 public class Utility {
+
+    Utility(){}
+
     public static LocalDateTime getDateNow() {
         return LocalDateTime.now(Clock.systemDefaultZone());
     }
