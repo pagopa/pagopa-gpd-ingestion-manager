@@ -81,7 +81,6 @@ class IngestionServiceImplTest {
     @BeforeEach
     void setUp() {
         objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 
     // Test Ingestion Payment Position
