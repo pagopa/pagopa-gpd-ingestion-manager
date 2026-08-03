@@ -31,8 +31,8 @@ public class Transfer {
 
     private String iuv;
 
-    @JsonProperty("last_update_date")
-    private LocalDateTime lastUpdateDate;
+    @JsonProperty("last_updated_date")
+    private LocalDateTime lastUpdatedDate;
 
     @JsonProperty("organization_fiscal_code")
     private String organizationFiscalCode;

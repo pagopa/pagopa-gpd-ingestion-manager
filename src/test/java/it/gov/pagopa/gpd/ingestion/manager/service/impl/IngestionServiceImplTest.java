@@ -2,7 +2,6 @@ package it.gov.pagopa.gpd.ingestion.manager.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import it.gov.pagopa.gpd.ingestion.manager.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.PaymentOption;
@@ -481,7 +480,7 @@ class IngestionServiceImplTest {
                         .isPartialPayment(true)
                         .iuv("iuv")
                         .nav("nav")
-                        .lastUpdateDate(DATE)
+                        .lastUpdatedDate(DATE)
                         .organizationFiscalCode("organizationFiscalCode")
                         .status(PaymentOptionStatus.PO_PAID.name())
                         .retentionDate(DATE)
@@ -666,7 +665,7 @@ class IngestionServiceImplTest {
                         .transferId("transferId")
                         .insertedDate(DATE)
                         .iuv("iuv")
-                        .lastUpdateDate(DATE)
+                        .lastUpdatedDate(DATE)
                         .organizationFiscalCode("organizationFiscalCode")
                         .remittanceInformation(REMITTANCE_INFORMATION)
                         .status(TransferStatus.T_REPORTED.name())
