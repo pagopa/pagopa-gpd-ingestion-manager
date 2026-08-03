@@ -27,10 +27,14 @@ public enum AppError {
           HttpStatus.INTERNAL_SERVER_ERROR,
           "Fail to tokenize fiscal code",
           "The PDVTokenizer couldn't tokenize the fiscal code"),
-  ERROR_ANONYMIZING_REMITTANCE_INFORMATION(
+  ERROR_ANONYMIZING_TRANSFER_REMITTANCE_INFORMATION(
           HttpStatus.INTERNAL_SERVER_ERROR,
-          "Fail to anonymize remittance information",
-          "The Anonymizer couldn't anonymize the remittance information"),
+          "Fail to anonymize transfer remittance information",
+          "The Anonymizer couldn't anonymize the transfer remittance information"),
+  ERROR_ANONYMIZING_PAYMENT_OPTION_DESCRIPTION(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          "Fail to anonymize payment option description",
+          "The Anonymizer couldn't anonymize the payment option description"),
   UNKNOWN(null, null, null);
 
   public final HttpStatus httpStatus;

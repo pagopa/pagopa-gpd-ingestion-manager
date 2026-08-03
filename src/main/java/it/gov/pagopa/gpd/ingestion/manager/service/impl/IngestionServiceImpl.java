@@ -165,6 +165,9 @@ public class IngestionServiceImpl implements IngestionService {
         } catch (PDVTokenizerException | PDVTokenizerUnexpectedException e) {
             handleException(e, EntityType.PAYMENT_OPTION.name());
             throw new AppException(AppError.ERROR_TOKENIZING_FISCAL_CODE, e);
+        } catch (AnonymizerException | AnonymizerUnexpectedException e) {
+            handleException(e, EntityType.PAYMENT_OPTION.name());
+            throw new AppException(AppError.ERROR_ANONYMIZING_PAYMENT_OPTION_DESCRIPTION, e);
         } catch (Exception e) {
             handleException(e, EntityType.PAYMENT_OPTION.name());
             throw new AppException(AppError.INTERNAL_SERVER_ERROR, e);
@@ -238,7 +241,7 @@ public class IngestionServiceImpl implements IngestionService {
             throw e;
         } catch (AnonymizerException | AnonymizerUnexpectedException e) {
             handleException(e, EntityType.TRANSFER.name());
-            throw new AppException(AppError.ERROR_ANONYMIZING_REMITTANCE_INFORMATION, e);
+            throw new AppException(AppError.ERROR_ANONYMIZING_TRANSFER_REMITTANCE_INFORMATION, e);
         } catch (Exception e) {
             handleException(e, EntityType.TRANSFER.name());
             throw new AppException(AppError.INTERNAL_SERVER_ERROR, e);
