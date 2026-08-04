@@ -2,7 +2,6 @@ package it.gov.pagopa.gpd.ingestion.manager.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import it.gov.pagopa.gpd.ingestion.manager.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.PaymentOption;
 import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.PaymentPosition;
@@ -18,7 +17,6 @@ import it.gov.pagopa.gpd.ingestion.manager.exception.AppException;
 import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerException;
 import it.gov.pagopa.gpd.ingestion.manager.service.AnonymizerServiceRetryWrapper;
 import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerServiceRetryWrapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -28,7 +26,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.ZoneOffset;
 
@@ -43,11 +40,10 @@ class IngestionServiceImplTest {
     public static final String TOKENIZED_FISCAL_CODE = "tokenizedFiscalCode";
     public static final String REMITTANCE_INFORMATION = "remittanceInformation";
     public static final String ANONYMIZED_REMITTANCE_INFORMATION = "anonymizedRemittanceInformation";
-    public static final LocalDateTime DATE = LocalDate.of(2026, Month.JANUARY, 1)
+    public static final long DATE = LocalDate.of(2026, Month.JANUARY, 1)
             .atStartOfDay()
             .toInstant(ZoneOffset.UTC)
-            .atZone(ZoneOffset.UTC)
-            .toLocalDateTime();
+            .toEpochMilli();
     public static final String DESCRIPTION = "DESCRIPTION";
     private final String FISCAL_CODE = "AAAAAA00A00A000D";
     private final String INVALID_FISCAL_CODE = "invalidFiscalCode";
@@ -76,11 +72,6 @@ class IngestionServiceImplTest {
 
     @Captor
     private ArgumentCaptor<DataCaptureMessage<Transfer>> transferCaptor;
-
-    @BeforeEach
-    void setUp() {
-        objectMapper.registerModule(new JavaTimeModule());
-    }
 
     // Test Ingestion Payment Position
     @Test
@@ -485,7 +476,7 @@ class IngestionServiceImplTest {
                         .status(PaymentOptionStatus.PO_PAID.name())
                         .retentionDate(DATE)
                         .notificationFee(0)
-                        .lastUpdatedDateNotificationFee(DATE)
+                        .lastUpdatedDateNotificationFee(0L)
                         .fiscalCode(fiscalCode)
                         .type("type")
                         .region("region")
