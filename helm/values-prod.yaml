@@ -126,7 +126,7 @@ microservice-chart:
     TRANSFER_INPUT_EVENTHUB_CONN_STRING: "transfer-topic-input-conn-string"
     TRANSFER_OUTPUT_EVENTHUB_CONN_STRING: "transfer-topic-output-conn-string"
     PDV_TOKENIZER_SUBSCRIPTION_KEY: "tokenizer-api-key-gpd"
-    ANONYMIZER_SUBSCRIPTION_KEY: "anonymizer-api-key"
+    ANONYMIZER_SUBSCRIPTION_KEY: "shared-anonymizer-api-key"
     AZURE_STORAGE_TABLE_CONN_STRING: "gpd-ingestion-sa-conn-string"
   keyvault:
     name: "pagopa-p-gps-kv"

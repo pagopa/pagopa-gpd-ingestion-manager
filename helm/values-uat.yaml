@@ -127,7 +127,7 @@ microservice-chart:
     TRANSFER_OUTPUT_EVENTHUB_CONN_STRING: "transfer-topic-output-conn-string"
     PDV_TOKENIZER_SUBSCRIPTION_KEY: "tokenizer-api-key-gpd"
     AZURE_STORAGE_TABLE_CONN_STRING: "gpd-ingestion-sa-conn-string"
-    ANONYMIZER_SUBSCRIPTION_KEY: "anonymizer-api-key"
+    ANONYMIZER_SUBSCRIPTION_KEY: "shared-anonymizer-api-key"
   keyvault:
     name: "pagopa-u-gps-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
