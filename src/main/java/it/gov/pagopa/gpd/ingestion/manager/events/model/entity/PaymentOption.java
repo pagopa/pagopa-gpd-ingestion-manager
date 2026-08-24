@@ -59,13 +59,14 @@ public class PaymentOption {
 
     private String type;
 
-    private String region;
-
     @JsonProperty("send_sync")
     private boolean sendSync;
 
     @JsonProperty("psp_code")
     private String pspCode;
+
+    @JsonProperty("psp_tax_code")
+    private String pspTaxCode;
 
     @JsonProperty("switch_to_expired")
     private boolean switchToExpired;
