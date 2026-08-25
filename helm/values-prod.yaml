@@ -125,7 +125,7 @@ microservice-chart:
     PAYMENT_OPTION_OUTPUT_EVENTHUB_CONN_STRING: "payment-option-topic-output-conn-string"
     TRANSFER_INPUT_EVENTHUB_CONN_STRING: "transfer-topic-input-conn-string"
     TRANSFER_OUTPUT_EVENTHUB_CONN_STRING: "transfer-topic-output-conn-string"
-    PDV_TOKENIZER_SUBSCRIPTION_KEY: "tokenizer-api-key-gpd"
+    PDV_TOKENIZER_SUBSCRIPTION_KEY: "tokenizer-api-key"
     ANONYMIZER_SUBSCRIPTION_KEY: "shared-anonymizer-api-key"
     AZURE_STORAGE_TABLE_CONN_STRING: "gpd-ingestion-sa-conn-string"
   keyvault:
