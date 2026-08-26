@@ -1,9 +1,13 @@
 package it.gov.pagopa.gpd.ingestion.manager.service;
 
+import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.Transfer;
+import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.PaymentPosition;
+import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.PaymentOption;
+
 public interface IngestionService {
 
     /**
-     * Ingest a {@link it.gov.pagopa.gpd.ingestion.manager.events.model.entity.PaymentPosition} message
+     * Ingest a {@link PaymentPosition} message
      * from GPD eventhub and tokenizes the tax codes
      *
      * @param message PaymentPosition message
@@ -11,7 +15,7 @@ public interface IngestionService {
     void ingestPaymentPosition(String message);
 
     /**
-     * Ingest a {@link it.gov.pagopa.gpd.ingestion.manager.events.model.entity.PaymentOption} message
+     * Ingest a {@link PaymentOption} message
      * from GPD eventhub
      *
      * @param message PaymentOption message
@@ -19,7 +23,7 @@ public interface IngestionService {
     void ingestPaymentOption(String message);
 
     /**
-     * Ingest a {@link it.gov.pagopa.gpd.ingestion.manager.events.model.entity.Transfer} message
+     * Ingest a {@link Transfer} message
      * from GPD eventhub
      *
      * @param message Transfer message

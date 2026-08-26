@@ -7,6 +7,9 @@ import it.gov.pagopa.gpd.ingestion.manager.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.PaymentOption;
 import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.PaymentPosition;
 import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.Transfer;
+import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.before.PaymentOptionBefore;
+import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.before.PaymentPositionBefore;
+import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.before.TransferBefore;
 import it.gov.pagopa.gpd.ingestion.manager.events.producer.IngestedPaymentOptionProducer;
 import it.gov.pagopa.gpd.ingestion.manager.events.producer.IngestedPaymentPositionProducer;
 import it.gov.pagopa.gpd.ingestion.manager.events.producer.IngestedTransferProducer;
@@ -93,17 +96,17 @@ public class IngestionServiceImpl implements IngestionService {
         try {
             initMDC(EntityType.PAYMENT_POSITION.name());
 
-            DataCaptureMessage<PaymentPosition> paymentPosition =
-                    mapMessageToObject(message, new TypeReference<DataCaptureMessage<PaymentPosition>>() {
+            DataCaptureMessage<PaymentPosition, PaymentPositionBefore> paymentPosition =
+                    mapMessageToObject(message, new TypeReference<DataCaptureMessage<PaymentPosition, PaymentPositionBefore>>() {
                     });
 
             if (paymentPosition == null) {
                 setMDCId("null");
                 return;
             }
-            PaymentPosition valuesBefore = paymentPosition.getBefore();
+            PaymentPositionBefore valuesBefore = paymentPosition.getBefore();
             PaymentPosition valuesAfter = paymentPosition.getAfter();
-            long id = (valuesAfter != null ? valuesAfter : valuesBefore).getId();
+            long id = valuesAfter != null ? valuesAfter.getId() : valuesBefore.getId();
             log.debug("PaymentPosition ingestion called at {} with payment position id {}", getDateNow(), id);
             setMDCId(String.valueOf(id));
 
@@ -130,17 +133,17 @@ public class IngestionServiceImpl implements IngestionService {
         try {
             initMDC(EntityType.PAYMENT_OPTION.name());
 
-            DataCaptureMessage<PaymentOption> paymentOption =
-                    mapMessageToObject(message, new TypeReference<DataCaptureMessage<PaymentOption>>() {
+            DataCaptureMessage<PaymentOption, PaymentOptionBefore> paymentOption =
+                    mapMessageToObject(message, new TypeReference<DataCaptureMessage<PaymentOption, PaymentOptionBefore>>() {
                     });
 
             if (paymentOption == null) {
                 setMDCId("null");
                 return;
             }
-            PaymentOption valuesBefore = paymentOption.getBefore();
+            PaymentOptionBefore valuesBefore = paymentOption.getBefore();
             PaymentOption valuesAfter = paymentOption.getAfter();
-            long id = (valuesAfter != null ? valuesAfter : valuesBefore).getId();
+            long id = valuesAfter != null ? valuesAfter.getId() : valuesBefore.getId();
 
             log.debug(
                     "PaymentOption ingestion called at {} with payment position id {}",
@@ -148,10 +151,7 @@ public class IngestionServiceImpl implements IngestionService {
                     id);
             setMDCId(String.valueOf(id));
 
-            paymentOption.setBefore(anonymizeDescription(valuesBefore));
             paymentOption.setAfter(anonymizeDescription(valuesAfter));
-
-            paymentOption.setBefore(tokenizeFiscalCode(valuesBefore));
             paymentOption.setAfter(tokenizeFiscalCode(valuesAfter));
 
             paymentOptionProducer.sendIngestedPaymentOption(paymentOption);
@@ -209,8 +209,8 @@ public class IngestionServiceImpl implements IngestionService {
         try {
             initMDC(EntityType.TRANSFER.name());
 
-            DataCaptureMessage<Transfer> transfer =
-                    mapMessageToObject(message, new TypeReference<DataCaptureMessage<Transfer>>() {
+            DataCaptureMessage<Transfer, TransferBefore> transfer =
+                    mapMessageToObject(message, new TypeReference<DataCaptureMessage<Transfer, TransferBefore>>() {
                     });
 
             if (transfer == null) {
@@ -218,9 +218,9 @@ public class IngestionServiceImpl implements IngestionService {
                 return;
             }
 
-            Transfer valuesBefore = transfer.getBefore();
+            TransferBefore valuesBefore = transfer.getBefore();
             Transfer valuesAfter = transfer.getAfter();
-            long id = (valuesAfter != null ? valuesAfter : valuesBefore).getId();
+            long id = valuesAfter != null ? valuesAfter.getId() : valuesBefore.getId();
 
             log.debug(
                     "Transfer ingestion called at {} with payment position id {}",
@@ -228,7 +228,6 @@ public class IngestionServiceImpl implements IngestionService {
                     id);
             setMDCId(String.valueOf(id));
 
-            transfer.setBefore(anonymizeRemittanceInformation(valuesBefore));
             transfer.setAfter(anonymizeRemittanceInformation(valuesAfter));
 
             transferProducer.sendIngestedTransfer(transfer);
@@ -273,7 +272,7 @@ public class IngestionServiceImpl implements IngestionService {
         return text;
     }
 
-    private <T> DataCaptureMessage<T> mapMessageToObject(String message, TypeReference<DataCaptureMessage<T>> typeReference) throws JsonProcessingException {
+    private <A, B> DataCaptureMessage<A, B> mapMessageToObject(String message, TypeReference<DataCaptureMessage<A, B>> typeReference) throws JsonProcessingException {
         // Discard null messages
         if (message == null || message.isBlank()) {
             log.debug("NULL message ignored at {}", getDateNow());

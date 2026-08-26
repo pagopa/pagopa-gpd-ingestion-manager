@@ -2,6 +2,7 @@ package it.gov.pagopa.gpd.ingestion.manager.events.producer;
 
 import it.gov.pagopa.gpd.ingestion.manager.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.Transfer;
+import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.before.TransferBefore;
 import org.springframework.stereotype.Service;
 
 /**
@@ -16,6 +17,6 @@ public interface IngestedTransferProducer {
      *
      * @param ingestedTransfer data to send
      */
-    void sendIngestedTransfer(DataCaptureMessage<Transfer> ingestedTransfer);
+    void sendIngestedTransfer(DataCaptureMessage<Transfer, TransferBefore> ingestedTransfer);
 
 }
