@@ -549,7 +549,7 @@ class IngestionServiceImplTest {
 
         assertDoesNotThrow(() -> sut.ingestTransfer(objectMapper.writeValueAsString(tr)));
 
-        verify(anonimizerServiceMock, times(1)).anonymizeWithRetry(REMITTANCE_INFORMATION);;
+        verify(anonimizerServiceMock, times(1)).anonymizeWithRetry(REMITTANCE_INFORMATION);
         verify(transferProducer).sendIngestedTransfer(transferCaptor.capture());
         DataCaptureMessage<Transfer, TransferBefore> captured = transferCaptor.getValue();
         assertEquals(tr.getBefore().getId(), captured.getBefore().getId());
