@@ -12,10 +12,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DataCaptureMessage<T> {
+public class DataCaptureMessage<A, B> {
 
-    private T before;
-    private T after;
+    private B before;
+    private A after;
     private String op;
     @JsonProperty("ts_ms")
     private Long tsMs;

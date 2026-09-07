@@ -6,14 +6,19 @@ import it.gov.pagopa.gpd.ingestion.manager.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.PaymentOption;
 import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.PaymentPosition;
 import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.Transfer;
+import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.before.PaymentOptionBefore;
+import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.before.PaymentPositionBefore;
+import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.before.TransferBefore;
 import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.enumeration.PaymentOptionStatus;
 import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.enumeration.PaymentPositionStatus;
 import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.enumeration.TransferStatus;
 import it.gov.pagopa.gpd.ingestion.manager.events.producer.impl.IngestedPaymentOptionProducerImpl;
 import it.gov.pagopa.gpd.ingestion.manager.events.producer.impl.IngestedPaymentPositionProducerImpl;
 import it.gov.pagopa.gpd.ingestion.manager.events.producer.impl.IngestedTransferProducerImpl;
+import it.gov.pagopa.gpd.ingestion.manager.exception.AnonymizerException;
 import it.gov.pagopa.gpd.ingestion.manager.exception.AppException;
 import it.gov.pagopa.gpd.ingestion.manager.exception.PDVTokenizerException;
+import it.gov.pagopa.gpd.ingestion.manager.service.AnonymizerServiceRetryWrapper;
 import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerServiceRetryWrapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -23,8 +28,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.Month;
+import java.time.ZoneOffset;
 
+import static it.gov.pagopa.gpd.ingestion.manager.service.impl.IngestionServiceImpl.ANONYMIZE_PLACEHOLDER;
+import static it.gov.pagopa.gpd.ingestion.manager.service.impl.IngestionServiceImpl.PDV_CF_TOKENIZER;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -32,10 +41,19 @@ import static org.mockito.Mockito.*;
 class IngestionServiceImplTest {
     public static final String HTTP_MESSAGE_ERROR = "an error occured";
     public static final String TOKENIZED_FISCAL_CODE = "tokenizedFiscalCode";
+    public static final String REMITTANCE_INFORMATION = "remittanceInformation";
+    public static final String ANONYMIZED_REMITTANCE_INFORMATION = "anonymizedRemittanceInformation";
+    public static final long DATE = LocalDate.of(2026, Month.JANUARY, 1)
+            .atStartOfDay()
+            .toInstant(ZoneOffset.UTC)
+            .toEpochMilli();
+    public static final String DESCRIPTION = "DESCRIPTION";
     private final String FISCAL_CODE = "AAAAAA00A00A000D";
     private final String INVALID_FISCAL_CODE = "invalidFiscalCode";
     @MockBean
     private PDVTokenizerServiceRetryWrapper pdvTokenizerServiceMock;
+    @MockBean
+    private AnonymizerServiceRetryWrapper anonimizerServiceMock;
     @MockBean
     private IngestedPaymentPositionProducerImpl paymentPositionProducer;
     @MockBean
@@ -50,226 +68,99 @@ class IngestionServiceImplTest {
     private IngestionServiceImpl sut;
 
     @Captor
-    private ArgumentCaptor<DataCaptureMessage<PaymentPosition>> paymentPositionCaptor;
+    private ArgumentCaptor<DataCaptureMessage<PaymentPosition, PaymentPositionBefore>> paymentPositionCaptor;
 
     @Captor
-    private ArgumentCaptor<DataCaptureMessage<PaymentOption>> paymentOptionCaptor;
+    private ArgumentCaptor<DataCaptureMessage<PaymentOption, PaymentOptionBefore>> paymentOptionCaptor;
 
     @Captor
-    private ArgumentCaptor<DataCaptureMessage<Transfer>> transferCaptor;
+    private ArgumentCaptor<DataCaptureMessage<Transfer, TransferBefore>> transferCaptor;
 
     // Test Ingestion Payment Position
     @Test
-    void ingestPaymentPositionRunOk() throws PDVTokenizerException, JsonProcessingException {
-        when(pdvTokenizerServiceMock.generateTokenForFiscalCodeWithRetry(FISCAL_CODE))
-                .thenReturn(TOKENIZED_FISCAL_CODE);
+    void ingestPaymentPositionRunOk() {
+        DataCaptureMessage<PaymentPosition, PaymentPositionBefore> pp = generateValidPaymentPosition(false);
 
-        DataCaptureMessage<PaymentPosition> pp = generateValidPaymentPosition(FISCAL_CODE, false);
+        sut = new IngestionServiceImpl(
+                objectMapper,
+                pdvTokenizerServiceMock,
+                anonimizerServiceMock,
+                paymentPositionProducer,
+                paymentOptionProducer,
+                transferProducer,
+                false, false);
 
-        sut =
-                new IngestionServiceImpl(
-                        objectMapper,
-                        pdvTokenizerServiceMock,
-                        paymentPositionProducer,
-                        paymentOptionProducer,
-                        transferProducer,
-                        false);
-
-        // test execution
         assertDoesNotThrow(() -> sut.ingestPaymentPosition(objectMapper.writeValueAsString(pp)));
 
         verify(paymentPositionProducer).sendIngestedPaymentPosition(paymentPositionCaptor.capture());
-        DataCaptureMessage<PaymentPosition> captured = paymentPositionCaptor.getValue();
+        DataCaptureMessage<PaymentPosition, PaymentPositionBefore> captured = paymentPositionCaptor.getValue();
         assertNull(captured.getBefore());
-        assertEquals(TOKENIZED_FISCAL_CODE, captured.getAfter().getFiscalCode());
+        assertNotNull(captured.getAfter());
     }
 
     @Test
-    void ingestPaymentPositionRunOkBothAfterAndBefore()
-            throws PDVTokenizerException, JsonProcessingException {
-        when(pdvTokenizerServiceMock.generateTokenForFiscalCodeWithRetry(FISCAL_CODE))
-                .thenReturn(TOKENIZED_FISCAL_CODE);
+    void ingestPaymentPositionRunOkBothAfterAndBefore() {
+        DataCaptureMessage<PaymentPosition, PaymentPositionBefore> pp = generateValidPaymentPosition(true);
 
-        DataCaptureMessage<PaymentPosition> pp = generateValidPaymentPosition(FISCAL_CODE, true);
-
-        sut =
-                new IngestionServiceImpl(
-                        objectMapper,
-                        pdvTokenizerServiceMock,
-                        paymentPositionProducer,
-                        paymentOptionProducer,
-                        transferProducer,
-                        false);
-
-        // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentPosition(objectMapper.writeValueAsString(pp)));
-
-        verify(paymentPositionProducer).sendIngestedPaymentPosition(paymentPositionCaptor.capture());
-        DataCaptureMessage<PaymentPosition> captured = paymentPositionCaptor.getValue();
-        assertEquals(TOKENIZED_FISCAL_CODE, captured.getBefore().getFiscalCode());
-        assertEquals(TOKENIZED_FISCAL_CODE, captured.getAfter().getFiscalCode());
-    }
-
-    @Test
-    void ingestPaymentPositionRunInvalidFiscalCode()
-            throws PDVTokenizerException, JsonProcessingException {
-        DataCaptureMessage<PaymentPosition> pp =
-                generateValidPaymentPosition(INVALID_FISCAL_CODE, false);
-
-        sut =
-                new IngestionServiceImpl(
-                        objectMapper,
-                        pdvTokenizerServiceMock,
-                        paymentPositionProducer,
-                        paymentOptionProducer,
-                        transferProducer, false);
-
-        // test execution
-        assertDoesNotThrow(() -> sut.ingestPaymentPosition(objectMapper.writeValueAsString(pp)));
-
-        verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
-        verify(paymentPositionProducer).sendIngestedPaymentPosition(paymentPositionCaptor.capture());
-        DataCaptureMessage<PaymentPosition> captured = paymentPositionCaptor.getValue();
-        assertNull(captured.getBefore());
-        assertEquals(INVALID_FISCAL_CODE, captured.getAfter().getFiscalCode());
-    }
-
-    @Test
-    void ingestPaymentPositionRunInvalidFiscalCodeBothAfterAndBefore()
-            throws PDVTokenizerException, JsonProcessingException {
-        DataCaptureMessage<PaymentPosition> pp =
-                generateValidPaymentPosition(INVALID_FISCAL_CODE, true);
-
-        sut =
-                new IngestionServiceImpl(
-                        objectMapper,
-                        pdvTokenizerServiceMock,
-                        paymentPositionProducer,
-                        paymentOptionProducer,
-                        transferProducer, false);
-
-        assertDoesNotThrow(() -> sut.ingestPaymentPosition(objectMapper.writeValueAsString(pp)));
-
-        verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
-        verify(paymentPositionProducer).sendIngestedPaymentPosition(paymentPositionCaptor.capture());
-        DataCaptureMessage<PaymentPosition> captured = paymentPositionCaptor.getValue();
-        assertEquals(INVALID_FISCAL_CODE, captured.getBefore().getFiscalCode());
-        assertEquals(INVALID_FISCAL_CODE, captured.getAfter().getFiscalCode());
-    }
-
-    @Test
-    void ingestPaymentPositionRunNullFiscalCode()
-            throws PDVTokenizerException, JsonProcessingException {
-        DataCaptureMessage<PaymentPosition> pp = generateValidPaymentPosition(null, false);
-
-        sut =
-                new IngestionServiceImpl(
-                        objectMapper,
-                        pdvTokenizerServiceMock,
-                        paymentPositionProducer,
-                        paymentOptionProducer,
-                        transferProducer, false);
-
-        assertDoesNotThrow(() -> sut.ingestPaymentPosition(objectMapper.writeValueAsString(pp)));
-
-        verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
-        verify(paymentPositionProducer).sendIngestedPaymentPosition(paymentPositionCaptor.capture());
-        DataCaptureMessage<PaymentPosition> captured = paymentPositionCaptor.getValue();
-        assertNull(captured.getBefore());
-        assertNull(captured.getAfter().getFiscalCode());
-    }
-
-    @Test
-    void ingestPaymentPositionErrorTokenizingFiscalCodes()
-            throws PDVTokenizerException, JsonProcessingException {
-        when(pdvTokenizerServiceMock.generateTokenForFiscalCodeWithRetry(FISCAL_CODE))
-                .thenThrow(
-                        new PDVTokenizerException(
-                                HTTP_MESSAGE_ERROR, org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR));
-
-        sut =
-                new IngestionServiceImpl(
-                        objectMapper,
-                        pdvTokenizerServiceMock,
-                        paymentPositionProducer,
-                        paymentOptionProducer,
-                        transferProducer, false);
-
-        DataCaptureMessage<PaymentPosition> pp = generateValidPaymentPosition(FISCAL_CODE, false);
-
-        String ppString = objectMapper.writeValueAsString(pp);
-        assertThrows(AppException.class, () -> sut.ingestPaymentPosition(ppString));
-
-        verify(paymentPositionProducer, never()).sendIngestedPaymentPosition(any());
-    }
-
-    @Test
-    void ingestPaymentPositionRunOkBothAfterAndBeforeWithPlaceholderOnPDvError()
-            throws PDVTokenizerException, JsonProcessingException {
-        when(pdvTokenizerServiceMock.generateTokenForFiscalCodeWithRetry(FISCAL_CODE))
-                .thenThrow(new PDVTokenizerException("test", 500));
-
-        DataCaptureMessage<PaymentPosition> pp = generateValidPaymentPosition(FISCAL_CODE, true);
-
-        sut =
-                new IngestionServiceImpl(
-                        objectMapper,
-                        pdvTokenizerServiceMock,
-                        paymentPositionProducer,
-                        paymentOptionProducer,
-                        transferProducer,
-                        true);
+        sut = new IngestionServiceImpl(
+                objectMapper,
+                pdvTokenizerServiceMock,
+                anonimizerServiceMock,
+                paymentPositionProducer,
+                paymentOptionProducer,
+                transferProducer,
+                false, false);
 
         assertDoesNotThrow(() -> sut.ingestPaymentPosition(objectMapper.writeValueAsString(pp)));
 
         verify(paymentPositionProducer).sendIngestedPaymentPosition(paymentPositionCaptor.capture());
-        DataCaptureMessage<PaymentPosition> captured = paymentPositionCaptor.getValue();
-        assertEquals("PDV_CF_TOKENIZER", captured.getBefore().getFiscalCode());
-        assertEquals("PDV_CF_TOKENIZER", captured.getAfter().getFiscalCode());
+        DataCaptureMessage<PaymentPosition, PaymentPositionBefore> captured = paymentPositionCaptor.getValue();
+        assertNotNull(captured.getBefore());
+        assertNotNull(captured.getAfter());
     }
 
     @Test
-    void ingestPaymentPositionRunTombstoneMessage() throws PDVTokenizerException, JsonProcessingException {
-        sut =
-                new IngestionServiceImpl(
-                        objectMapper,
-                        pdvTokenizerServiceMock,
-                        paymentPositionProducer,
-                        paymentOptionProducer,
-                        transferProducer, false);
+    void ingestPaymentPositionRunTombstoneMessage() {
+        sut = new IngestionServiceImpl(
+                objectMapper,
+                pdvTokenizerServiceMock,
+                anonimizerServiceMock,
+                paymentPositionProducer,
+                paymentOptionProducer,
+                transferProducer,
+                false, false);
 
         assertDoesNotThrow(() -> sut.ingestPaymentPosition(""));
 
-        verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
         verify(paymentPositionProducer, never()).sendIngestedPaymentPosition(any());
     }
 
-    private DataCaptureMessage<PaymentPosition> generateValidPaymentPosition(
-            String fiscalCode, boolean withBefore) {
+    private DataCaptureMessage<PaymentPosition, PaymentPositionBefore> generateValidPaymentPosition(boolean withBefore) {
         PaymentPosition pp =
                 PaymentPosition.builder()
                         .id(0)
                         .iupd("iupd")
-                        .fiscalCode(fiscalCode)
-                        .postalCode("postalCode")
-                        .province("province")
-                        .maxDueDate(new Date().getTime())
-                        .minDueDate(new Date().getTime())
+                        .maxDueDate(DATE)
+                        .minDueDate(DATE)
                         .organizationFiscalCode("orgFiscalCode")
                         .companyName("companyName")
-                        .publishDate(new Date().getTime())
-                        .region("region")
-                        .status(PaymentPositionStatus.VALID)
-                        .type("type")
-                        .validityDate(new Date().getTime())
-                        .switchToExpired(false)
-                        .paymentDate(new Date().getTime())
-                        .lastUpdatedDate(new Date().getTime())
-                        .insertedDate(new Date().getTime())
+                        .publishDate(DATE)
+                        .status(PaymentPositionStatus.VALID.name())
+                        .paymentDate(DATE)
+                        .lastUpdatedDate(DATE)
+                        .insertedDate(DATE)
+                        .pull(false)
+                        .payStandIn(false)
+                        .serviceType("GPD")
                         .build();
+        
+        PaymentPositionBefore ppBefore = null;
+        if(withBefore){
+            ppBefore = PaymentPositionBefore.builder().id(0).build();
+        }
 
-        return DataCaptureMessage.<PaymentPosition>builder()
-                .before(withBefore ? pp : null)
+        return DataCaptureMessage.<PaymentPosition, PaymentPositionBefore>builder()
+                .before(ppBefore)
                 .after(pp)
                 .op("c")
                 .tsMs(0L)
@@ -280,246 +171,333 @@ class IngestionServiceImplTest {
 
     // Test Ingestion Payment Option
     @Test
-    void ingestPaymentOptionRunOk() throws PDVTokenizerException, JsonProcessingException {
+    void ingestPaymentOptionRunOk() throws PDVTokenizerException, JsonProcessingException, AnonymizerException {
+        when(anonimizerServiceMock.anonymizeWithRetry(DESCRIPTION))
+                .thenReturn(ANONYMIZE_PLACEHOLDER);
         when(pdvTokenizerServiceMock.generateTokenForFiscalCodeWithRetry(FISCAL_CODE))
                 .thenReturn(TOKENIZED_FISCAL_CODE);
 
-        DataCaptureMessage<PaymentOption> po = generateValidPaymentOption(FISCAL_CODE, false);
+        DataCaptureMessage<PaymentOption, PaymentOptionBefore> po = generateValidPaymentOption(FISCAL_CODE, DESCRIPTION, false);
 
-        sut =
-                new IngestionServiceImpl(
-                        objectMapper,
-                        pdvTokenizerServiceMock,
-                        paymentPositionProducer,
-                        paymentOptionProducer,
-                        transferProducer,
-                        false);
+        sut = new IngestionServiceImpl(
+                objectMapper,
+                pdvTokenizerServiceMock,
+                anonimizerServiceMock,
+                paymentPositionProducer,
+                paymentOptionProducer,
+                transferProducer,
+                false, false);
 
         assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
 
+        verify(anonimizerServiceMock, times(1)).anonymizeWithRetry(DESCRIPTION);
+        verify(pdvTokenizerServiceMock, times(1)).generateTokenForFiscalCodeWithRetry(FISCAL_CODE);
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
-        DataCaptureMessage<PaymentOption> captured = paymentOptionCaptor.getValue();
+        DataCaptureMessage<PaymentOption, PaymentOptionBefore> captured = paymentOptionCaptor.getValue();
         assertNull(captured.getBefore());
         assertEquals(TOKENIZED_FISCAL_CODE, captured.getAfter().getFiscalCode());
     }
 
     @Test
     void ingestPaymentOptionRunOkBothAfterAndBefore()
-            throws PDVTokenizerException, JsonProcessingException {
+            throws PDVTokenizerException, JsonProcessingException, AnonymizerException {
+        when(anonimizerServiceMock.anonymizeWithRetry(DESCRIPTION))
+                .thenReturn(ANONYMIZE_PLACEHOLDER);
         when(pdvTokenizerServiceMock.generateTokenForFiscalCodeWithRetry(FISCAL_CODE))
                 .thenReturn(TOKENIZED_FISCAL_CODE);
 
-        DataCaptureMessage<PaymentOption> po = generateValidPaymentOption(FISCAL_CODE, true);
+        DataCaptureMessage<PaymentOption, PaymentOptionBefore> po = generateValidPaymentOption(FISCAL_CODE, DESCRIPTION, true);
 
-        sut =
-                new IngestionServiceImpl(
-                        objectMapper,
-                        pdvTokenizerServiceMock,
-                        paymentPositionProducer,
-                        paymentOptionProducer,
-                        transferProducer,
-                        false);
+        sut = new IngestionServiceImpl(
+                objectMapper,
+                pdvTokenizerServiceMock,
+                anonimizerServiceMock,
+                paymentPositionProducer,
+                paymentOptionProducer,
+                transferProducer,
+                false, false);
 
         assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
 
+        verify(anonimizerServiceMock, times(1)).anonymizeWithRetry(DESCRIPTION);
+        verify(pdvTokenizerServiceMock, times(1)).generateTokenForFiscalCodeWithRetry(FISCAL_CODE);
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
-        DataCaptureMessage<PaymentOption> captured = paymentOptionCaptor.getValue();
-        assertEquals(TOKENIZED_FISCAL_CODE, captured.getBefore().getFiscalCode());
+        DataCaptureMessage<PaymentOption, PaymentOptionBefore> captured = paymentOptionCaptor.getValue();
+        assertEquals(TOKENIZED_FISCAL_CODE, captured.getAfter().getFiscalCode());
+    }
+
+    @Test
+    void ingestPaymentOptionRunNullDescription()
+            throws PDVTokenizerException, JsonProcessingException, AnonymizerException {
+        when(pdvTokenizerServiceMock.generateTokenForFiscalCodeWithRetry(FISCAL_CODE))
+                .thenReturn(TOKENIZED_FISCAL_CODE);
+
+        DataCaptureMessage<PaymentOption, PaymentOptionBefore> po = generateValidPaymentOption(FISCAL_CODE, null, false);
+
+        sut = new IngestionServiceImpl(
+                objectMapper,
+                pdvTokenizerServiceMock,
+                anonimizerServiceMock,
+                paymentPositionProducer,
+                paymentOptionProducer,
+                transferProducer,
+                false, false);
+
+        assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
+
+        verify(anonimizerServiceMock, never()).anonymizeWithRetry(any());
+        verify(pdvTokenizerServiceMock, times(1)).generateTokenForFiscalCodeWithRetry(FISCAL_CODE);
+        verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
+        DataCaptureMessage<PaymentOption, PaymentOptionBefore> captured = paymentOptionCaptor.getValue();
+        assertEquals(TOKENIZED_FISCAL_CODE, captured.getAfter().getFiscalCode());
+    }
+
+    @Test
+    void ingestPaymentOptionRunBlankDescription()
+            throws PDVTokenizerException, JsonProcessingException, AnonymizerException {
+        when(pdvTokenizerServiceMock.generateTokenForFiscalCodeWithRetry(FISCAL_CODE))
+                .thenReturn(TOKENIZED_FISCAL_CODE);
+
+        DataCaptureMessage<PaymentOption, PaymentOptionBefore> po = generateValidPaymentOption(FISCAL_CODE, "", false);
+
+        sut = new IngestionServiceImpl(
+                objectMapper,
+                pdvTokenizerServiceMock,
+                anonimizerServiceMock,
+                paymentPositionProducer,
+                paymentOptionProducer,
+                transferProducer,
+                false, false);
+
+        assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
+
+        verify(anonimizerServiceMock, never()).anonymizeWithRetry(any());
+        verify(pdvTokenizerServiceMock, times(1)).generateTokenForFiscalCodeWithRetry(FISCAL_CODE);
+        verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
+        DataCaptureMessage<PaymentOption, PaymentOptionBefore> captured = paymentOptionCaptor.getValue();
         assertEquals(TOKENIZED_FISCAL_CODE, captured.getAfter().getFiscalCode());
     }
 
     @Test
     void ingestPaymentOptionRunFiscalCodeLowerCase()
-            throws PDVTokenizerException, JsonProcessingException {
+            throws PDVTokenizerException, JsonProcessingException, AnonymizerException {
+        when(anonimizerServiceMock.anonymizeWithRetry(DESCRIPTION))
+                .thenReturn(ANONYMIZE_PLACEHOLDER);
         when(pdvTokenizerServiceMock.generateTokenForFiscalCodeWithRetry(FISCAL_CODE.toLowerCase()))
                 .thenReturn(TOKENIZED_FISCAL_CODE);
 
-        DataCaptureMessage<PaymentOption> po =
-                generateValidPaymentOption(FISCAL_CODE.toLowerCase(), false);
+        DataCaptureMessage<PaymentOption, PaymentOptionBefore> po =
+                generateValidPaymentOption(FISCAL_CODE.toLowerCase(), DESCRIPTION, false);
 
         sut =
                 new IngestionServiceImpl(
                         objectMapper,
                         pdvTokenizerServiceMock,
+                        anonimizerServiceMock,
                         paymentPositionProducer,
                         paymentOptionProducer,
-                        transferProducer, false);
+                        transferProducer, false, false);
 
         assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
 
+        verify(anonimizerServiceMock, atLeast(1)).anonymizeWithRetry(DESCRIPTION);
         verify(pdvTokenizerServiceMock, times(1)).generateTokenForFiscalCodeWithRetry(FISCAL_CODE.toLowerCase());
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
-        DataCaptureMessage<PaymentOption> captured = paymentOptionCaptor.getValue();
+        DataCaptureMessage<PaymentOption, PaymentOptionBefore> captured = paymentOptionCaptor.getValue();
         assertNull(captured.getBefore());
         assertEquals(TOKENIZED_FISCAL_CODE, captured.getAfter().getFiscalCode());
     }
 
     @Test
     void ingestPaymentOptionRunInvalidFiscalCode()
-            throws PDVTokenizerException, JsonProcessingException {
-        DataCaptureMessage<PaymentOption> po =
-                generateValidPaymentOption(INVALID_FISCAL_CODE, false);
+            throws PDVTokenizerException, JsonProcessingException, AnonymizerException {
+        when(anonimizerServiceMock.anonymizeWithRetry(DESCRIPTION))
+                .thenReturn(ANONYMIZE_PLACEHOLDER);
+        DataCaptureMessage<PaymentOption, PaymentOptionBefore> po =
+                generateValidPaymentOption(INVALID_FISCAL_CODE, DESCRIPTION, false);
 
-        sut =
-                new IngestionServiceImpl(
-                        objectMapper,
-                        pdvTokenizerServiceMock,
-                        paymentPositionProducer,
-                        paymentOptionProducer,
-                        transferProducer, false);
+        sut = new IngestionServiceImpl(
+                objectMapper,
+                pdvTokenizerServiceMock,
+                anonimizerServiceMock,
+                paymentPositionProducer,
+                paymentOptionProducer,
+                transferProducer,
+                false, false);
 
         assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
 
+        verify(anonimizerServiceMock, atLeast(1)).anonymizeWithRetry(DESCRIPTION);
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
-        DataCaptureMessage<PaymentOption> captured = paymentOptionCaptor.getValue();
+        DataCaptureMessage<PaymentOption, PaymentOptionBefore> captured = paymentOptionCaptor.getValue();
         assertNull(captured.getBefore());
         assertEquals(INVALID_FISCAL_CODE, captured.getAfter().getFiscalCode());
     }
 
     @Test
     void ingestPaymentOptionRunInvalidFiscalCodeBothAfterAndBefore()
-            throws PDVTokenizerException, JsonProcessingException {
-        DataCaptureMessage<PaymentOption> po =
-                generateValidPaymentOption(INVALID_FISCAL_CODE, true);
+            throws PDVTokenizerException, JsonProcessingException, AnonymizerException {
+        when(anonimizerServiceMock.anonymizeWithRetry(DESCRIPTION))
+                .thenReturn(ANONYMIZE_PLACEHOLDER);
+        DataCaptureMessage<PaymentOption, PaymentOptionBefore> po =
+                generateValidPaymentOption(INVALID_FISCAL_CODE, DESCRIPTION, true);
 
-        sut =
-                new IngestionServiceImpl(
-                        objectMapper,
-                        pdvTokenizerServiceMock,
-                        paymentPositionProducer,
-                        paymentOptionProducer,
-                        transferProducer, false);
+        sut = new IngestionServiceImpl(
+                objectMapper,
+                pdvTokenizerServiceMock,
+                anonimizerServiceMock,
+                paymentPositionProducer,
+                paymentOptionProducer,
+                transferProducer,
+                false, false);
 
         assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
 
+        verify(anonimizerServiceMock, atLeast(1)).anonymizeWithRetry(DESCRIPTION);
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
-        DataCaptureMessage<PaymentOption> captured = paymentOptionCaptor.getValue();
-        assertEquals(INVALID_FISCAL_CODE, captured.getBefore().getFiscalCode());
+        DataCaptureMessage<PaymentOption, PaymentOptionBefore> captured = paymentOptionCaptor.getValue();
         assertEquals(INVALID_FISCAL_CODE, captured.getAfter().getFiscalCode());
     }
 
     @Test
     void ingestPaymentOptionRunNullFiscalCode()
-            throws PDVTokenizerException, JsonProcessingException {
-        DataCaptureMessage<PaymentOption> po = generateValidPaymentOption(null, false);
+            throws PDVTokenizerException, JsonProcessingException, AnonymizerException {
+        when(anonimizerServiceMock.anonymizeWithRetry(DESCRIPTION))
+                .thenReturn(ANONYMIZE_PLACEHOLDER);
+        DataCaptureMessage<PaymentOption, PaymentOptionBefore> po = generateValidPaymentOption(null, DESCRIPTION, false);
 
-        sut =
-                new IngestionServiceImpl(
-                        objectMapper,
-                        pdvTokenizerServiceMock,
-                        paymentPositionProducer,
-                        paymentOptionProducer,
-                        transferProducer, false);
+        sut = new IngestionServiceImpl(
+                objectMapper,
+                pdvTokenizerServiceMock,
+                anonimizerServiceMock,
+                paymentPositionProducer,
+                paymentOptionProducer,
+                transferProducer,
+                false, false);
 
         assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
 
+        verify(anonimizerServiceMock, atLeast(1)).anonymizeWithRetry(DESCRIPTION);
         verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
-        DataCaptureMessage<PaymentOption> captured = paymentOptionCaptor.getValue();
+        DataCaptureMessage<PaymentOption, PaymentOptionBefore> captured = paymentOptionCaptor.getValue();
         assertNull(captured.getBefore());
         assertNull(captured.getAfter().getFiscalCode());
     }
 
     @Test
     void ingestPaymentOptionErrorTokenizingFiscalCodes()
-            throws PDVTokenizerException, JsonProcessingException {
+            throws PDVTokenizerException, JsonProcessingException, AnonymizerException {
+        when(anonimizerServiceMock.anonymizeWithRetry(DESCRIPTION))
+                .thenReturn(ANONYMIZE_PLACEHOLDER);
         when(pdvTokenizerServiceMock.generateTokenForFiscalCodeWithRetry(FISCAL_CODE))
                 .thenThrow(
                         new PDVTokenizerException(
                                 HTTP_MESSAGE_ERROR, org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR));
 
-        sut =
-                new IngestionServiceImpl(
-                        objectMapper,
-                        pdvTokenizerServiceMock,
-                        paymentPositionProducer,
-                        paymentOptionProducer,
-                        transferProducer, false);
+        sut = new IngestionServiceImpl(
+                objectMapper,
+                pdvTokenizerServiceMock,
+                anonimizerServiceMock,
+                paymentPositionProducer,
+                paymentOptionProducer,
+                transferProducer,
+                false, false);
 
-        DataCaptureMessage<PaymentOption> po = generateValidPaymentOption(FISCAL_CODE, false);
-        String poString = objectMapper.writeValueAsString(po);
+        DataCaptureMessage<PaymentOption, PaymentOptionBefore> po = generateValidPaymentOption(FISCAL_CODE, DESCRIPTION, false);
+        String message = objectMapper.writeValueAsString(po);
 
-        assertThrows(AppException.class, () -> sut.ingestPaymentOption(poString));
+        assertThrows(AppException.class, () -> sut.ingestPaymentOption(message));
 
+        verify(anonimizerServiceMock, atLeast(1)).anonymizeWithRetry(DESCRIPTION);
         verify(paymentOptionProducer, never()).sendIngestedPaymentOption(any());
     }
 
     @Test
-    void ingestPaymentOptionRunOkBothAfterAndBeforeWithPlaceholderOnPDvError()
-            throws PDVTokenizerException, JsonProcessingException {
+    void ingestPaymentOptionRunOkBothAfterAndBeforeWithPlaceholderOnAnonymizerAndPdvError()
+            throws PDVTokenizerException, JsonProcessingException, AnonymizerException {
+        when(anonimizerServiceMock.anonymizeWithRetry(DESCRIPTION))
+                .thenThrow(new AnonymizerException("test", 500));
         when(pdvTokenizerServiceMock.generateTokenForFiscalCodeWithRetry(FISCAL_CODE))
                 .thenThrow(new PDVTokenizerException("test", 500));
 
-        DataCaptureMessage<PaymentOption> po = generateValidPaymentOption(FISCAL_CODE, true);
+        DataCaptureMessage<PaymentOption, PaymentOptionBefore> po = generateValidPaymentOption(FISCAL_CODE, DESCRIPTION, true);
 
-        sut =
-                new IngestionServiceImpl(
-                        objectMapper,
-                        pdvTokenizerServiceMock,
-                        paymentPositionProducer,
-                        paymentOptionProducer,
-                        transferProducer,
-                        true);
+        sut = new IngestionServiceImpl(
+                objectMapper,
+                pdvTokenizerServiceMock,
+                anonimizerServiceMock,
+                paymentPositionProducer,
+                paymentOptionProducer,
+                transferProducer,
+                true, true);
 
         assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
 
         verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
-        DataCaptureMessage<PaymentOption> captured = paymentOptionCaptor.getValue();
-        assertEquals("PDV_CF_TOKENIZER", captured.getBefore().getFiscalCode());
-        assertEquals("PDV_CF_TOKENIZER", captured.getAfter().getFiscalCode());
+        DataCaptureMessage<PaymentOption, PaymentOptionBefore> captured = paymentOptionCaptor.getValue();
+        assertEquals(ANONYMIZE_PLACEHOLDER, captured.getAfter().getDescription());
+        assertEquals(PDV_CF_TOKENIZER, captured.getAfter().getFiscalCode());
     }
 
 
     @Test
-    void ingestPaymentOptionRunTombstoneMessage() {
-        sut =
-                new IngestionServiceImpl(
-                        objectMapper,
-                        pdvTokenizerServiceMock,
-                        paymentPositionProducer,
-                        paymentOptionProducer,
-                        transferProducer, false);
+    void ingestPaymentOptionRunTombstoneMessage() throws PDVTokenizerException, JsonProcessingException, AnonymizerException {
+        sut = new IngestionServiceImpl(
+                objectMapper,
+                pdvTokenizerServiceMock,
+                anonimizerServiceMock,
+                paymentPositionProducer,
+                paymentOptionProducer,
+                transferProducer,
+                false, false);
 
         assertDoesNotThrow(() -> sut.ingestPaymentOption(""));
 
+        verify(pdvTokenizerServiceMock, never()).generateTokenForFiscalCodeWithRetry(any());
+        verify(anonimizerServiceMock, never()).anonymizeWithRetry(any());
         verify(paymentOptionProducer, never()).sendIngestedPaymentOption(any());
     }
 
-    private DataCaptureMessage<PaymentOption> generateValidPaymentOption(String fiscalCode, Boolean withBefore) {
+    private DataCaptureMessage<PaymentOption, PaymentOptionBefore> generateValidPaymentOption(String fiscalCode, String description, Boolean withBefore) {
         PaymentOption pp =
                 PaymentOption.builder()
                         .id(0)
                         .paymentPositionId(0)
                         .amount(0)
-                        .description("description")
-                        .dueDate(new Date().getTime())
+                        .description(description)
+                        .dueDate(DATE)
                         .fee(0)
                         .flowReportingId("flowReportingId")
-                        .receiptId("receiptId")
-                        .insertedDate(new Date().getTime())
+                        .insertedDate(DATE)
                         .isPartialPayment(true)
                         .iuv("iuv")
-                        .lastUpdateDate(new Date().getTime())
+                        .nav("nav")
+                        .lastUpdatedDate(DATE)
                         .organizationFiscalCode("organizationFiscalCode")
-                        .status(PaymentOptionStatus.PO_PAID)
-                        .paymentDate(new Date().getTime())
-                        .paymentMethod("paymentMethod")
-                        .pspCompany("pspCompany")
-                        .reportingDate(new Date().getTime())
-                        .retentionDate(new Date().getTime())
+                        .status(PaymentOptionStatus.PO_PAID.name())
+                        .retentionDate(DATE)
                         .notificationFee(0)
                         .lastUpdatedDateNotificationFee(0L)
                         .fiscalCode(fiscalCode)
-                        .postalCode("postalCode")
-                        .province("province")
-                        .region("region")
                         .type("type")
+                        .sendSync(false)
+                        .pspCode("pspCode")
+                        .switchToExpired(false)
+                        .validityDate(DATE)
+                        .paymentPlanId("paymentPlanId-0")
+                        .paymentOptionDescription("paymentOptionDescription")
                         .build();
+        
+        PaymentOptionBefore poBefore = null;
+        if(withBefore){
+            poBefore = PaymentOptionBefore.builder().id(0).build();
+        }
 
-        return DataCaptureMessage.<PaymentOption>builder()
-                .before(withBefore ? pp : null)
+        return DataCaptureMessage.<PaymentOption, PaymentOptionBefore>builder()
+                .before(poBefore)
                 .after(pp)
                 .op("c")
                 .tsMs(0L)
@@ -530,57 +508,173 @@ class IngestionServiceImplTest {
 
     // Test Ingestion Transfer
     @Test
-    void ingestTransferRunOk() {
-        DataCaptureMessage<Transfer> tr = generateValidTransfer();
+    void ingestTransferRunOk() throws JsonProcessingException, AnonymizerException {
+        when(anonimizerServiceMock.anonymizeWithRetry(REMITTANCE_INFORMATION))
+                .thenReturn(ANONYMIZED_REMITTANCE_INFORMATION);
+        DataCaptureMessage<Transfer, TransferBefore> tr = generateValidTransfer(false);
 
-        sut =
-                new IngestionServiceImpl(
-                        objectMapper,
-                        pdvTokenizerServiceMock,
-                        paymentPositionProducer,
-                        paymentOptionProducer,
-                        transferProducer, false);
+        sut = new IngestionServiceImpl(
+                objectMapper,
+                pdvTokenizerServiceMock,
+                anonimizerServiceMock,
+                paymentPositionProducer,
+                paymentOptionProducer,
+                transferProducer,
+                false, false);
 
         assertDoesNotThrow(() -> sut.ingestTransfer(objectMapper.writeValueAsString(tr)));
 
+        verify(anonimizerServiceMock, times(1)).anonymizeWithRetry(REMITTANCE_INFORMATION);
         verify(transferProducer).sendIngestedTransfer(transferCaptor.capture());
-        DataCaptureMessage<Transfer> captured = transferCaptor.getValue();
+        DataCaptureMessage<Transfer, TransferBefore> captured = transferCaptor.getValue();
         assertNull(captured.getBefore());
         assertEquals(tr.getAfter().getId(), captured.getAfter().getId());
+        assertEquals(ANONYMIZED_REMITTANCE_INFORMATION, captured.getAfter().getRemittanceInformation());
     }
 
     @Test
-    void ingestTransferRunTombstoneMessage() {
-        sut =
-                new IngestionServiceImpl(
-                        objectMapper,
-                        pdvTokenizerServiceMock,
-                        paymentPositionProducer,
-                        paymentOptionProducer,
-                        transferProducer, false);
+    void ingestTransferRunOkBothAfterAndBefore() throws JsonProcessingException, AnonymizerException {
+        when(anonimizerServiceMock.anonymizeWithRetry(REMITTANCE_INFORMATION))
+                .thenReturn(ANONYMIZED_REMITTANCE_INFORMATION);
+        DataCaptureMessage<Transfer, TransferBefore> tr = generateValidTransfer(true);
 
-        assertDoesNotThrow(() -> sut.ingestTransfer(""));
+        sut = new IngestionServiceImpl(
+                objectMapper,
+                pdvTokenizerServiceMock,
+                anonimizerServiceMock,
+                paymentPositionProducer,
+                paymentOptionProducer,
+                transferProducer,
+                false, false);
 
+        assertDoesNotThrow(() -> sut.ingestTransfer(objectMapper.writeValueAsString(tr)));
+
+        verify(anonimizerServiceMock, times(1)).anonymizeWithRetry(REMITTANCE_INFORMATION);
+        verify(transferProducer).sendIngestedTransfer(transferCaptor.capture());
+        DataCaptureMessage<Transfer, TransferBefore> captured = transferCaptor.getValue();
+        assertEquals(tr.getBefore().getId(), captured.getBefore().getId());
+        assertEquals(tr.getAfter().getId(), captured.getAfter().getId());
+        assertEquals(ANONYMIZED_REMITTANCE_INFORMATION, captured.getAfter().getRemittanceInformation());
+    }
+
+    @Test
+    void ingestTransferRunNullRemittanceInformation() throws JsonProcessingException, AnonymizerException {
+        when(anonimizerServiceMock.anonymizeWithRetry(REMITTANCE_INFORMATION))
+                .thenReturn(ANONYMIZED_REMITTANCE_INFORMATION);
+        DataCaptureMessage<Transfer, TransferBefore> tr = generateValidTransfer(false);
+        Transfer transferAfter = tr.getAfter();
+        transferAfter.setRemittanceInformation(null);
+        tr.setAfter(transferAfter);
+
+        sut = new IngestionServiceImpl(
+                objectMapper,
+                pdvTokenizerServiceMock,
+                anonimizerServiceMock,
+                paymentPositionProducer,
+                paymentOptionProducer,
+                transferProducer,
+                false, false);
+
+        assertDoesNotThrow(() -> sut.ingestTransfer(objectMapper.writeValueAsString(tr)));
+
+        verify(anonimizerServiceMock, never()).anonymizeWithRetry(REMITTANCE_INFORMATION);
+        verify(transferProducer).sendIngestedTransfer(transferCaptor.capture());
+        DataCaptureMessage<Transfer, TransferBefore> captured = transferCaptor.getValue();
+        assertNull(captured.getBefore());
+        assertEquals(tr.getAfter().getId(), captured.getAfter().getId());
+        assertNull(captured.getAfter().getRemittanceInformation());
+    }
+
+    @Test
+    void ingestTransferErrorAnonymizingRemittance()
+            throws AnonymizerException, JsonProcessingException {
+        when(anonimizerServiceMock.anonymizeWithRetry(REMITTANCE_INFORMATION))
+                .thenThrow(
+                        new AnonymizerException(
+                                HTTP_MESSAGE_ERROR, org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR));
+
+        sut = new IngestionServiceImpl(
+                objectMapper,
+                pdvTokenizerServiceMock,
+                anonimizerServiceMock,
+                paymentPositionProducer,
+                paymentOptionProducer,
+                transferProducer,
+                false, false);
+
+        DataCaptureMessage<Transfer, TransferBefore> tr = generateValidTransfer(false);
+        String msg = objectMapper.writeValueAsString(tr);
+
+        assertThrows(AppException.class, () -> sut.ingestTransfer(msg));
+
+        verify(anonimizerServiceMock, times(1)).anonymizeWithRetry(REMITTANCE_INFORMATION);
         verify(transferProducer, never()).sendIngestedTransfer(any());
     }
 
-    private DataCaptureMessage<Transfer> generateValidTransfer() {
+    @Test
+    void ingestTransferRunOkBothAfterAndBeforeWithPlaceholderOnAnonymizerError()
+            throws AnonymizerException, JsonProcessingException {
+        when(anonimizerServiceMock.anonymizeWithRetry(REMITTANCE_INFORMATION))
+                .thenThrow(new AnonymizerException("test", 500));
+
+        DataCaptureMessage<Transfer, TransferBefore> tr = generateValidTransfer(true);
+
+        sut = new IngestionServiceImpl(
+                objectMapper,
+                pdvTokenizerServiceMock,
+                anonimizerServiceMock,
+                paymentPositionProducer,
+                paymentOptionProducer,
+                transferProducer,
+                false, true);
+
+        assertDoesNotThrow(() -> sut.ingestTransfer(objectMapper.writeValueAsString(tr)));
+
+        verify(anonimizerServiceMock, times(1)).anonymizeWithRetry(REMITTANCE_INFORMATION);
+        verify(transferProducer).sendIngestedTransfer(transferCaptor.capture());
+        DataCaptureMessage<Transfer, TransferBefore> captured = transferCaptor.getValue();
+        assertEquals("Anonymized", captured.getAfter().getRemittanceInformation());
+    }
+
+    @Test
+    void ingestTransferRunTombstoneMessage() throws AnonymizerException, JsonProcessingException {
+        sut = new IngestionServiceImpl(
+                objectMapper,
+                pdvTokenizerServiceMock,
+                anonimizerServiceMock,
+                paymentPositionProducer,
+                paymentOptionProducer,
+                transferProducer,
+                false, true);
+
+        assertDoesNotThrow(() -> sut.ingestTransfer(""));
+        verify(anonimizerServiceMock, never()).anonymizeWithRetry(REMITTANCE_INFORMATION);
+        verify(transferProducer, never()).sendIngestedTransfer(any());
+    }
+
+    private DataCaptureMessage<Transfer, TransferBefore> generateValidTransfer(boolean withBefore) {
         Transfer pp =
                 Transfer.builder()
                         .id(0)
+                        .paymentOptionId(0)
                         .amount(0)
                         .category("category")
                         .transferId("transferId")
-                        .insertedDate(new Date().getTime())
+                        .insertedDate(DATE)
                         .iuv("iuv")
-                        .lastUpdateDate(new Date().getTime())
+                        .lastUpdatedDate(DATE)
                         .organizationFiscalCode("organizationFiscalCode")
-                        .status(TransferStatus.T_REPORTED)
-                        .paymentOptionId(0)
+                        .remittanceInformation(REMITTANCE_INFORMATION)
+                        .status(TransferStatus.T_REPORTED.name())
                         .build();
 
-        return DataCaptureMessage.<Transfer>builder()
-                .before(null)
+        TransferBefore trBefore = null;
+        if(withBefore){
+            trBefore = TransferBefore.builder().id(0).build();
+        }
+
+        return DataCaptureMessage.<Transfer, TransferBefore>builder()
+                .before(trBefore)
                 .after(pp)
                 .op("c")
                 .tsMs(0L)

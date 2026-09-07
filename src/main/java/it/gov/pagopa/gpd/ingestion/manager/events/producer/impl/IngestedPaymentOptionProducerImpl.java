@@ -2,6 +2,7 @@ package it.gov.pagopa.gpd.ingestion.manager.events.producer.impl;
 
 import it.gov.pagopa.gpd.ingestion.manager.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.PaymentOption;
+import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.before.PaymentOptionBefore;
 import it.gov.pagopa.gpd.ingestion.manager.events.producer.IngestedPaymentOptionProducer;
 import java.util.function.Supplier;
 
@@ -28,14 +29,14 @@ public class IngestedPaymentOptionProducerImpl implements IngestedPaymentOptionP
     this.streamBridge = streamBridge;
   }
 
-  private static Message<DataCaptureMessage<PaymentOption>> buildMessage(
-      DataCaptureMessage<PaymentOption> ingestedPaymentOption) {
+  private static Message<DataCaptureMessage<PaymentOption, PaymentOptionBefore>> buildMessage(
+      DataCaptureMessage<PaymentOption, PaymentOptionBefore> ingestedPaymentOption) {
     return MessageBuilder.withPayload(ingestedPaymentOption).build();
   }
 
   @Override
   public void sendIngestedPaymentOption(
-      DataCaptureMessage<PaymentOption> ingestedPaymentOption) {
+      DataCaptureMessage<PaymentOption, PaymentOptionBefore> ingestedPaymentOption) {
     var res = streamBridge.send("ingestPaymentOption-out-0", buildMessage(ingestedPaymentOption));
 
     if(!res){
@@ -49,7 +50,7 @@ public class IngestedPaymentOptionProducerImpl implements IngestedPaymentOptionP
   static class IngestedPaymentOptionProducerConfig {
 
     @Bean
-    public Supplier<Flux<Message<DataCaptureMessage<PaymentOption>>>> sendIngestedPaymentOption() {
+    public Supplier<Flux<Message<DataCaptureMessage<PaymentOption, PaymentOptionBefore>>>> sendIngestedPaymentOption() {
       return Flux::empty;
     }
   }

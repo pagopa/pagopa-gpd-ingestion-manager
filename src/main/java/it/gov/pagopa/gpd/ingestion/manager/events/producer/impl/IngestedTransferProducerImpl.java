@@ -2,6 +2,7 @@ package it.gov.pagopa.gpd.ingestion.manager.events.producer.impl;
 
 import it.gov.pagopa.gpd.ingestion.manager.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.Transfer;
+import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.before.TransferBefore;
 import it.gov.pagopa.gpd.ingestion.manager.events.producer.IngestedTransferProducer;
 import java.util.function.Supplier;
 
@@ -28,13 +29,13 @@ public class IngestedTransferProducerImpl implements IngestedTransferProducer {
     this.streamBridge = streamBridge;
   }
 
-  private static Message<DataCaptureMessage<Transfer>> buildMessage(
-      DataCaptureMessage<Transfer> ingestedTransfer) {
+  private static Message<DataCaptureMessage<Transfer, TransferBefore>> buildMessage(
+      DataCaptureMessage<Transfer, TransferBefore> ingestedTransfer) {
     return MessageBuilder.withPayload(ingestedTransfer).build();
   }
 
   @Override
-  public void sendIngestedTransfer(DataCaptureMessage<Transfer> ingestedTransfer) {
+  public void sendIngestedTransfer(DataCaptureMessage<Transfer, TransferBefore> ingestedTransfer) {
     var res = streamBridge.send("ingestTransfer-out-0", buildMessage(ingestedTransfer));
 
     if(!res){
@@ -48,7 +49,7 @@ public class IngestedTransferProducerImpl implements IngestedTransferProducer {
   static class IngestedTransferProducerConfig {
 
     @Bean
-    public Supplier<Flux<Message<DataCaptureMessage<Transfer>>>> sendIngestedTransfer() {
+    public Supplier<Flux<Message<DataCaptureMessage<Transfer, TransferBefore>>>> sendIngestedTransfer() {
       return Flux::empty;
     }
   }
