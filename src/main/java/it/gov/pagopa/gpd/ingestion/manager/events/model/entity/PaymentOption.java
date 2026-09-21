@@ -2,7 +2,6 @@ package it.gov.pagopa.gpd.ingestion.manager.events.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.enumeration.PaymentOptionStatus;
 import lombok.*;
 
 @Getter
@@ -12,70 +11,72 @@ import lombok.*;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PaymentOption {
-  private int id;
+    private long id;
 
-  @JsonProperty("payment_position_id")
-  private int paymentPositionId;
+    @JsonProperty("payment_position_id")
+    private long paymentPositionId;
 
-  private int amount;
-  private String description;
+    private long amount;
+    private String description;
 
-  @JsonProperty("due_date")
-  private Long dueDate;
+    @JsonProperty("due_date")
+    private Long dueDate;
 
-  private int fee;
+    private long fee;
 
-  @JsonProperty("flow_reporting_id")
-  private String flowReportingId;
+    @JsonProperty("flow_reporting_id")
+    private String flowReportingId;
 
-  @JsonProperty("receipt_id")
-  private String receiptId;
+    @JsonProperty("inserted_date")
+    private Long insertedDate;
 
-  @JsonProperty("inserted_date")
-  private Long insertedDate;
+    @JsonProperty("is_partial_payment")
+    private boolean isPartialPayment;
 
-  @JsonProperty("is_partial_payment")
-  private boolean isPartialPayment;
+    private String iuv;
+    private String nav;
 
-  private String iuv;
+    @JsonProperty("last_updated_date")
+    private Long lastUpdatedDate;
 
-  @JsonProperty("last_update_date")
-  private Long lastUpdateDate;
+    @JsonProperty("organization_fiscal_code")
+    private String organizationFiscalCode;
 
-  @JsonProperty("organization_fiscal_code")
-  private String organizationFiscalCode;
+    private String status;
 
-  private PaymentOptionStatus status;
+    @JsonProperty("retention_date")
+    private Long retentionDate;
 
-  @JsonProperty("payment_date")
-  private Long paymentDate;
+    @JsonProperty("notification_fee")
+    private long notificationFee;
 
-  @JsonProperty("payment_method")
-  private String paymentMethod;
+    @JsonProperty("last_updated_date_notification_fee")
+    private Long lastUpdatedDateNotificationFee;
 
-  @JsonProperty("psp_company")
-  private String pspCompany;
+    // Debtor info
+    @JsonProperty("fiscal_code")
+    private String fiscalCode;
 
-  @JsonProperty("reporting_date")
-  private Long reportingDate;
+    private String type;
 
-  @JsonProperty("retention_date")
-  private Long retentionDate;
+    @JsonProperty("send_sync")
+    private boolean sendSync;
 
-  @JsonProperty("notification_fee")
-  private int notificationFee;
+    @JsonProperty("psp_code")
+    private String pspCode;
 
-  @JsonProperty("last_updated_date_notification_fee")
-  private Long lastUpdatedDateNotificationFee;
+    @JsonProperty("psp_tax_code")
+    private String pspTaxCode;
 
-  // Debtor info
-  @JsonProperty("fiscal_code")
-  private String fiscalCode;
+    @JsonProperty("switch_to_expired")
+    private boolean switchToExpired;
 
-  @JsonProperty("postal_code")
-  private String postalCode;
+    @JsonProperty("validity_date")
+    private Long validityDate;
 
-  private String province;
-  private String region;
-  private String type;
+    @JsonProperty("payment_plan_id")
+    private String paymentPlanId;
+
+    @JsonProperty("payment_option_description")
+    private String paymentOptionDescription;
 }

@@ -2,6 +2,7 @@ package it.gov.pagopa.gpd.ingestion.manager.events.producer;
 
 import it.gov.pagopa.gpd.ingestion.manager.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.PaymentOption;
+import it.gov.pagopa.gpd.ingestion.manager.events.model.entity.before.PaymentOptionBefore;
 import org.springframework.stereotype.Service;
 
 /**
@@ -16,6 +17,6 @@ public interface IngestedPaymentOptionProducer {
      *
      * @param ingestedPaymentOption data to send
      */
-    void sendIngestedPaymentOption(DataCaptureMessage<PaymentOption> ingestedPaymentOption);
+    void sendIngestedPaymentOption(DataCaptureMessage<PaymentOption, PaymentOptionBefore> ingestedPaymentOption);
 
 }
