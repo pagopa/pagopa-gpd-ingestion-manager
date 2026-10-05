@@ -113,7 +113,7 @@ microservice-chart:
     EVENTHUB_TRANSFER_GROUP_ID: "gpd-ingestion-manager-tr"
     KAFKA_CONSUMER_CONCURRENCY: "8"
     KAFKA_MAX_POLL_INTERVAL_MS: "900000"
-    KAFKA_MAX_POLL_RECORDS: "500"
+    KAFKA_MAX_POLL_RECORDS: "2000"
   envFieldRef:
     APP_NAME: "metadata.labels['app.kubernetes.io/instance']"
     APP_VERSION: "metadata.labels['app.kubernetes.io/version']"
