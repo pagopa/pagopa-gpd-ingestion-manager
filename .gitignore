@@ -44,3 +44,7 @@ yarn.lock
 # Misc
 .azure/
 local.settings.json
+
+# PGP secrets
+*.asc
+*.passphrase
