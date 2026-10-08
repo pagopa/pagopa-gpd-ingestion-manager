@@ -33,7 +33,7 @@ By default, the script manages these Key Vault secrets:
 | Secret | Default Key Vault name |
 | --- | --- |
 | Private PGP key | `pgp-rpt-audit-private-key` |
-| Public PGP key | `gp-rpt-audit-private-key` |
+| Public PGP key | `pgp-rpt-audit-public-key` |
 | PGP passphrase | `pgp-rpt-audit-passphrase` |
 
 If needed, override the names by exporting these variables before running the script:

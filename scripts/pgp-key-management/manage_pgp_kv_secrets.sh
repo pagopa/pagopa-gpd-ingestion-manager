@@ -63,7 +63,7 @@ public_key_file="${4:-$environment-public.asc}"
 passphrase="${3:-}"
 
 private_secret_name="${PRIVATE_SECRET_NAME:-pgp-rpt-audit-private-key}"
-public_secret_name="${PUBLIC_SECRET_NAME:-gp-rpt-audit-private-key}"
+public_secret_name="${PUBLIC_SECRET_NAME:-pgp-rpt-audit-public-key}"
 passphrase_secret_name="${PASSPHRASE_SECRET_NAME:-pgp-rpt-audit-passphrase}"
 
 case "$environment" in
