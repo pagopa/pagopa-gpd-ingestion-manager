@@ -24,7 +24,7 @@ microservice-chart:
     periodSeconds: 10
   deployment:
     create: true
-    replicas: 4 # same as HPA minReplica
+    replicas: 6 # same as HPA minReplica
     strategy:
       type: RollingUpdate
       rollingUpdate:
@@ -63,8 +63,8 @@ microservice-chart:
       cpu: "0.50"
   autoscaling:
     enable: true
-    minReplica: 4
-    maxReplica: 4
+    minReplica: 6
+    maxReplica: 6
     pollingInterval: 10 # seconds
     cooldownPeriod: 60 # seconds
     triggers:
@@ -111,7 +111,7 @@ microservice-chart:
     EVENTHUB_PAYMENT_POSITION_GROUP_ID: "gpd-ingestion-manager-pp"
     EVENTHUB_PAYMENT_OPTION_GROUP_ID: "gpd-ingestion-manager-po"
     EVENTHUB_TRANSFER_GROUP_ID: "gpd-ingestion-manager-tr"
-    KAFKA_CONSUMER_CONCURRENCY: "8"
+    KAFKA_CONSUMER_CONCURRENCY: "6"
     KAFKA_MAX_POLL_INTERVAL_MS: "900000"
     KAFKA_MAX_POLL_RECORDS: "500"
   envFieldRef:
