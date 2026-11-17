@@ -82,25 +82,6 @@ public class IngestionServiceImpl implements IngestionService {
         this.placeholderOnAnonymizerKO = placeholderOnAnonymizerKO;
     }
 
-    private static String sanitizeFiscalCode(String fiscalCode) {
-        if (fiscalCode == null || fiscalCode.isBlank()) {
-            return fiscalCode;
-        }
-
-        String normalizedFiscalCode = normalizeFiscalCode(fiscalCode);
-        Matcher cfMatcher = PATTERN_CF.matcher(normalizedFiscalCode);
-        if (cfMatcher.find()) {
-            return cfMatcher.group();
-        }
-
-        Matcher ivaMatcher = PATTERN_IVA.matcher(normalizedFiscalCode);
-        if (ivaMatcher.find()) {
-            return ivaMatcher.group();
-        }
-
-        return fiscalCode;
-    }
-
     private static boolean hasValidFiscalCodePattern(String fiscalCode) {
         if (fiscalCode == null || fiscalCode.isBlank()) {
             return false;
@@ -203,11 +184,10 @@ public class IngestionServiceImpl implements IngestionService {
 
     private PaymentOption tokenizeFiscalCode(PaymentOption values) throws PDVTokenizerException, JsonProcessingException {
         if (values != null && hasValidFiscalCodePattern(values.getFiscalCode())) {
-            String sanitizedFiscalCode = sanitizeFiscalCode(values.getFiscalCode());
             try {
                 values.setFiscalCode(
                         pdvTokenizerService.generateTokenForFiscalCodeWithRetry(
-                                sanitizedFiscalCode));
+                                values.getFiscalCode()));
              } catch (Exception e) {
                  if (Boolean.FALSE.equals(placeholderOnPdvKO)) {
                      throw e;
