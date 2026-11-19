@@ -309,6 +309,37 @@ class IngestionServiceImplTest {
     }
 
     @Test
+    void ingestPaymentOptionRunFiscalCodeWithSpecialCharacters()
+            throws PDVTokenizerException, JsonProcessingException, AnonymizerException {
+        when(anonimizerServiceMock.anonymizeWithRetry(DESCRIPTION))
+                .thenReturn(ANONYMIZE_PLACEHOLDER);
+        String fiscalCodeWithSpecialCharacters = "Codice Fiscale AAAA-AA00A00%A000DCG-TERIN";
+        when(pdvTokenizerServiceMock.generateTokenForFiscalCodeWithRetry(fiscalCodeWithSpecialCharacters))
+                .thenReturn(TOKENIZED_FISCAL_CODE);
+
+        DataCaptureMessage<PaymentOption, PaymentOptionBefore> po =
+                generateValidPaymentOption(fiscalCodeWithSpecialCharacters, DESCRIPTION, false);
+
+        sut =
+                new IngestionServiceImpl(
+                        objectMapper,
+                        pdvTokenizerServiceMock,
+                        anonimizerServiceMock,
+                        paymentPositionProducer,
+                        paymentOptionProducer,
+                        transferProducer, false, false);
+
+        assertDoesNotThrow(() -> sut.ingestPaymentOption(objectMapper.writeValueAsString(po)));
+
+        verify(anonimizerServiceMock, atLeast(1)).anonymizeWithRetry(DESCRIPTION);
+        verify(pdvTokenizerServiceMock, times(1)).generateTokenForFiscalCodeWithRetry(fiscalCodeWithSpecialCharacters);
+        verify(paymentOptionProducer).sendIngestedPaymentOption(paymentOptionCaptor.capture());
+        DataCaptureMessage<PaymentOption, PaymentOptionBefore> captured = paymentOptionCaptor.getValue();
+        assertNull(captured.getBefore());
+        assertEquals(TOKENIZED_FISCAL_CODE, captured.getAfter().getFiscalCode());
+    }
+
+    @Test
     void ingestPaymentOptionRunInvalidFiscalCode()
             throws PDVTokenizerException, JsonProcessingException, AnonymizerException {
         when(anonimizerServiceMock.anonymizeWithRetry(DESCRIPTION))

@@ -19,6 +19,8 @@ import it.gov.pagopa.gpd.ingestion.manager.service.AnonymizerServiceRetryWrapper
 import it.gov.pagopa.gpd.ingestion.manager.service.IngestionService;
 import it.gov.pagopa.gpd.ingestion.manager.service.PDVTokenizerServiceRetryWrapper;
 
+import java.util.Locale;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
@@ -42,9 +44,9 @@ public class IngestionServiceImpl implements IngestionService {
     public static final String ANONYMIZE_PLACEHOLDER = "Anonymized";
 
     private static final Pattern PATTERN_CF = Pattern.compile(
-            "^[A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]$"
+            "[A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]"
     );
-    private static final Pattern PATTERN_IVA = Pattern.compile("^\\d{11}$");
+    private static final Pattern PATTERN_IVA = Pattern.compile("\\d{11}");
 
     private final ObjectMapper objectMapper;
 
@@ -80,13 +82,17 @@ public class IngestionServiceImpl implements IngestionService {
         this.placeholderOnAnonymizerKO = placeholderOnAnonymizerKO;
     }
 
-    private static boolean isValidFiscalCode(String fiscalCode) {
-        if (fiscalCode != null && !fiscalCode.isEmpty()) {
-            String normalizedFiscalCode = fiscalCode.toUpperCase().trim();
-            return PATTERN_CF.matcher(normalizedFiscalCode).find() || PATTERN_IVA.matcher(normalizedFiscalCode).find();
+    private static boolean hasValidFiscalCodePattern(String fiscalCode) {
+        if (fiscalCode == null || fiscalCode.isBlank()) {
+            return false;
         }
 
-        return false;
+        String normalizedFiscalCode = normalizeFiscalCode(fiscalCode);
+        return PATTERN_CF.matcher(normalizedFiscalCode).find() || PATTERN_IVA.matcher(normalizedFiscalCode).find();
+    }
+
+    private static String normalizeFiscalCode(String fiscalCode) {
+        return fiscalCode.toUpperCase(Locale.ROOT).replaceAll("[^A-Z0-9]", "").trim();
     }
 
     public void ingestPaymentPosition(String message) {
@@ -177,18 +183,18 @@ public class IngestionServiceImpl implements IngestionService {
     }
 
     private PaymentOption tokenizeFiscalCode(PaymentOption values) throws PDVTokenizerException, JsonProcessingException {
-        if (values != null && isValidFiscalCode(values.getFiscalCode())) {
+        if (values != null && hasValidFiscalCodePattern(values.getFiscalCode())) {
             try {
                 values.setFiscalCode(
                         pdvTokenizerService.generateTokenForFiscalCodeWithRetry(
                                 values.getFiscalCode()));
-            } catch (Exception e) {
-                if (Boolean.FALSE.equals(placeholderOnPdvKO)) {
-                    throw e;
-                } else {
-                    log.error(PDV_TOKENIZER_EXCEPTION_MESSAGE, getDateNow(), e);
-                    values.setFiscalCode(PDV_CF_TOKENIZER);
-                }
+             } catch (Exception e) {
+                 if (Boolean.FALSE.equals(placeholderOnPdvKO)) {
+                     throw e;
+                 } else {
+                     log.error(PDV_TOKENIZER_EXCEPTION_MESSAGE, getDateNow(), e);
+                     values.setFiscalCode(PDV_CF_TOKENIZER);
+                 }
             }
         }
 
