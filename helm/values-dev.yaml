@@ -71,14 +71,10 @@ microservice-chart:
       - type: cpu
         metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
         metadata:
-          # Required
-          type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
           value: "80"
       - type: memory
         metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
         metadata:
-          # Required
-          type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
           value: "70"
   envConfig:
     JAVA_OPTS: "-XX:-UseBASE64Intrinsics"
